@@ -13,8 +13,8 @@ def Ctx.dv : Ctx → Finset ℕ
   | cons Γ x _ => {x} ∪ Γ.dv
 
 inductive Ctx.At : Ctx → ℕ → Tm → Prop
-  | head {Γ : Ctx} {x : ℕ} {A : Tm} : Ctx.At (Ctx.cons Γ x A) x A
-  | tail {Γ : Ctx} {x y : ℕ} {A B : Tm} (h : Ctx.At Γ x A) : Ctx.At (Ctx.cons Γ y B) x A
+  | here {Γ : Ctx} {x : ℕ} {A : Tm} : Ctx.At (Ctx.cons Γ x A) x A
+  | there {Γ : Ctx} {x y : ℕ} {A B : Tm} (h : Ctx.At Γ x A) : Ctx.At (Ctx.cons Γ y B) x A
 
 @[simp]
 theorem Ctx.At.mem_dv {Γ : Ctx} {x : ℕ} {A : Tm} (h : Ctx.At Γ x A) : x ∈ Γ.dv := by
@@ -125,7 +125,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
   | inhab {Γ : Ctx} {A a : Tm}
     : JEq Γ A a a
     → JEq Γ (.univ 0) (.trunc A) (.unit 0)
-  | spec {Γ : Ctx} {ℓ} {A φ φa : Tm} {L : Finset ℕ}
+  | spec_cf {Γ : Ctx} {ℓ} {A φ φa : Tm} {L : Finset ℕ}
     : JEq Γ (.univ ℓ) A A
     → JEq Γ (.univ 0) (.trunc A) (.unit 0)
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ 0) (φ.bs0 (.fv x)) (φ.bs0 (.fv x)))
@@ -230,6 +230,9 @@ theorem Ctx.Ok.zero {Γ : Ctx} (h : Γ.Ok) : Γ.JEq .nats .zero .zero
 theorem Ctx.Ok.univ {Γ : Ctx} (h : Γ.Ok) {ℓ : ℕ} : Γ.JEq (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ)
   := h.zero.univ
 
+theorem Ctx.Ok.unit {Γ : Ctx} (h : Γ.Ok) {ℓ : ℕ} : Γ.JEq (.univ ℓ) (.unit ℓ) (.unit ℓ)
+  := h.zero.unit
+
 theorem Ctx.Ok.empty {Γ : Ctx} (h : Γ.Ok) {ℓ : ℕ} : Γ.JEq (.univ ℓ) (.empty ℓ) (.empty ℓ)
   := h.zero.empty
 
@@ -265,8 +268,8 @@ theorem Ctx.Scoped.cons_iff {Γ : Ctx} {x : ℕ} {A : Tm} :
 theorem Ctx.Scoped.at_ty
   {Γ : Ctx} {x : ℕ} {A : Tm} (h : Ctx.Scoped Γ) (hA : Γ.At x A) : A.fvs ⊆ Γ.dv
   := by induction hA with
-  | head => exact Finset.Subset.trans h.ty Finset.subset_union_right
-  | tail _ I => exact Finset.Subset.trans (I h.tail) Finset.subset_union_right
+  | here => exact Finset.Subset.trans h.ty Finset.subset_union_right
+  | there _ I => exact Finset.Subset.trans (I h.tail) Finset.subset_union_right
 
 theorem Ctx.Scoped.at
   {Γ : Ctx} {x : ℕ} {A : Tm} (h : Ctx.Scoped Γ) (hA : Γ.At x A) : {x} ∪ A.fvs ⊆ Γ.dv
@@ -313,7 +316,7 @@ theorem Ctx.Lc.cons_iff {Γ : Ctx} {x : ℕ} {A : Tm} :
   := ⟨fun h => by cases h; simp [*], fun h => by constructor <;> simp [*]⟩
 
 theorem Ctx.Lc.at {Γ : Ctx} {x : ℕ} {A : Tm} (h : Ctx.Lc Γ) (hA : Γ.At x A) : A.bvi = 0
-  := by induction hA with | head => exact h.head | tail _ I => exact I h.tail
+  := by induction hA with | here => exact h.head | there _ I => exact I h.tail
 
 theorem Ctx.JEq.lc_all {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
   : Γ.Lc ∧ A.bvi = 0 ∧ a.bvi = 0 ∧ b.bvi = 0

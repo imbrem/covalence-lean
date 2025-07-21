@@ -29,7 +29,7 @@ theorem Ctx.Wk.src_ok {Γ Δ : Ctx} (h : Ctx.Wk Γ Δ) : Γ.Ok := by
 theorem Ctx.Wk.trg_ok {Γ Δ : Ctx} (h : Ctx.Wk Γ Δ) : Δ.Ok := by
   induction h <;> repeat first | assumption | constructor
 
-theorem Ctx.Ok.wk_refl {Γ : Ctx} (h : Γ.Ok) : Ctx.Wk Γ Γ
+theorem Ctx.Ok.wk {Γ : Ctx} (h : Γ.Ok) : Ctx.Wk Γ Γ
   := by induction h <;> constructor <;> assumption
 
 theorem Ctx.Wk.trans {Γ Δ Θ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) (hΔΘ : Ctx.Wk Δ Θ) : Ctx.Wk Γ Θ := by
@@ -42,9 +42,9 @@ theorem Ctx.Wk.at {Γ Δ : Ctx} (h : Ctx.Wk Γ Δ) {x : ℕ} {A : Tm} (hA : Δ.A
   induction h with
   | nil => exact hA
   | lift' _ _ _ _ _ I => cases hA with
-    | head => apply At.head
-    | tail => apply At.tail; apply I; assumption
-  | skip _ _ _ I => apply At.tail; exact I hA
+    | here => apply At.here
+    | there => apply At.there; apply I; assumption
+  | skip _ _ _ I => apply At.there; exact I hA
 
 theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq A a b) : Γ.JEq A a b := by
   induction h generalizing Γ with
@@ -218,10 +218,10 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
     · exact Ia hΓΔ
     · exact Ib hΓΔ
     · exact hBa
-  | spec hA hiA hφ hφa IA Iia Iφ =>
+  | spec_cf hA hiA hφ hφa IA Iia Iφ =>
     have hA' := IA hΓΔ
     rename Finset ℕ => L
-    apply JEq.spec (L := L ∪ Γ.dv)
+    apply JEq.spec_cf (L := L ∪ Γ.dv)
     · exact hA'
     · exact Iia hΓΔ
     · intro x hx
@@ -277,12 +277,12 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
       · exact hx.1
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hΓΔ.src_ok.nats hΓΔ.trg_ok.nats
     · exact hCn
-  | beta_succ_cf hC hn hz hs hsn hCn hCs Ic In Iz Is =>
+  | beta_succ_cf hC hn hz hs hsn hCn hCs IC In Iz Is =>
     rename Finset ℕ => L
     apply JEq.beta_succ_cf (L := L ∪ Γ.dv)
     · intro x hx
       simp only [Finset.mem_union, not_or] at hx
-      apply Ic
+      apply IC
       · exact hx.1
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hΓΔ.src_ok.nats hΓΔ.trg_ok.nats
     · exact In hΓΔ
@@ -330,3 +330,8 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
   | trans => apply JEq.trans <;> apply_assumption <;> assumption
   | symm => apply JEq.symm; apply_assumption; assumption
   | cast => apply JEq.cast <;> apply_assumption <;> assumption
+
+theorem Ctx.JEq.wk0
+  {Γ : Ctx} {A a b : Tm} (h : Γ.JEq A a b)
+  {ℓ : ℕ} {x : ℕ} {B : Tm} (hx : x ∉ Γ.dv) (hB : Γ.JEq (.univ ℓ) B B) : (Γ.cons x B).JEq A a b
+  := h.wk (h.ok.wk.skip hx hB)
