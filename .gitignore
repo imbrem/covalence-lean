@@ -1,0 +1,11 @@
+*/node_modules
+pnpm-lock.yaml
+node_modules
+bun.lock
+covalence-code/dist
+covalence-code/.vscode-test-web
+covalence-js/dist
+*.vsix
+covalence-code/.npmrc
+/.lake
+target/
