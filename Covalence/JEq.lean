@@ -327,6 +327,40 @@ theorem Ctx.JEq.scoped_lhs {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
 theorem Ctx.JEq.scoped_rhs {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
   : b.fvs ⊆ Γ.dv := h.scoped_all.2.2.2
 
+-- theorem Ctx.JEq.scoped_cf_all {Γ : Ctx} {A B a b : Tm} {L : Finset ℕ}
+--   (h : ∀x ∉ L, Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (a.bs0 (.fv x)) (b.bs0 (.fv x)))
+--   : Γ.Scoped ∧ A.fvs ⊆ Γ.dv ∧ a.fvs ⊆ Γ.dv ∧ b.fvs ⊆ Γ.dv
+--   := by induction h with
+--   | var hΓ hA IA => simp [hA.mem_dv, IA.1.at_ty hA, IA.1]
+--   | cons_ok => simp [Scoped.cons_iff, *]
+
+theorem Ctx.JEq.scoped_cf_ty {Γ : Ctx} {A B : Tm} {ax bx : ℕ → Tm} {L : Finset ℕ}
+  (h : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (ax x) (bx x))
+  : B.fvs ⊆ Γ.dv := by
+  have ⟨y, hy⟩ := Finset.exists_notMem (L ∪ B.fvs);
+  have ⟨hL, ha⟩ : y ∉ L ∧ y ∉ B.fvs := by simp [Finset.mem_union] at hy; exact hy;
+  intro x hx
+  convert (B.fvs_bsubst_sub _).trans (h y hL).scoped_ty hx using 0
+  simp [dv]
+  intro h; cases h; exact (ha hx).elim
+
+theorem Ctx.JEq.scoped_cf_lhs {Γ : Ctx} {A a : Tm} {Bx bx : ℕ → Tm} {L : Finset ℕ}
+  (h : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (Bx x) (a.bs0 (.fv x)) (bx x))
+  : a.fvs ⊆ Γ.dv := by
+  have ⟨y, hy⟩ := Finset.exists_notMem (L ∪ a.fvs);
+  have ⟨hL, ha⟩ : y ∉ L ∧ y ∉ a.fvs := by simp [Finset.mem_union] at hy; exact hy;
+  intro x hx
+  convert (a.fvs_bsubst_sub _).trans (h y hL).scoped_lhs hx using 0
+  simp [dv]
+  intro h; cases h; exact (ha hx).elim
+
+theorem Ctx.JEq.scoped_cf_rhs {Γ : Ctx} {A b : Tm} {Bx ax : ℕ → Tm} {L : Finset ℕ}
+  (h : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (Bx x) (ax x) (b.bs0 (.fv x)))
+  : b.fvs ⊆ Γ.dv := by
+  have h' := fun x hx => (h x hx).symm;
+  apply scoped_cf_lhs
+  apply h'
+
 theorem Ctx.Ok.scoped {Γ : Ctx} (h : Γ.Ok) : Γ.Scoped := h.zero.scoped_ctx
 
 inductive Ctx.Lc : Ctx → Prop

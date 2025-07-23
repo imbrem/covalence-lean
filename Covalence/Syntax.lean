@@ -246,6 +246,61 @@ instance Tm.BSubst.instMonoid : Monoid Tm.BSubst where
   one_mul f := by ext n; simp
   mul_one f := by ext n; simp
 
+def Tm.BSubst.EqOn (n : ℕ) (σ τ : Tm.BSubst) : Prop := ∀i < n, σ.get i = τ.get i
+
+theorem Tm.BSubst.EqOn.sup_iff {n m : ℕ} {σ τ : Tm.BSubst} :
+  σ.EqOn (n ⊔ m) τ ↔ σ.EqOn n τ ∧ σ.EqOn m τ := by
+  simp only [EqOn]
+  rw [<-forall_and]
+  apply forall_congr'
+  grind
+
+@[simp] theorem Tm.BSubst.EqOn.zero {σ τ : Tm.BSubst} : σ.EqOn 0 τ := by intro i hi; cases hi
+
+theorem Tm.BSubst.EqOn.lift {n : ℕ} (f g : Tm.BSubst) (h : Tm.BSubst.EqOn n f g) :
+  Tm.BSubst.EqOn (n + 1) (↑s f) (↑s g) := fun i hi => by cases i with
+  | zero => rfl
+  | succ i => rw [get_succ_lift, get_succ_lift, h i]; omega
+
+theorem Tm.bwk_inj {f : BWk} (hf : f.Inj) : Function.Injective (Tm.bwk f) := by
+  intro t s hts
+  induction t generalizing s f with
+  | bv i =>
+    cases s <;> simp at hts
+    rw [hf.get hts]
+  | _ =>
+    have hf' := hf.lift
+    cases s <;> simp at hts
+    (try casesm* _ ∧ _)
+    simp <;> (try constructorm* _ ∧ _) <;> solve_by_elim
+
+theorem Tm.bwk0_inj : Function.Injective (Tm.bwk BWk.wk0) := Tm.bwk_inj .wk0
+
+theorem Tm.BSubst.EqOn.of_succ_lift {n : ℕ}
+  (f g : Tm.BSubst) (h : Tm.BSubst.EqOn (n + 1) f.lift g.lift)
+  : f.EqOn n g := fun i hi => by
+  convert h (i + 1) (by omega) using 0; simp; exact Tm.bwk0_inj.eq_iff.symm
+
+theorem Tm.BSubst.EqOn.succ_lift_iff {n : ℕ} (f g : Tm.BSubst)
+  : f.lift.EqOn (n + 1) g.lift ↔ f.EqOn n g := ⟨fun h => h.of_succ_lift, fun h => h.lift⟩
+
+theorem Tm.BSubst.EqOn.pred_iff_lift (n : ℕ) (f g : Tm.BSubst) :
+  f.EqOn (n - 1) g ↔ f.lift.EqOn n g.lift := by cases n <;> simp [succ_lift_iff]
+
+theorem Tm.bsubst_eqOn (t : Tm) {f g : BSubst} (h : f.EqOn t.bvi g) : t.bsubst f = t.bsubst g := by
+  induction t generalizing f g with
+  | bv i => exact h i (by simp [bvi])
+  | _ =>
+    simp only [bvi, BSubst.EqOn.sup_iff, BSubst.EqOn.pred_iff_lift] at *
+    grind [bsubst]
+
+theorem Tm.bsubst_eqOn_id (t : Tm) {f : BSubst} (h : f.EqOn t.bvi 1) : t.bsubst f = t
+  := (t.bsubst_eqOn h).trans t.bsubst_one
+
+@[simp]
+theorem Tm.bsubst_lc (t : Tm) (h : t.bvi = 0) (f : BSubst) : t.bsubst f = t
+  := t.bsubst_eqOn_id (by simp [h])
+
 def Tm.b0 (t : Tm) : BSubst | 0 => t | n + 1 => .bv n
 
 @[simp] theorem Tm.get_zero_b0 (t : Tm) : t.b0.get 0 = t := rfl
@@ -310,6 +365,102 @@ instance Tm.MSubst.instMonoid : Monoid Tm.MSubst where
   mul_assoc f g h := by ext n; simp [msubst_mul]
   one_mul f := by ext n; simp
   mul_one f := by ext n; simp
+
+def Tm.MSubst.lift (σ : MSubst) (x : ℕ) : MSubst := Function.update σ x (.fv x)
+
+theorem Tm.MSubst.get_lift (σ : MSubst) (x : ℕ) (n : ℕ) :
+  (σ.lift x).get n = if n = x then .fv x else σ.get n
+  := by simp [lift, Function.update, get]
+
+@[simp]
+theorem Tm.MSubst.get_lift_self (σ : MSubst) (x : ℕ) :
+  (σ.lift x).get x = .fv x := by simp [get_lift]
+
+theorem Tm.MSubst.lift_comm (σ : MSubst) (x : ℕ) (y : ℕ) : (σ.lift x).lift y = (σ.lift y).lift x
+  := by ext n; simp only [get_lift]; grind
+
+theorem Tm.MSubst.lift_lift (σ : MSubst) (x : ℕ) : (σ.lift x).lift x = σ.lift x
+  := by ext n; simp only [get_lift]; grind
+
+theorem Tm.BSubst.get_liftn (σ : BSubst) (n : ℕ) (i : ℕ)
+  : (BSubst.lift^[n] σ).get i = if i < n then .bv i else (Tm.bwk BWk.wk0)^[n] (σ.get (i - n))
+  := by induction n generalizing i with
+  | zero => rfl
+  | succ n I =>
+    rw [Function.iterate_succ_apply']
+    cases i with
+    | zero => simp only [get_zero_lift, Nat.zero_lt_succ, ↓reduceIte]
+    | succ i =>
+      simp only [get_succ_lift, Nat.add_lt_add_iff_right, Nat.reduceSubDiff, Function.iterate_succ,
+        Function.comp_apply, I]
+      split
+      · rfl
+      · rw [
+          <-Function.iterate_succ_apply' (f := Tm.bwk BWk.wk0),
+          <-Function.iterate_succ_apply (f := Tm.bwk BWk.wk0)
+        ]
+
+@[simp]
+theorem Tm.bwk_iter_fv (f : BWk) (n : ℕ) (x : ℕ)
+  : (Tm.bwk f)^[n] (.fv x) = .fv x := by induction n <;> simp [*]
+
+@[simp]
+theorem Tm.bwk_bwk0_iter_bv (n : ℕ) (i : ℕ)
+  : (Tm.bwk BWk.wk0)^[n] (.bv i) = .bv (i + n) := by induction n generalizing i <;> simp +arith [*]
+
+def Tm.MSubst.Lc (σ : MSubst) (X : Finset ℕ) : Prop := ∀i ∈ X, (σ.get i).bvi = 0
+
+@[simp] theorem Tm.MSubst.Lc.empty (σ : MSubst) : σ.Lc ∅ := fun i hi => by cases hi
+
+theorem Tm.MSubst.Lc.union_iff {σ : MSubst} {X Y : Finset ℕ} :
+  σ.Lc (X ∪ Y) ↔ σ.Lc X ∧ σ.Lc Y := by
+  simp only [Lc, Finset.mem_union, ← forall_and]
+  apply forall_congr'
+  grind
+
+theorem Tm.MSubst.Lc.anti {σ : MSubst} {X Y : Finset ℕ} (hXY : X ⊆ Y) (hσ : σ.Lc Y) :
+  σ.Lc X := fun i hi => hσ i (hXY hi)
+
+@[simp]
+theorem Tm.MSubst.Lc.singleton_iff {σ : MSubst} {x : ℕ} :
+  σ.Lc {x} ↔ (σ.get x).bvi = 0 := by
+  simp only [Lc, Finset.mem_singleton, forall_eq]
+
+theorem Tm.MSubst.Lc.lift {σ : MSubst} (X : Finset ℕ) (hσ : σ.Lc X) (x : ℕ) :
+  (σ.lift x).Lc ({x} ∪ X) := fun i hi => by
+  simp [get_lift]
+  split
+  · rfl
+  · apply hσ; simp [*] at hi; exact hi
+
+theorem Tm.MSubst.Lc.bsubst_var {σ : MSubst}
+  (t : Tm) (hσ : σ.Lc t.fvs) (n : ℕ) (x : ℕ) (hx : x ∉ t.fvs)
+  : (t.msubst σ).bsubst (BSubst.lift^[n] (Tm.fv x).b0)
+  = (t.bsubst (BSubst.lift^[n] (Tm.fv x).b0)).msubst (σ.lift x)
+  := by induction t generalizing n with
+  | bv i =>
+    simp only [msubst, bsubst, BSubst.get_liftn]
+    split
+    · rfl
+    · generalize i - n = j; cases j <;> simp
+  | fv y =>
+    simp at hx
+    simp only [msubst, bsubst, get_lift, Ne.symm hx, ↓reduceIte]
+    rw [bsubst_lc]
+    apply hσ
+    simp
+  | _ =>
+    simp [msubst, bsubst, <-Function.iterate_succ_apply', -Function.iterate_succ]
+    <;> simp at hx
+    <;> simp [Tm.MSubst.Lc.union_iff] at hσ
+    <;> (try constructorm* _ ∧ _)
+    <;> apply_assumption
+    <;> simp [*]
+
+theorem Tm.MSubst.Lc.bs0_var {σ : MSubst}
+  (t : Tm) (hσ : σ.Lc t.fvs) (x : ℕ) (hx : x ∉ t.fvs)
+  : (t.msubst σ).bs0 (.fv x) = (t.bs0 (.fv x)).msubst (σ.lift x)
+  := hσ.bsubst_var t 0 x hx
 
 def Tm.FSubst := ℕ → Tm
 

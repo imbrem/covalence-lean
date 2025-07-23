@@ -87,3 +87,19 @@ theorem BWk.EqOn.succ_lift_iff {n : ℕ} (f g : BWk)
 
 theorem BWk.EqOn.pred_iff_lift (n : ℕ) (f g : BWk)
   : f.EqOn (n - 1) g ↔ f.lift.EqOn n g.lift := by cases n <;> simp [succ_lift_iff]
+
+def BWk.Inj (f : BWk) : Prop := Function.Injective f.get
+
+theorem BWk.Inj.get {f : BWk} (h : f.Inj) {x y : ℕ} (hxy : f.get x = f.get y) : x = y
+  := h hxy
+
+theorem BWk.Inj.lift {f : BWk} (h : f.Inj) : (↑b f).Inj := by
+  intro x y hxy; cases x <;> cases y <;> simp at hxy <;> simp; exact h hxy
+
+theorem BWk.Inj.of_lift {f : BWk} (h : (↑b f).Inj) : f.Inj := by
+  intro x y hxy; convert @h (x + 1) (y + 1) (congrArg (· + 1) hxy) using 0; simp
+
+theorem BWk.Inj.lift_iff (f : BWk) : (↑b f).Inj ↔ f.Inj
+  := ⟨fun h => h.of_lift, fun h => h.lift⟩
+
+theorem BWk.Inj.wk0 : BWk.wk0.Inj := Nat.succ_injective
