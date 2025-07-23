@@ -201,10 +201,36 @@ theorem Ctx.JEq.lhs {Γ : Ctx} {A a b : Tm} (h : JEq Γ A a b) : Γ.JEq A a a :=
 
 theorem Ctx.JEq.rhs {Γ : Ctx} {A a b : Tm} (h : JEq Γ A a b) : Γ.JEq A b b := h.symm.trans h
 
+def Ctx.TyEq (Γ : Ctx) (A B : Tm) : Prop := ∃ℓ, Ctx.JEq Γ (.univ ℓ) A B
+
+theorem Ctx.JEq.ty_eq {Γ : Ctx} {ℓ : ℕ} {A B : Tm} (h : Ctx.JEq Γ (.univ ℓ) A B)
+  : Γ.TyEq A B := ⟨ℓ, h⟩
+
+theorem Ctx.TyEq.symm {Γ : Ctx} {A B : Tm} (h : Γ.TyEq A B) : Γ.TyEq B A
+  := have ⟨ℓ, h⟩ := h; ⟨ℓ, h.symm⟩
+
+theorem Ctx.TyEq.cast {Γ : Ctx} {A B : Tm} (h : Γ.TyEq A B) {a b : Tm} (ha : Γ.JEq A a b)
+  : Γ.JEq B a b := have ⟨_, h⟩ := h; h.cast ha
+
+def Ctx.IsTy (Γ : Ctx) (A : Tm) : Prop := Γ.TyEq A A
+
+theorem Ctx.TyEq.lhs {Γ : Ctx} {A B : Tm} (h : Γ.TyEq A B) : Γ.IsTy A
+  := have ⟨ℓ, h⟩ := h; ⟨ℓ, h.lhs⟩
+
+theorem Ctx.TyEq.rhs {Γ : Ctx} {A B : Tm} (h : Γ.TyEq A B) : Γ.IsTy B
+  := have ⟨ℓ, h⟩ := h; ⟨ℓ, h.rhs⟩
+
+theorem Ctx.IsTy.refl {Γ : Ctx} {A : Tm} (h : Γ.IsTy A) : Γ.TyEq A A := h
+
+theorem Ctx.JEq.lhs_ty {Γ : Ctx} {ℓ : ℕ} {A B : Tm} (h : Γ.JEq (.univ ℓ) A B) : Γ.IsTy A
+  := h.lhs.ty_eq
+
+theorem Ctx.JEq.rhs_ty {Γ : Ctx} {ℓ : ℕ} {A B : Tm} (h : Γ.JEq (.univ ℓ) A B) : Γ.IsTy B
+  := h.rhs.ty_eq
+
 inductive Ctx.Ok : Ctx → Prop
   | nil : Ctx.Ok .nil
-  | cons {Γ : Ctx} {x : ℕ} {A : Tm} {ℓ : ℕ}
-    : Ctx.Ok Γ → x ∉ Γ.dv → JEq Γ (.univ ℓ) A A → Ctx.Ok (Γ.cons x A)
+  | cons {Γ : Ctx} {x : ℕ} {A : Tm} : Ctx.Ok Γ → x ∉ Γ.dv → IsTy Γ A → Ctx.Ok (Γ.cons x A)
 
 attribute [simp] Ctx.Ok.nil
 
@@ -214,18 +240,22 @@ theorem Ctx.Ok.no_rep {Γ : Ctx} (h : Γ.Ok) : Ctx.NoRep Γ
 theorem Ctx.Ok.var {Γ : Ctx} {x : ℕ} {A : Tm} (h : (Γ.cons x A).Ok) : x ∉ Γ.dv
   := by cases h; assumption
 
-theorem Ctx.Ok.ty_e {Γ : Ctx} {x : ℕ} {A : Tm} (h : (Γ.cons x A).Ok) : ∃ℓ, JEq Γ (.univ ℓ) A A
-  := by cases h; constructor; assumption
+theorem Ctx.Ok.ty {Γ : Ctx} {x : ℕ} {A : Tm} (h : (Γ.cons x A).Ok) : IsTy Γ A
+  := by cases h; assumption
 
 theorem Ctx.Ok.tail {Γ : Ctx} {x : ℕ} {A : Tm} (h : (Γ.cons x A).Ok) : Ctx.Ok Γ
   := by cases h; assumption
 
 theorem Ctx.JEq.ok {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) : Γ.Ok := by induction h with
-  | nil_ok | cons_ok => constructor <;> assumption
+  | nil_ok | cons_ok => constructor <;> first | assumption | constructor <;> assumption
   | _ => assumption
 
 theorem Ctx.Ok.zero {Γ : Ctx} (h : Γ.Ok) : Γ.JEq .nats .zero .zero
-  := by induction h <;> constructor <;> assumption
+  := by induction h with
+  | nil => constructor
+  | cons hΓ hx hA =>
+    cases hA
+    constructor <;> assumption
 
 theorem Ctx.Ok.univ {Γ : Ctx} (h : Γ.Ok) {ℓ : ℕ} : Γ.JEq (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ)
   := h.zero.univ
@@ -241,7 +271,7 @@ theorem Ctx.Ok.nats {Γ : Ctx} (h : Γ.Ok) : Γ.JEq (.univ 1) .nats .nats
 
 theorem Ctx.JEq.not {Γ : Ctx} {ℓ : ℕ} {A A' : Tm} (h : JEq Γ (.univ ℓ) A A')
   : JEq Γ (.univ 0) (.not A) (.not A')
-  := .pi_cf (L := Γ.dv) h (fun _ hx => (h.ok.cons hx h.lhs).empty) rfl
+  := .pi_cf (L := Γ.dv) h (fun _ hx => (h.ok.cons hx h.lhs_ty).empty) rfl
 
 theorem Ctx.ok_iff_zero {Γ : Ctx} : Γ.Ok ↔ Γ.JEq .nats .zero .zero := ⟨Ok.zero, JEq.ok⟩
 
@@ -358,3 +388,24 @@ theorem Ctx.JEq.lc_lhs {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
 
 theorem Ctx.JEq.lc_rhs {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
   : b.bvi = 0 := h.lc_all.2.2.2
+
+theorem Ctx.JEq.lhs_ok {Γ : Ctx} {ℓ : ℕ} {A B : Tm}
+  (h : Ctx.JEq Γ (.univ ℓ) A B) {x : ℕ} (hx : x ∉ Γ.dv)
+  : (Γ.cons x A).Ok := h.ok.cons hx h.lhs_ty
+
+theorem Ctx.JEq.rhs_ok {Γ : Ctx} {ℓ : ℕ} {A B : Tm}
+  (h : Ctx.JEq Γ (.univ ℓ) A B) {x : ℕ} (hx : x ∉ Γ.dv)
+  : (Γ.cons x B).Ok := h.ok.cons hx h.rhs_ty
+
+theorem Ctx.TyEq.ok {Γ : Ctx} {A B : Tm} (h : Γ.TyEq A B) : Γ.Ok := have ⟨_, h⟩ := h; h.ok
+
+theorem Ctx.TyEq.not {Γ : Ctx} {A A' : Tm} (h : TyEq Γ A A')
+  : JEq Γ (.univ 0) (.not A) (.not A')
+  := have ⟨_, h⟩ := h; h.not
+
+theorem Ctx.TyEq.not_ty {Γ : Ctx} {A A' : Tm} (h : TyEq Γ A A')
+  : Γ.TyEq (.not A) (.not A') := ⟨0, h.not⟩
+
+-- def Ctx.IsTy (Γ : Ctx) (A : Tm) : Prop := Γ.TyEq A A
+
+-- theorem Ctx.IsTy.ok {Γ : Ctx} {A : Tm} (h : Γ.IsTy A) : Γ.Ok := TyEq.ok h

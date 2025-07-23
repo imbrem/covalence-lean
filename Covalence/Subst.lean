@@ -2,10 +2,10 @@ import Covalence.Wk
 
 inductive Ctx.Subst : Ctx → Ctx → Tm.MSubst → Tm.MSubst → Prop
   | nil {Γ : Ctx} {σ τ : Tm.MSubst} : Γ.Ok → Subst Γ .nil σ τ
-  | cons' {Γ Δ : Ctx} {σ τ : Tm.MSubst} {ℓ : ℕ} {x : ℕ} {A : Tm}
+  | cons' {Γ Δ : Ctx} {σ τ : Tm.MSubst} {x : ℕ} {A : Tm}
     : Γ.Subst Δ σ τ
     → x ∉ Δ.dv
-    → Δ.JEq (.univ ℓ) A A
+    → Δ.IsTy A
     → Γ.JEq (A.msubst σ) (σ.get x) (τ.get x)
     → Γ.JEq (A.msubst τ) (σ.get x) (τ.get x)
     → Γ.Subst (Δ.cons x A) σ τ

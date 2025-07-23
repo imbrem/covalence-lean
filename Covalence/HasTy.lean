@@ -1,4 +1,4 @@
-import Covalence.JEq
+import Covalence.Wk
 
 inductive Ctx.HasTy : Ctx → Tm → Tm → Prop
   | univ {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → HasTy Γ (.univ (ℓ + 1)) (.univ ℓ)
@@ -74,8 +74,8 @@ inductive Ctx.HasTy : Ctx → Tm → Tm → Prop
         HasTy (Γ.cons x .nats) (.pi (C.bs0 (.fv x)) (C.bs0 (.app .nats .nats .succ (.fv x)))) s)
     → (Cn = C.bs0 n)
     → HasTy Γ Cn (.natrec C n z s)
-  | cast {Γ : Ctx} {ℓ : ℕ} {A B a : Tm}
-    : JEq Γ (.univ ℓ) A B
+  | cast {Γ : Ctx} {A B a : Tm}
+    : TyEq Γ A B
     → HasTy Γ A a
     → HasTy Γ B a
 
@@ -88,28 +88,64 @@ theorem Ctx.HasTy.refl {Γ : Ctx} {A a : Tm} (h : Ctx.HasTy Γ A a) : Γ.JEq A a
     (try simp only [<-ok_iff_zero]) <;>
     assumption
 
+theorem Ctx.HasTy.is_ty {Γ : Ctx} {ℓ : ℕ} {A : Tm} (h : Ctx.HasTy Γ (.univ ℓ) A) : Γ.IsTy A
+  := ⟨_, h.refl⟩
+
 theorem Ctx.HasTy.ok {Γ : Ctx} {A a : Tm} (h : Ctx.HasTy Γ A a) : Γ.Ok := h.refl.ok
 
-theorem Ctx.JEq.has_ty_both {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
-  : Γ.HasTy A a ∧ Γ.HasTy A b
-  := by induction h with
-  | nil_ok => rw [and_self]; apply HasTy.zero; constructor
-  | cons_ok hΓ =>
-    rw [and_self]; apply HasTy.zero; constructor
-    · exact hΓ.ok
-    · assumption
-    · assumption
-  | univ | var | unit | nil | empty | nats | succ =>
-    rw [and_self]
-    constructor <;> (try apply ok) <;> assumption
-  | eqn hA ha hb IA Ia Ib => exact ⟨IA.1.eqn Ia.1 Ib.1, IA.2.eqn (Ia.2.cast hA) (Ib.2.cast hA)⟩
-  | pi_cf hA hB hℓ IA IB =>
-    stop
-    exact ⟨IA.1.pi_cf (fun x hx => (IB x hx).1) hℓ, IA.2.pi_cf (fun x hx => (IB x hx).2) hℓ⟩
-  | eqn_ext => sorry
-  | pi_ext_cf hA hB hf hg hL => sorry
-  | sigma_ext_cf hA hB he => sorry
-  | prop_ext hA hB mp mpr => sorry
-  | prop_uniq hA ha hb => sorry
-  | cast => sorry
-  | _ => sorry
+theorem Ctx.HasTy.not {Γ : Ctx} {ℓ : ℕ} {φ : Tm} (h : Ctx.HasTy Γ (.univ ℓ) φ)
+  : Γ.HasTy (.univ 0) φ.not :=  .pi_cf (L := Γ.dv) h (fun _ hx => .empty (h.ok.cons hx h.is_ty)) rfl
+
+theorem Ctx.Var.ty {Γ : Ctx} {x : ℕ} {A : Tm} (h : Γ.Var x A) : Γ.HasTy A (.fv x)
+  := have ⟨_, hΓ, hX⟩ := h; (HasTy.var hX.ok hΓ).cast hX
+
+theorem Ctx.HasTy.wk {Γ Δ : Ctx} (h : Γ.Wk Δ) {a A : Tm} (h : Δ.HasTy a A) : Γ.HasTy a A
+  := by induction h generalizing Γ with
+  | cast hA ha I => exact (I h).cast (hA.wk h)
+  | var hΓ hA => exact (h.at hA).ty
+  | _ =>
+    constructor <;> (first | exact h.src_ok | (try apply JEq.wk) <;> apply_assumption | {
+      rename Finset ℕ => L
+      intro x hx
+      have ⟨hL, hΓ⟩ : x ∉ L ∧ x ∉ Γ.dv := by rw [<-Finset.notMem_union]; exact hx
+      apply_assumption <;> (first | assumption | apply Wk.lift) <;> first
+        | assumption | (apply HasTy.is_ty; (try apply not) <;> first | assumption | constructor)
+      <;> exact h.trg_ok
+    }) <;> assumption
+
+theorem Ctx.HasTy.cast0
+  {Γ : Ctx} {x : ℕ} {B C a : Tm} (h : (Γ.cons x B).HasTy C a)
+  {A : Tm} (hB : Γ.TyEq A B) : (Γ.cons x A).HasTy C a
+  := h.wk (hB.ok.wk.lift h.ok.var hB)
+
+--TODO: we need substitution here...
+-- theorem Ctx.JEq.has_ty_both {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
+--   : Γ.HasTy A a ∧ Γ.HasTy A b
+--   := by induction h with
+--   | nil_ok => rw [and_self]; apply HasTy.zero; constructor
+--   | cons_ok hΓ =>
+--     rw [and_self]; apply HasTy.zero; constructor
+--     · exact hΓ.ok
+--     · assumption
+--     · assumption
+--   | univ | var | unit | nil | empty | nats | succ =>
+--     rw [and_self]; constructor <;> (try apply ok) <;> assumption
+--   | eqn hA ha hb IA Ia Ib => exact ⟨IA.1.eqn Ia.1 Ib.1, IA.2.eqn (Ia.2.cast hA) (Ib.2.cast hA)⟩
+--   | pi_cf hA hB hℓ IA IB =>
+--     exact ⟨
+--       IA.1.pi_cf (fun x hx => (IB x hx).1) hℓ,
+--       IA.2.pi_cf (fun x hx => (IB x hx).2.cast0 hA.symm) hℓ
+--     ⟩
+--   | app_cf hA hB hf hg he IA IB If Ig =>
+--     exact ⟨
+--       IA.1.app_cf (fun x hx => (IB x hx).1) If.1 Ig.1 he,
+--       (IA.2.app_cf (fun x hx => (IB x hx).2.cast0 hA.symm)
+--        (If.2.cast sorry) (Ig.2.cast sorry) rfl).cast sorry
+--     ⟩
+--   | eqn_ext => sorry
+--   | pi_ext_cf hA hB hf hg hL => sorry
+--   | sigma_ext_cf hA hB he => sorry
+--   | prop_ext hA hB mp mpr => sorry
+--   | prop_uniq hA ha hb => sorry
+--   | cast => sorry
+--   | _ => sorry
