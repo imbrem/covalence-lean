@@ -21,16 +21,20 @@ theorem Ctx.Subst.symm {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.Subst Δ σ τ)
   | nil hΓ => exact .nil hΓ
   | cons' hΓΔ hx hΔ hσ hτ IΓΔ => exact IΓΔ.cons' hx hΔ hτ.symm hσ.symm
 
--- theorem Ctx?.Subst.trans {Γ Δ : Ctx} {σ τ ρ : Tm.MSubst}
---   (hστ : Γ.Subst Δ σ τ) (hτρ : Γ.Subst Δ τ ρ) : Γ.Subst Δ σ ρ := by
---   induction hστ with
---   | nil hΓ => exact .nil hΓ
---   | cons' hΓΔ hx hΔ hσ hτ IΓΔ => cases hτρ with
---   | cons' hΓΔ' hx' hΔ' hτ' hρ => exact (IΓΔ hΓΔ').cons' hx hΔ (hσ.trans hτ) sorry
-
 theorem Ctx.Subst.at {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.Subst Δ σ τ)
   {x : ℕ} {A : Tm} (hA : Δ.At x A) : Γ.JEq (A.msubst σ) (σ x) (τ x) := by
   induction hA <;> cases h <;> apply_assumption; assumption
+
+-- theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
+--   (hΓΔ : Γ.Subst Δ σ σ) (h : Δ.JEq A a b)
+--   : Γ.JEq (A.msubst σ) (a.msubst σ) (b.msubst σ)
+--   := by induction h generalizing Γ σ with
+--   | univ | unit | nil | empty | nats | succ => constructor; apply hΓΔ.src_ok.zero
+--   | var _ hA => exact hΓΔ.at hA
+--   | trans _ _ Ia Ib => exact (Ia hΓΔ).trans (Ib hΓΔ)
+--   | symm _ Ia => exact (Ia hΓΔ).symm
+--   | cast _ _ IA Ia => exact (IA hΓΔ).cast (Ia hΓΔ)
+--   | _ => sorry
 
 -- theorem Ctx.JEq.subst_both {Γ Δ : Ctx} {σ τ : Tm.MSubst} {A a b : Tm}
 --   (hΓΔ : Γ.Subst Δ σ τ) (h : Δ.JEq A a b)
@@ -39,7 +43,7 @@ theorem Ctx.Subst.at {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.Subst Δ σ τ)
 --   | univ | unit | nil | empty | nats | succ =>
 --     constructor <;> constructor <;> apply hΓΔ.src_ok.zero
 --   | var _ hA => exact ⟨hΓΔ.at hA, (hΓΔ.symm.at hA).symm⟩
---   | symm ha Ia => sorry
+--   | symm ha Ia =>sorry
 --   | _ => sorry
 
 -- TODO: need substitution to cast stuff

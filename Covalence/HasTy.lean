@@ -118,28 +118,38 @@ theorem Ctx.HasTy.cast0
   {A : Tm} (hB : Γ.TyEq A B) : (Γ.cons x A).HasTy C a
   := h.wk (hB.ok.wk.lift h.ok.var hB)
 
+def Ctx.Cmp (Γ : Ctx) (A a b : Tm) : Prop := Γ.HasTy A a ∧ Γ.HasTy A b
+
+theorem Ctx.HasTy.cmp {Γ : Ctx} {A a : Tm} (h : Γ.HasTy A a) : Γ.Cmp A a a := ⟨h, h⟩
+
+theorem Ctx.Cmp.symm {Γ : Ctx} {A a b : Tm} (h : Γ.Cmp A a b) : Γ.Cmp A b a := ⟨h.2, h.1⟩
+
+theorem Ctx.Cmp.trans {Γ : Ctx} {A a b c : Tm} (hab : Γ.Cmp A a b) (hbc : Γ.Cmp A b c)
+  : Γ.Cmp A a c := ⟨hab.1, hbc.2⟩
+
 --TODO: we need substitution here...
--- theorem Ctx.JEq.has_ty_both {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
---   : Γ.HasTy A a ∧ Γ.HasTy A b
+-- theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
+--   : Γ.Cmp A a b
 --   := by induction h with
---   | nil_ok => rw [and_self]; apply HasTy.zero; constructor
+--   | nil_ok => apply HasTy.cmp; apply HasTy.zero; constructor
 --   | cons_ok hΓ =>
---     rw [and_self]; apply HasTy.zero; constructor
+--     apply HasTy.cmp; apply HasTy.zero; constructor
 --     · exact hΓ.ok
 --     · assumption
---     · assumption
+--     · apply JEq.lhs_ty; assumption
 --   | univ | var | unit | nil | empty | nats | succ =>
---     rw [and_self]; constructor <;> (try apply ok) <;> assumption
---   | eqn hA ha hb IA Ia Ib => exact ⟨IA.1.eqn Ia.1 Ib.1, IA.2.eqn (Ia.2.cast hA) (Ib.2.cast hA)⟩
+--     apply HasTy.cmp; constructor <;> (try apply ok) <;> assumption
+--   | eqn hA ha hb IA Ia Ib
+--     => exact ⟨IA.1.eqn Ia.1 Ib.1, IA.2.eqn (Ia.2.cast hA.ty_eq) (Ib.2.cast hA.ty_eq)⟩
 --   | pi_cf hA hB hℓ IA IB =>
 --     exact ⟨
 --       IA.1.pi_cf (fun x hx => (IB x hx).1) hℓ,
---       IA.2.pi_cf (fun x hx => (IB x hx).2.cast0 hA.symm) hℓ
+--       IA.2.pi_cf (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm) hℓ
 --     ⟩
 --   | app_cf hA hB hf hg he IA IB If Ig =>
 --     exact ⟨
 --       IA.1.app_cf (fun x hx => (IB x hx).1) If.1 Ig.1 he,
---       (IA.2.app_cf (fun x hx => (IB x hx).2.cast0 hA.symm)
+--       (IA.2.app_cf (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm)
 --        (If.2.cast sorry) (Ig.2.cast sorry) rfl).cast sorry
 --     ⟩
 --   | eqn_ext => sorry

@@ -100,7 +100,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → (Cn = C.bs0 n)
     → JEq Γ Cn (.natrec C n z s) (.natrec C' n' z' s')
   -- Equations
-  | nil_uniq {Γ : Ctx} {ℓ : ℕ} {a : Tm} : JEq Γ (.unit ℓ) a a → JEq Γ (.nil ℓ) a (.unit ℓ)
+  | nil_uniq {Γ : Ctx} {A a b : Tm} : JEq Γ (.univ 0) A A → JEq Γ A a a → JEq Γ A a (.nil 0)
   | explode {Γ : Ctx} {ℓ : ℕ} {a : Tm} : JEq Γ (.empty ℓ) a a → JEq Γ (.univ 0) (.unit 0) (.empty 0)
   | eqn_rfl {Γ : Ctx} {A a b : Tm} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn A a b) (.unit 0)
   | beta_abs_cf {Γ : Ctx} {ℓ : ℕ} {A B a b Ba ba : Tm} {L : Finset ℕ}
@@ -190,8 +190,6 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → JEq Γ (.pi A B) mp mp
     → JEq Γ (.pi B A) mpr mpr
     → JEq Γ (.univ 0) A B
-  -- Uniqueness
-  | prop_uniq {Γ : Ctx} {A a b : Tm} : JEq Γ (.univ 0) A A → JEq Γ A a a → JEq Γ A b b → JEq Γ A a b
   -- Equivalence relations
   | trans {Γ : Ctx} {A a b c : Tm} : JEq Γ A a b → JEq Γ A b c → JEq Γ A a c
   | symm {Γ : Ctx} {A a b : Tm} : JEq Γ A a b → JEq Γ A b a
