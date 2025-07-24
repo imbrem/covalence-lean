@@ -88,7 +88,8 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         }
       }
     | {
-      sorry
+      stop
+      fail
       }) <;> assumption
   | trans _ _ Ia Ib => exact (Ia hΓΔ).trans (Ib hΓΔ)
   | symm _ Ia => exact (Ia hΓΔ).symm

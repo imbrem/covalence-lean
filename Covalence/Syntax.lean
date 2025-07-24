@@ -241,6 +241,9 @@ theorem Tm.bsubst_mul (t : Tm) (f g : BSubst) : t.bsubst (f * g) = (t.bsubst g).
 theorem Tm.bsubst_bsubst (t : Tm) (f g : BSubst) : (t.bsubst g).bsubst f = t.bsubst (f * g) := by
   rw [bsubst_mul]
 
+theorem Tm.bsubst_lift_wk0 (t : Tm) (f : BSubst) : (↑0 t).bsubst (↑s f) = ↑0 (t.bsubst f)
+  := by rw [<-Tm.bsubst_wkIn, BSubst.lift_wkIn_wk0, Tm.bsubst_wkOut]
+
 instance Tm.BSubst.instMonoid : Monoid Tm.BSubst where
   mul_assoc f g h := by ext n; simp [bsubst_mul]
   one_mul f := by ext n; simp
@@ -439,18 +442,18 @@ theorem Tm.MSubst.Lc.bsubst_var {σ : MSubst}
   = (t.bsubst (BSubst.lift^[n] (Tm.fv x).b0)).msubst (σ.lift x)
   := by induction t generalizing n with
   | bv i =>
-    simp only [msubst, bsubst, BSubst.get_liftn]
+    simp only [msubst, Tm.bsubst, BSubst.get_liftn]
     split
     · rfl
     · generalize i - n = j; cases j <;> simp
   | fv y =>
     simp at hx
-    simp only [msubst, bsubst, get_lift, Ne.symm hx, ↓reduceIte]
+    simp only [msubst, Tm.bsubst, get_lift, Ne.symm hx, ↓reduceIte]
     rw [bsubst_lc]
     apply hσ
     simp
   | _ =>
-    simp [msubst, bsubst, <-Function.iterate_succ_apply', -Function.iterate_succ]
+    simp [msubst, Tm.bsubst, <-Function.iterate_succ_apply', -Function.iterate_succ]
     <;> simp at hx
     <;> simp [Tm.MSubst.Lc.union_iff] at hσ
     <;> (try constructorm* _ ∧ _)
@@ -461,6 +464,22 @@ theorem Tm.MSubst.Lc.bs0_var {σ : MSubst}
   (t : Tm) (hσ : σ.Lc t.fvs) (x : ℕ) (hx : x ∉ t.fvs)
   : (t.msubst σ).bs0 (.fv x) = (t.bs0 (.fv x)).msubst (σ.lift x)
   := hσ.bsubst_var t 0 x hx
+
+def Tm.MSubst.bwk (f : BWk) (σ : MSubst) : MSubst | x => (σ.get x).bwk f
+
+theorem Tm.MSubst.get_bwk (f : BWk) (σ : MSubst) (n : ℕ) :
+  (σ.bwk f).get n = (σ.get n).bwk f := rfl
+
+def Tm.MSubst.bsubst (f : BSubst) (σ : MSubst) : MSubst | x => (f.get x).bsubst σ
+
+theorem Tm.MSubst.get_bsubst (f : BSubst) (σ : MSubst) (n : ℕ) :
+  (σ.bsubst f).get n = (f.get n).bsubst σ := rfl
+
+def Tm.BSubst.msubstOut (σ : MSubst) (f : BSubst) : BSubst | i => (f.get i).msubst σ
+
+@[simp]
+theorem Tm.BSubst.get_msubstOut (σ : MSubst) (f : BSubst) (i : ℕ) :
+  (f.msubstOut σ).get i = (f.get i).msubst σ := rfl
 
 def Tm.FSubst := ℕ → Tm
 
@@ -553,6 +572,26 @@ instance Tm.FSubst.instMonoid : Monoid Tm.FSubst where
   mul_assoc f g h := by ext n; simp [fsubst_mul]
   one_mul f := by ext n; simp
   mul_one f := by ext n; simp
+
+def Tm.FSubst.bsubstOut (f : BSubst) (σ : Tm.FSubst) : FSubst | x => (σ.get x).bsubst f
+
+@[simp]
+theorem Tm.FSubst.get_bsubstOut (f : BSubst) (σ : Tm.FSubst) (x : ℕ) :
+  (σ.bsubstOut f).get x = (σ.get x).bsubst f := rfl
+
+-- theorem Tm.FSubst.lift_bsubstOut_wk0 (f : BSubst) (σ : Tm.FSubst) :
+--   ↑f (σ.bsubstOut f) = σ.bsubstOut (f.wkOut .wk0) := by sorry
+
+theorem Tm.FSubst.lift_bsubstOut_lift (f : BSubst) (σ : Tm.FSubst) :
+  (↑f σ).bsubstOut (↑s f) = ↑f (σ.bsubstOut f) := by ext n; simp [bsubst_lift_wk0]
+
+theorem Tm.FSubst.lift_bsubstOut (f : BSubst) (σ : Tm.FSubst) :
+  ↑f (σ.bsubstOut f) = (↑f σ).bsubstOut (↑s f) := by rw [lift_bsubstOut_lift]
+
+-- theorem Tm.bsubst_fsubst (t : Tm) (f : BSubst) (σ : Tm.FSubst) :
+--   (t.fsubst σ).bsubst f = (t.bsubst f).fsubst (σ.bsubstOut f) := by
+--   induction t generalizing σ f <;> simp [*]
+--   sorry
 
 @[simp]
   theorem Tm.fvs_bwk (t : Tm) (f : BWk) : (t.bwk f).fvs = t.fvs
