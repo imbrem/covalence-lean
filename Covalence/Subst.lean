@@ -63,9 +63,52 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
   | univ | unit | nil | empty | nats | succ => constructor; apply hΓΔ.src_ok.zero
   | var _ hA => exact hΓΔ.at hA
   | eqn => constructor <;> apply_assumption <;> assumption
-  | pi_cf | abs_cf | sigma_cf | choose_cf | pair_cf =>
+  | app_cf =>
+    constructor
+    · apply_assumption; assumption
+    · {
+      intro x hx
+      rename Finset ℕ => L
+      have ⟨hΓ, hΔ, hL⟩ : x ∉ Γ.dv ∧ x ∉ hΓΔ.trg.dv ∧ x ∉ L
+        := by simp only [<-Finset.notMem_union]; exact hx
+      repeat rw [Tm.MSubst.Lc.bs0_var (hσ := hΓΔ.lc_rhs.anti (by {
+        first | (apply JEq.scoped_cf_ty; assumption)
+              | (apply JEq.scoped_cf_rhs; assumption)
+              | (apply JEq.scoped_cf_lhs; assumption)
+      }))]
+      · apply_assumption
+        · exact hL
+        · apply hΓΔ.lift' hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
+      all_goals {
+        apply Finset.notMem_mono _ hΔ
+        first | (apply JEq.scoped_cf_ty; assumption)
+              | (apply JEq.scoped_cf_rhs; assumption)
+              | (apply JEq.scoped_cf_lhs; assumption)
+      }
+    }
+    · apply_assumption; assumption
+    · apply_assumption; assumption
+    · sorry
+    --   {
+    --   rw [<-Tm.MSubst.Lc.bs0]
+    --   · apply Tm.MSubst.Lc.anti
+    --     apply Set.Subset.trans (Tm.fvs_bs0_sub _ _)
+    --     apply JEq.scoped_ty
+    --     assumption
+    --     apply Ctx.Subst.lc_lhs
+    --     assumption
+    --   · apply Tm.MSubst.Lc.anti
+    --     apply JEq.scoped_lhs
+    --     assumption
+    --     apply Ctx.Subst.lc_rhs
+    --     assumption
+    -- }
+  | pi_cf | abs_cf | sigma_cf | choose_cf
+  | pair_cf | fst_cf
+    => stop
     constructor <;>
     (first
+    | { rw [<-Tm.MSubst.Lc.bs0] <;> sorry }
     | apply_assumption
     | {
         intro x hx
@@ -88,12 +131,24 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         }
       }
     | {
-      stop
-      fail
-      }) <;> assumption
-  | trans _ _ Ia Ib => exact (Ia hΓΔ).trans (Ib hΓΔ)
-  | symm _ Ia => exact (Ia hΓΔ).symm
-  | cast _ _ IA Ia => exact (IA hΓΔ).cast (Ia hΓΔ)
+      rw [<-Tm.MSubst.Lc.bs0]
+      · apply_assumption; assumption
+      · apply Tm.MSubst.Lc.anti
+        apply Set.Subset.trans (Tm.fvs_bs0_sub _ _)
+        apply JEq.scoped_ty
+        assumption
+        apply Ctx.Subst.lc_lhs
+        assumption
+      · apply Tm.MSubst.Lc.anti
+        apply JEq.scoped_lhs
+        assumption
+        apply Ctx.Subst.lc_rhs
+        assumption
+      })
+    <;> assumption
+  -- | trans _ _ Ia Ib => exact (Ia hΓΔ).trans (Ib hΓΔ)
+  -- | symm _ Ia => exact (Ia hΓΔ).symm
+  -- | cast _ _ IA Ia => exact (IA hΓΔ).cast (Ia hΓΔ)
   | _ => sorry
 
 -- theorem Ctx.JEq.subst_both {Γ Δ : Ctx} {σ τ : Tm.MSubst} {A a b : Tm}
