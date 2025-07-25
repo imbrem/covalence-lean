@@ -56,252 +56,6 @@ theorem Ctx.JEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A a b : Tm} (h
     constructor
     · apply hΓΔ.src_ok.zero
     · apply hΓΔ.at hA
-  | eqn | trunc | nil_uniq | explode | eqn_rfl | inhab =>
-    constructor <;> apply_assumption <;> assumption
-  | pi_cf hA hB hℓ IA IB =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.pi_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact hℓ
-  | app_cf hA hB hf hg he IA IB If Ig =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.app_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact (If hΓΔ)
-    · exact (Ig hΓΔ)
-    · exact he
-  | abs_cf hA hb IA Ib =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.abs_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply_assumption
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-  | sigma_cf hA hB hℓ IA IB =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.sigma_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact hℓ
-  | pair_cf hA hB ha hb IA IB Ia Ib =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.pair_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact Ia hΓΔ
-    · exact Ib hΓΔ
-  | fst_cf hA hB he IA IB Ie =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.fst_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact Ie hΓΔ
-  | snd_cf hA hB he hBa IA IB Ie =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.snd_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact Ie hΓΔ
-    · exact hBa
-  | dite_cf hφ hA ha hb Iφ IA Ia Ib =>
-    have hφ' := Iφ hΓΔ
-    rename Finset ℕ => L
-    apply JEq.dite_cf (L := L ∪ Γ.dv)
-    · exact hφ'
-    · exact IA hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ia
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hφ'.lhs_ty hφ.lhs_ty
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ib
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hφ'.lhs_ty.not_ty hφ.lhs_ty.not_ty
-  | choose_cf hA hiA hφ IA IiA Iφ =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.choose_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · exact IiA hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Iφ
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-  | natrec_cf hC hn hz hs hCn IC In Iz Is =>
-    rename Finset ℕ => L
-    apply JEq.natrec_cf (L := L ∪ Γ.dv)
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IC
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2)
-          hΓΔ.src_ok.nats.lhs_ty hΓΔ.trg_ok.nats.lhs_ty
-    · exact In hΓΔ
-    · exact Iz hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Is
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2)
-          hΓΔ.src_ok.nats.lhs_ty hΓΔ.trg_ok.nats.lhs_ty
-    · exact hCn
-  | beta_abs_cf hA hb ha hBa hba IA Ib Ia =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.beta_abs_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ib
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact Ia hΓΔ
-    · exact hBa
-    · exact hba
-  | beta_fst_cf hA hB ha hb IA IB Ia Ib =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.beta_fst_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact Ia hΓΔ
-    · exact Ib hΓΔ
-  | beta_snd_cf hA hB ha hb hBa IA IB Ia Ib =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.beta_snd_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact Ia hΓΔ
-    · exact Ib hΓΔ
-    · exact hBa
-  | spec_cf hA hiA hφ hφa IA Iia Iφ =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.spec_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · exact Iia hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Iφ
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact hφa
-  | beta_true_cf hφ hA ha hb Iφ IA Ia Ib =>
-    have hφ' := Iφ hΓΔ
-    rename Finset ℕ => L
-    apply JEq.beta_true_cf (L := L ∪ Γ.dv)
-    · exact hφ'
-    · exact IA hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ia
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hφ'.lhs_ty hφ.lhs_ty
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ib
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hφ'.lhs_ty.not_ty hφ.lhs_ty.not_ty
-  | beta_false_cf hφ hA ha hb Iφ IA Ia Ib =>
-    have hφ' := Iφ hΓΔ
-    rename Finset ℕ => L
-    apply JEq.beta_false_cf (L := L ∪ Γ.dv)
-    · exact hφ'
-    · exact IA hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ia
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hφ'.lhs_ty hφ.lhs_ty
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ib
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hφ'.lhs_ty.not_ty hφ.lhs_ty.not_ty
-  | beta_zero_cf hC hz hs hCn IC Iz Is =>
-    rename Finset ℕ => L
-    apply JEq.beta_zero_cf (L := L ∪ Γ.dv)
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IC
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2)
-          hΓΔ.src_ok.nats.lhs_ty hΓΔ.trg_ok.nats.lhs_ty
-    · exact Iz hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Is
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2)
-          hΓΔ.src_ok.nats.lhs_ty hΓΔ.trg_ok.nats.lhs_ty
-    · exact hCn
-  | beta_succ_cf hC hn hz hs hsn hCn hCs IC In Iz Is =>
-    rename Finset ℕ => L
-    apply JEq.beta_succ_cf (L := L ∪ Γ.dv)
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IC
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2)
-          hΓΔ.src_ok.nats.lhs_ty hΓΔ.trg_ok.nats.lhs_ty
-    · exact In hΓΔ
-    · exact Iz hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Is
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2)
-          hΓΔ.src_ok.nats.lhs_ty hΓΔ.trg_ok.nats.lhs_ty
-    · exact hsn
-    · exact hCn
-    · exact hCs
   | nil_ok | cons_ok => exact hΓΔ.src_ok.zero
   | eqn_ext => apply JEq.eqn_ext <;> apply_assumption <;> assumption
   | pi_ext_cf hA hB hf hg hfg IA IB If Ig Ifg =>
@@ -336,6 +90,22 @@ theorem Ctx.JEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A a b : Tm} (h
   | trans => apply JEq.trans <;> apply_assumption <;> assumption
   | symm => apply JEq.symm; apply_assumption; assumption
   | cast => apply JEq.cast <;> apply_assumption <;> assumption
+  | _ =>
+    constructor <;> first | (apply_assumption <;> assumption) | {
+      rename Finset ℕ => L
+      intro x hx
+      have ⟨hΓ, hL⟩ : x ∉ Γ.dv ∧ x ∉ L := by simp only [<-Finset.notMem_union]; exact hx
+      simp only [Finset.mem_union, not_or] at hx
+      apply_assumption
+      · exact hL
+      · apply hΓΔ.lift' hΓ (Set.notMem_subset hΓΔ.dv_anti hΓ)
+        <;> (try exact hΓΔ.src_ok.nats.lhs_ty)
+        <;> (try exact hΓΔ.trg_ok.nats.lhs_ty)
+        <;> apply lhs_ty
+        <;> (try apply JEq.not)
+        <;> apply_assumption
+        <;> assumption
+    }
 
 theorem Ctx.TyEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A B : Tm} (h : Δ.TyEq A B)
   : Γ.TyEq A B := have ⟨ℓ, h⟩ := h; ⟨ℓ, h.pure_wk hΓΔ⟩
@@ -442,252 +212,6 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
     constructor
     apply hΓΔ.src_ok.zero
   | var _ hA => exact (hΓΔ.at hA).jeq
-  | eqn | trunc | nil_uniq | explode | eqn_rfl | inhab =>
-    constructor <;> apply_assumption <;> assumption
-  | pi_cf hA hB hℓ IA IB =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.pi_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact hℓ
-  | app_cf hA hB hf hg he IA IB If Ig =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.app_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact (If hΓΔ)
-    · exact (Ig hΓΔ)
-    · exact he
-  | abs_cf hA hb IA Ib =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.abs_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply_assumption
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-  | sigma_cf hA hB hℓ IA IB =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.sigma_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact hℓ
-  | pair_cf hA hB ha hb IA IB Ia Ib =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.pair_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact Ia hΓΔ
-    · exact Ib hΓΔ
-  | fst_cf hA hB he IA IB Ie =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.fst_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact Ie hΓΔ
-  | snd_cf hA hB he hBa IA IB Ie =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.snd_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact Ie hΓΔ
-    · exact hBa
-  | dite_cf hφ hA ha hb Iφ IA Ia Ib =>
-    have hφ' := Iφ hΓΔ
-    rename Finset ℕ => L
-    apply JEq.dite_cf (L := L ∪ Γ.dv)
-    · exact hφ'
-    · exact IA hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ia
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hφ'.lhs_ty hφ.lhs_ty
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ib
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hφ'.lhs_ty.not_ty hφ.lhs_ty.not_ty
-  | choose_cf hA hiA hφ IA IiA Iφ =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.choose_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · exact IiA hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Iφ
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-  | natrec_cf hC hn hz hs hCn IC In Iz Is =>
-    rename Finset ℕ => L
-    apply JEq.natrec_cf (L := L ∪ Γ.dv)
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IC
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2)
-          hΓΔ.src_ok.nats.ty_eq hΓΔ.trg_ok.nats.ty_eq
-    · exact In hΓΔ
-    · exact Iz hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Is
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2)
-          hΓΔ.src_ok.nats.ty_eq hΓΔ.trg_ok.nats.ty_eq
-    · exact hCn
-  | beta_abs_cf hA hb ha hBa hba IA Ib Ia =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.beta_abs_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ib
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact Ia hΓΔ
-    · exact hBa
-    · exact hba
-  | beta_fst_cf hA hB ha hb IA IB Ia Ib =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.beta_fst_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact Ia hΓΔ
-    · exact Ib hΓΔ
-  | beta_snd_cf hA hB ha hb hBa IA IB Ia Ib =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.beta_snd_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IB
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact Ia hΓΔ
-    · exact Ib hΓΔ
-    · exact hBa
-  | spec_cf hA hiA hφ hφa IA Iia Iφ =>
-    have hA' := IA hΓΔ
-    rename Finset ℕ => L
-    apply JEq.spec_cf (L := L ∪ Γ.dv)
-    · exact hA'
-    · exact Iia hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Iφ
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact hφa
-  | beta_true_cf hφ hA ha hb Iφ IA Ia Ib =>
-    have hφ' := Iφ hΓΔ
-    rename Finset ℕ => L
-    apply JEq.beta_true_cf (L := L ∪ Γ.dv)
-    · exact hφ'
-    · exact IA hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ia
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hφ'.lhs_ty hφ.lhs_ty
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ib
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hφ'.lhs_ty.not_ty hφ.lhs_ty.not_ty
-  | beta_false_cf hφ hA ha hb Iφ IA Ia Ib =>
-    have hφ' := Iφ hΓΔ
-    rename Finset ℕ => L
-    apply JEq.beta_false_cf (L := L ∪ Γ.dv)
-    · exact hφ'
-    · exact IA hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ia
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hφ'.lhs_ty hφ.lhs_ty
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Ib
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hφ'.lhs_ty.not_ty hφ.lhs_ty.not_ty
-  | beta_zero_cf hC hz hs hCn IC Iz Is =>
-    rename Finset ℕ => L
-    apply JEq.beta_zero_cf (L := L ∪ Γ.dv)
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IC
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2)
-          hΓΔ.src_ok.nats.ty_eq hΓΔ.trg_ok.nats.ty_eq
-    · exact Iz hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Is
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2)
-          hΓΔ.src_ok.nats.ty_eq hΓΔ.trg_ok.nats.ty_eq
-    · exact hCn
-  | beta_succ_cf hC hn hz hs hsn hCn hCs IC In Iz Is =>
-    rename Finset ℕ => L
-    apply JEq.beta_succ_cf (L := L ∪ Γ.dv)
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply IC
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2)
-          hΓΔ.src_ok.nats.ty_eq hΓΔ.trg_ok.nats.ty_eq
-    · exact In hΓΔ
-    · exact Iz hΓΔ
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply Is
-      · exact hx.1
-      · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2)
-          hΓΔ.src_ok.nats.ty_eq hΓΔ.trg_ok.nats.ty_eq
-    · exact hsn
-    · exact hCn
-    · exact hCs
   | nil_ok | cons_ok => exact hΓΔ.src_ok.zero
   | eqn_ext => apply JEq.eqn_ext <;> apply_assumption <;> assumption
   | pi_ext_cf hA hB hf hg hfg IA IB If Ig Ifg =>
@@ -722,6 +246,22 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
   | trans => apply JEq.trans <;> apply_assumption <;> assumption
   | symm => apply JEq.symm; apply_assumption; assumption
   | cast => apply JEq.cast <;> apply_assumption <;> assumption
+  | _ =>
+    constructor <;> first | (apply_assumption <;> assumption) | {
+      rename Finset ℕ => L
+      intro x hx
+      have ⟨hΓ, hL⟩ : x ∉ Γ.dv ∧ x ∉ L := by simp only [<-Finset.notMem_union]; exact hx
+      simp only [Finset.mem_union, not_or] at hx
+      apply_assumption
+      · exact hL
+      · apply hΓΔ.lift' hΓ (Set.notMem_subset hΓΔ.dv_anti hΓ)
+        <;> (try exact hΓΔ.src_ok.nats.lhs_ty)
+        <;> (try exact hΓΔ.trg_ok.nats.lhs_ty)
+        <;> apply lhs_ty
+        <;> (try apply JEq.not)
+        <;> apply_assumption
+        <;> assumption
+    }
 
 theorem Ctx.TyEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A B : Tm} (h : Δ.TyEq A B)
   : Γ.TyEq A B := have ⟨ℓ, h⟩ := h; ⟨ℓ, h.wk hΓΔ⟩

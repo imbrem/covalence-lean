@@ -47,7 +47,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
     → JEq Γ (.pi A B) f f'
     → JEq Γ A a a'
-    → (Ba = B.bs0 a)
+    → JEq Γ (.univ n) (B.bs0 a) Ba
     → JEq Γ Ba (.app A B f a) (.app A' B' f' a')
   | abs_cf {Γ : Ctx} {m : ℕ} {A A' B b b' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A'
@@ -73,7 +73,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     : JEq Γ (.univ m) A A'
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
     → JEq Γ (.sigma A B) e e'
-    → (Ba = B.bs0 (.fst A B e))
+    → JEq Γ (.univ n) (B.bs0 (.fst A B e)) Ba
     → JEq Γ Ba (.snd A B e) (.snd A' B' e')
   | dite_cf {Γ : Ctx} {ℓ : ℕ} {φ φ' A A' a a' b b' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ 0) φ φ'
@@ -120,7 +120,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
     → JEq Γ A a a
     → JEq Γ b b (B.bs0 a)
-    → (Ba = B.bs0 a)
+    → JEq Γ (.univ n) (B.bs0 a) Ba
     → JEq Γ Ba (.snd A B (.pair A B a b)) b
   | inhab {Γ : Ctx} {A a : Tm}
     : JEq Γ A a a
@@ -157,9 +157,9 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → JEq Γ (C.bs0 .zero) z z
     → (∀ x ∉ L,
         JEq (Γ.cons x .nats) (.pi (C.bs0 (.fv x)) (C.bs0 (.app .nats .nats .succ (.fv x)))) s s)
-    → (sn = s.bs0 n)
-    → (Cn = C.bs0 n)
-    → (Cs = C.bs0 (.app .nats .nats .succ n))
+    → JEq Γ (.pi (C.bs0 n) (C.bs0 (.app .nats .nats .succ n))) (s.bs0 n) sn
+    → JEq Γ (.univ ℓ) (C.bs0 n) Cn
+    → JEq Γ (.univ ℓ) (C.bs0 (.app .nats .nats .succ n)) Cs
     → JEq Γ Cs (.natrec C (.app .nats .nats .succ n) z s) (.app Cn Cs sn (.natrec C n z s))
   -- Context well-formedness
   | nil_ok : JEq .nil .nats .zero .zero
@@ -385,20 +385,6 @@ theorem Ctx.JEq.lc_all {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
   := by induction h with
   | var hΓ hA IA => simp [IA.1.at hA, Tm.bvi, *]
   | cons_ok => simp [Tm.bvi, Ctx.Lc.cons_iff, *]
-  | beta_succ_cf =>
-    simp only [
-      Tm.bvi, forall_and, true_and, and_true, Nat.max_eq_zero_iff,
-      Nat.sub_eq_zero_iff_le, Tm.bs0_lc_cofinite_iff, Tm.lc_cofinite_iff
-    ] at *
-    simp [*]
-    constructorm* _ ∧ _
-    · apply Tm.bs0_lc_of <;> simp [Tm.bvi, *]
-    · apply Tm.bs0_lc_of <;> simp [*]
-    · convert Nat.zero_le _ using 1
-      apply Tm.bs0_lc_of
-      · simp [*]
-      · simp [Tm.bvi, *]
-    · apply Tm.bs0_lc_of <;> simp [*]
   | _ =>
     simp only [
       Tm.bvi, forall_and, true_and, and_true, Nat.max_eq_zero_iff, Ctx.Lc.nil,

@@ -79,53 +79,54 @@ inductive Ctx.HasTy : Ctx → Tm → Tm → Prop
     → HasTy Γ A a
     → HasTy Γ B a
 
-theorem Ctx.HasTy.refl {Γ : Ctx} {A a : Tm} (h : Ctx.HasTy Γ A a) : Γ.JEq A a a
-  := by induction h with
-  | cast hA ha Ia => exact hA.cast Ia
-  | zero => rw [<-ok_iff_zero] ; assumption
-  | _ =>
-    constructor <;>
-    (try simp only [<-ok_iff_zero]) <;>
-    assumption
+-- theorem Ctx.HasTy.refl {Γ : Ctx} {A a : Tm} (h : Ctx.HasTy Γ A a) : Γ.JEq A a a
+--   := by induction h with
+--   | cast hA ha Ia => exact hA.cast Ia
+--   | zero => rw [<-ok_iff_zero] ; assumption
+--   | _ =>
+--     constructor <;>
+--     (try simp only [<-ok_iff_zero]) <;>
+--     assumption
 
-theorem Ctx.HasTy.is_ty {Γ : Ctx} {ℓ : ℕ} {A : Tm} (h : Ctx.HasTy Γ (.univ ℓ) A) : Γ.IsTy A
-  := ⟨_, h.refl⟩
+-- theorem Ctx.HasTy.is_ty {Γ : Ctx} {ℓ : ℕ} {A : Tm} (h : Ctx.HasTy Γ (.univ ℓ) A) : Γ.IsTy A
+--   := ⟨_, h.refl⟩
 
-theorem Ctx.HasTy.ok {Γ : Ctx} {A a : Tm} (h : Ctx.HasTy Γ A a) : Γ.Ok := h.refl.ok
+-- theorem Ctx.HasTy.ok {Γ : Ctx} {A a : Tm} (h : Ctx.HasTy Γ A a) : Γ.Ok := h.refl.ok
 
-theorem Ctx.HasTy.not {Γ : Ctx} {ℓ : ℕ} {φ : Tm} (h : Ctx.HasTy Γ (.univ ℓ) φ)
-  : Γ.HasTy (.univ 0) φ.not :=  .pi_cf (L := Γ.dv) h (fun _ hx => .empty (h.ok.cons hx h.is_ty)) rfl
+-- theorem Ctx.HasTy.not {Γ : Ctx} {ℓ : ℕ} {φ : Tm} (h : Ctx.HasTy Γ (.univ ℓ) φ)
+--   : Γ.HasTy (.univ 0) φ.not
+--   :=  .pi_cf (L := Γ.dv) h (fun _ hx => .empty (h.ok.cons hx h.is_ty)) rfl
 
-theorem Ctx.Var.ty {Γ : Ctx} {x : ℕ} {A : Tm} (h : Γ.Var x A) : Γ.HasTy A (.fv x)
-  := have ⟨_, hΓ, hX⟩ := h; (HasTy.var hX.ok hΓ).cast hX
+-- theorem Ctx.Var.ty {Γ : Ctx} {x : ℕ} {A : Tm} (h : Γ.Var x A) : Γ.HasTy A (.fv x)
+--   := have ⟨_, hΓ, hX⟩ := h; (HasTy.var hX.ok hΓ).cast hX
 
-theorem Ctx.HasTy.wk {Γ Δ : Ctx} (h : Γ.Wk Δ) {a A : Tm} (h : Δ.HasTy a A) : Γ.HasTy a A
-  := by induction h generalizing Γ with
-  | cast hA ha I => exact (I h).cast (hA.wk h)
-  | var hΓ hA => exact (h.at hA).ty
-  | _ =>
-    constructor <;> (first | exact h.src_ok | (try apply JEq.wk) <;> apply_assumption | {
-      rename Finset ℕ => L
-      intro x hx
-      have ⟨hL, hΓ⟩ : x ∉ L ∧ x ∉ Γ.dv := by rw [<-Finset.notMem_union]; exact hx
-      apply_assumption <;> (first | assumption | apply Wk.lift) <;> first
-        | assumption | (apply HasTy.is_ty; (try apply not) <;> first | assumption | constructor)
-      <;> exact h.trg_ok
-    }) <;> assumption
+-- theorem Ctx.HasTy.wk {Γ Δ : Ctx} (h : Γ.Wk Δ) {a A : Tm} (h : Δ.HasTy a A) : Γ.HasTy a A
+--   := by induction h generalizing Γ with
+--   | cast hA ha I => exact (I h).cast (hA.wk h)
+--   | var hΓ hA => exact (h.at hA).ty
+--   | _ =>
+--     constructor <;> (first | exact h.src_ok | (try apply JEq.wk) <;> apply_assumption | {
+--       rename Finset ℕ => L
+--       intro x hx
+--       have ⟨hL, hΓ⟩ : x ∉ L ∧ x ∉ Γ.dv := by rw [<-Finset.notMem_union]; exact hx
+--       apply_assumption <;> (first | assumption | apply Wk.lift) <;> first
+--         | assumption | (apply HasTy.is_ty; (try apply not) <;> first | assumption | constructor)
+--       <;> exact h.trg_ok
+--     }) <;> assumption
 
-theorem Ctx.HasTy.cast0
-  {Γ : Ctx} {x : ℕ} {B C a : Tm} (h : (Γ.cons x B).HasTy C a)
-  {A : Tm} (hB : Γ.TyEq A B) : (Γ.cons x A).HasTy C a
-  := h.wk (hB.ok.wk.lift h.ok.var hB)
+-- theorem Ctx.HasTy.cast0
+--   {Γ : Ctx} {x : ℕ} {B C a : Tm} (h : (Γ.cons x B).HasTy C a)
+--   {A : Tm} (hB : Γ.TyEq A B) : (Γ.cons x A).HasTy C a
+--   := h.wk (hB.ok.wk.lift h.ok.var hB)
 
-def Ctx.Cmp (Γ : Ctx) (A a b : Tm) : Prop := Γ.HasTy A a ∧ Γ.HasTy A b
+-- def Ctx.Cmp (Γ : Ctx) (A a b : Tm) : Prop := Γ.HasTy A a ∧ Γ.HasTy A b
 
-theorem Ctx.HasTy.cmp {Γ : Ctx} {A a : Tm} (h : Γ.HasTy A a) : Γ.Cmp A a a := ⟨h, h⟩
+-- theorem Ctx.HasTy.cmp {Γ : Ctx} {A a : Tm} (h : Γ.HasTy A a) : Γ.Cmp A a a := ⟨h, h⟩
 
-theorem Ctx.Cmp.symm {Γ : Ctx} {A a b : Tm} (h : Γ.Cmp A a b) : Γ.Cmp A b a := ⟨h.2, h.1⟩
+-- theorem Ctx.Cmp.symm {Γ : Ctx} {A a b : Tm} (h : Γ.Cmp A a b) : Γ.Cmp A b a := ⟨h.2, h.1⟩
 
-theorem Ctx.Cmp.trans {Γ : Ctx} {A a b c : Tm} (hab : Γ.Cmp A a b) (hbc : Γ.Cmp A b c)
-  : Γ.Cmp A a c := ⟨hab.1, hbc.2⟩
+-- theorem Ctx.Cmp.trans {Γ : Ctx} {A a b c : Tm} (hab : Γ.Cmp A a b) (hbc : Γ.Cmp A b c)
+--   : Γ.Cmp A a c := ⟨hab.1, hbc.2⟩
 
 --TODO: we need substitution here...
 -- theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
