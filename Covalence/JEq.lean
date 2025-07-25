@@ -103,23 +103,24 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
   | nil_uniq {Γ : Ctx} {A a b : Tm} : JEq Γ (.univ 0) A A → JEq Γ A a a → JEq Γ A a (.nil 0)
   | explode {Γ : Ctx} {ℓ : ℕ} {a : Tm} : JEq Γ (.empty ℓ) a a → JEq Γ (.univ 0) (.unit 0) (.empty 0)
   | eqn_rfl {Γ : Ctx} {A a b : Tm} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn A a b) (.unit 0)
-  | beta_abs_cf {Γ : Ctx} {ℓ : ℕ} {A B a b Ba ba : Tm} {L : Finset ℕ}
-    : JEq Γ (.univ ℓ) A A
+  | beta_abs_cf {Γ : Ctx} {m n : ℕ} {A B a b Ba ba : Tm} {L : Finset ℕ}
+    : JEq Γ (.univ m) A A
     → (∀ x ∉ L, JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b.bs0 (.fv x)))
     → JEq Γ A a a
-    → (Ba = B.bs0 a) → (ba = b.bs0 a)
+    → JEq Γ (.univ n) (B.bs0 a) Ba
+    → JEq Γ Ba (b.bs0 a) ba
     → JEq Γ Ba (.app A B (.abs A b) a) ba
   | beta_fst_cf {Γ : Ctx} {m n : ℕ} {A B a b : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
     → JEq Γ A a a
-    → JEq Γ b b (B.bs0 a)
+    → JEq Γ (B.bs0 a) b b
     → JEq Γ A (.fst A B (.pair A B a b)) a
   | beta_snd_cf {Γ : Ctx} {m n : ℕ} {A B a b Ba : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
     → JEq Γ A a a
-    → JEq Γ b b (B.bs0 a)
+    → JEq Γ (B.bs0 a) b b
     → JEq Γ (.univ n) (B.bs0 a) Ba
     → JEq Γ Ba (.snd A B (.pair A B a b)) b
   | inhab {Γ : Ctx} {A a : Tm}
