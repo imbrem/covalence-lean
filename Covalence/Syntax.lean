@@ -593,9 +593,64 @@ theorem Tm.FSubst.lift_bsubstOut (f : BSubst) (σ : Tm.FSubst) :
 --   induction t generalizing σ f <;> simp [*]
 --   sorry
 
+def Tm.BSubst.fsubstOut (σ : Tm.FSubst) (f : BSubst) : BSubst | i => (f.get i).fsubst σ
+
+@[simp]
+theorem Tm.BSubst.get_fsubstOut (σ : Tm.FSubst) (f : BSubst) (i : ℕ) :
+  (f.fsubstOut σ).get i = (f.get i).fsubst σ := rfl
+
 @[simp]
   theorem Tm.fvs_bwk (t : Tm) (f : BWk) : (t.bwk f).fvs = t.fvs
   := by induction t generalizing f <;> simp [*]
+
+theorem Tm.MSubst.Lc.bwk_msubst (f : BWk) {σ : MSubst} (a : Tm) (hσ : σ.Lc a.fvs) :
+  (a.msubst σ).bwk f = (a.bwk f).msubst σ := by
+  induction a generalizing f with
+  | fv x =>
+    apply Tm.bwk_lc
+    apply hσ
+    simp
+  | _ =>
+    simp only [Lc.union_iff, Tm.fvs] at hσ
+    simp only [msubst, Tm.bwk] <;> congr <;> apply_assumption <;> simp [*]
+
+theorem Tm.MSubst.Lc.bsubst_lift_b0 {σ : MSubst}
+  (t : Tm) (hσ : σ.Lc t.fvs) (n : ℕ) (a : Tm) (ha : σ.Lc a.fvs)
+  : (t.bsubst (BSubst.lift^[n] a.b0)).msubst σ
+  = (t.msubst σ).bsubst (BSubst.lift^[n] (a.msubst σ).b0)
+  := by induction t generalizing n with
+  | bv i =>
+    simp only [msubst, Tm.bsubst, BSubst.get_liftn]
+    split
+    · rfl
+    case isFalse h =>
+      clear h
+      generalize i - n = j; cases j with
+      | zero =>
+      simp only [get_zero_b0]
+      induction n with
+        | zero => rfl
+        | succ n I =>
+          rw [Function.iterate_succ_apply', <-Lc.bwk_msubst, I, Function.iterate_succ_apply']
+          convert ha using 1
+          clear * -
+          induction n generalizing a <;> simp [*]
+      | succ => simp
+  | fv x =>
+    simp only [Tm.bsubst, msubst]
+    rw [Tm.bsubst_lc _]
+    apply hσ; simp
+  | _ =>
+    simp only [msubst, Tm.bsubst, <-Function.iterate_succ_apply']
+    <;> simp only [Lc.union_iff, Tm.fvs] at hσ
+    <;> congr
+    <;> apply_assumption
+    <;> simp [*]
+
+theorem Tm.MSubst.Lc.bs0 {σ : MSubst}
+  (t : Tm) (hσ : σ.Lc t.fvs) (a : Tm) (ha : σ.Lc a.fvs)
+  : (t.bs0 a).msubst σ = (t.msubst σ).bs0 (a.msubst σ)
+  := hσ.bsubst_lift_b0 t 0 a ha
 
 def Tm.BSubst.FvSub (f : Tm.BSubst) (X : Finset ℕ) : Prop := ∀i, (f.get i).fvs ⊆ X
 
