@@ -312,7 +312,6 @@ theorem Ctx.JEq.scoped_all {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
   | _ =>
     simp only [forall_and, Ctx.dv, Tm.bs0_var_cofinite_iff, Tm.fsv_cofinite_iff] at *
     simp [Finset.union_subset_iff, *] <;>
-    (try constructorm* _ ∧ _) <;>
     apply Tm.bs0_fv_sub <;>
     simp [Finset.union_subset_iff, *]
 
@@ -362,6 +361,33 @@ theorem Ctx.JEq.scoped_cf_rhs {Γ : Ctx} {A b : Tm} {Bx ax : ℕ → Tm} {L : Fi
   apply scoped_cf_lhs
   apply h'
 
+theorem Ctx.JEq.scoped_cf_ty' {Γ : Ctx} {A B : Tm} {ax bx : ℕ → Tm} {L : Finset ℕ}
+  (h : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) B (ax x) (bx x))
+  : B.fvs ⊆ Γ.dv := by
+  have ⟨y, hy⟩ := Finset.exists_notMem (L ∪ B.fvs);
+  have ⟨hL, ha⟩ : y ∉ L ∧ y ∉ B.fvs := by simp [Finset.mem_union] at hy; exact hy;
+  intro x hx
+  convert (h y hL).scoped_ty hx using 0
+  simp [dv]
+  intro h; cases h; exact (ha hx).elim
+
+theorem Ctx.JEq.scoped_cf_lhs' {Γ : Ctx} {A a : Tm} {Bx bx : ℕ → Tm} {L : Finset ℕ}
+  (h : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (Bx x) a (bx x))
+  : a.fvs ⊆ Γ.dv := by
+  have ⟨y, hy⟩ := Finset.exists_notMem (L ∪ a.fvs);
+  have ⟨hL, ha⟩ : y ∉ L ∧ y ∉ a.fvs := by simp [Finset.mem_union] at hy; exact hy;
+  intro x hx
+  convert (h y hL).scoped_lhs hx using 0
+  simp [dv]
+  intro h; cases h; exact (ha hx).elim
+
+theorem Ctx.JEq.scoped_cf_rhs' {Γ : Ctx} {A b : Tm} {Bx ax : ℕ → Tm} {L : Finset ℕ}
+  (h : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (Bx x) (ax x) b)
+  : b.fvs ⊆ Γ.dv := by
+  have h' := fun x hx => (h x hx).symm;
+  apply scoped_cf_lhs'
+  apply h'
+
 theorem Ctx.Ok.scoped {Γ : Ctx} (h : Γ.Ok) : Γ.Scoped := h.zero.scoped_ctx
 
 inductive Ctx.Lc : Ctx → Prop
@@ -392,7 +418,6 @@ theorem Ctx.JEq.lc_all {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
       Nat.sub_eq_zero_iff_le, Tm.bs0_lc_cofinite_iff, Tm.lc_cofinite_iff
     ] at * <;>
     simp [*] <;>
-    (try constructorm* _ ∧ _) <;>
     (try apply Tm.bs0_lc_of) <;>
     simp [Tm.bvi, *]
 

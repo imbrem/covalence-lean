@@ -61,8 +61,67 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
   : Γ.JEq (A.msubst σ) (a.msubst σ) (b.msubst σ)
   := by induction h generalizing Γ σ with
   | univ | unit | nil | empty | nats | succ => constructor; apply hΓΔ.src_ok.zero
-  | snd_cf => sorry
-  | dite_cf => sorry
+  | dite_cf hφ hA ha hb Iφ IA Ia Ib =>
+    apply JEq.dite_cf
+    · exact Iφ hΓΔ
+    · exact IA hΓΔ
+    · intro x hx
+      rename Finset ℕ => L
+      have ⟨hΓ, hΔ, hL⟩ : x ∉ Γ.dv ∧ x ∉ hΓΔ.trg.dv ∧ x ∉ L
+          := by simp only [<-Finset.notMem_union]; exact hx
+      conv =>
+        arg 2
+        rw [<-Tm.msubst_lift_eq σ (x := x) (hx := by
+          apply Finset.notMem_mono _ hΔ
+          apply JEq.scoped_lhs
+          assumption)]
+        skip
+      conv =>
+        arg 3
+        rw [<-Tm.msubst_lift_eq σ (x := x) (hx := by
+          apply Finset.notMem_mono _ hΔ
+          apply JEq.scoped_cf_lhs'
+          assumption)]
+        skip
+      conv =>
+        arg 4
+        rw [<-Tm.msubst_lift_eq σ (x := x) (hx := by
+          apply Finset.notMem_mono _ hΔ
+          apply JEq.scoped_cf_rhs'
+          assumption)]
+        skip
+      apply_assumption
+      · exact hL
+      · apply hΓΔ.lift' hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
+    · intro x hx
+      rename Finset ℕ => L
+      have ⟨hΓ, hΔ, hL⟩ : x ∉ Γ.dv ∧ x ∉ hΓΔ.trg.dv ∧ x ∉ L
+          := by simp only [<-Finset.notMem_union]; exact hx
+      conv =>
+        arg 2
+        rw [<-Tm.msubst_lift_eq σ (x := x) (hx := by
+          apply Finset.notMem_mono _ hΔ
+          apply JEq.scoped_lhs
+          assumption)]
+        skip
+      conv =>
+        arg 3
+        rw [<-Tm.msubst_lift_eq σ (x := x) (hx := by
+          apply Finset.notMem_mono _ hΔ
+          apply JEq.scoped_cf_lhs'
+          assumption)]
+        skip
+      conv =>
+        arg 4
+        rw [<-Tm.msubst_lift_eq σ (x := x) (hx := by
+          apply Finset.notMem_mono _ hΔ
+          apply JEq.scoped_cf_rhs'
+          assumption)]
+        skip
+      apply_assumption
+      · exact hL
+      · apply hΓΔ.lift' (A := Tm.not _) hΓ hΔ
+        <;> apply TyEq.not_ty <;> apply JEq.lhs_ty <;> apply_assumption; assumption
   | natrec_cf => sorry
   | beta_abs_cf => sorry
   | spec_cf => sorry
@@ -101,6 +160,7 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
   | symm _ Ia => exact (Ia hΓΔ).symm
   | cast _ _ IA Ia => exact (IA hΓΔ).cast (Ia hΓΔ)
   | _ =>
+    stop
     constructor <;>
     (first
     | apply_assumption
@@ -125,12 +185,17 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         }
       }
     | {
+      (try simp only [<-Tm.msubst_fst])
       rw [<-Tm.MSubst.Lc.bs0]
       apply_assumption; assumption
       all_goals {
         apply Tm.MSubst.Lc.anti
-        · first | (apply JEq.scoped_lhs; assumption)
+        · (try simp only [Tm.fvs, Finset.union_subset_iff])
+          (try constructorm* _ ∧ _) <;>
+          first | (apply JEq.scoped_lhs; assumption)
+                -- | (apply JEq.scoped_rhs; assumption)
                 | (apply JEq.scoped_cf_lhs ; assumption)
+                -- | (apply JEq.scoped_cf_rhs ; assumption)
         · first | apply Ctx.Subst.lc_lhs -- | apply Ctx.Subst.lc_rhs
           assumption
       }

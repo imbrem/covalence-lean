@@ -37,6 +37,9 @@ def Tm.msubst (σ : MSubst) : Tm → Tm
   -- | .let₁ A a b => .let₁ (A.msubst σ) (a.msubst σ) (b.msubst σ)
   | .invalid => .invalid
 
+theorem Tm.msubst_fst {σ : MSubst} {A B a : Tm} :
+  (Tm.fst A B a).msubst σ = .fst (A.msubst σ) (B.msubst σ) (a.msubst σ) := rfl
+
 @[simp]
 theorem Tm.msubst_one (t : Tm) : t.msubst 1 = t := by induction t <;> simp [*]
 
@@ -192,3 +195,12 @@ theorem Tm.MSubst.Lc.bs0 {σ : MSubst}
   (t : Tm) (hσ : σ.Lc t.fvs) (a : Tm) (ha : σ.Lc a.fvs)
   : (t.bs0 a).msubst σ = (t.msubst σ).bs0 (a.msubst σ)
   := hσ.bsubst_lift_b0 t 0 a ha
+
+theorem Tm.msubst_lift_eq (σ : MSubst) (t : Tm) {x : ℕ} (hx : x ∉ t.fvs) :
+  t.msubst (σ.lift x) = t.msubst σ
+  := by induction t generalizing σ with
+  | fv y => simp only [fvs, Finset.mem_singleton] at hx; simp [MSubst.get_lift, Ne.symm hx]
+  | _ =>
+    simp only [msubst]
+    <;> (try simp only [fvs, Finset.mem_union, not_or] at hx)
+    <;> congr 1 <;> apply_assumption <;> simp [*]
