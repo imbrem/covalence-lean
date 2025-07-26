@@ -72,6 +72,7 @@ theorem Tm.MSubst.get_set (σ : MSubst) (x : ℕ) (t : Tm) (y : ℕ) :
   (σ.set x t).get y = if y = x then t else σ.get y
   := by simp [set, Function.update, get]
 
+@[simp]
 theorem Tm.MSubst.get_set_self (σ : MSubst) (x : ℕ) (t : Tm) :
   (σ.set x t).get x = t := by simp [get_set]
 
@@ -255,14 +256,18 @@ theorem Tm.MSubst.Lc.bs0_fvs_empty {σ : MSubst}
   : (t.bs0 a).msubst σ = (t.msubst σ).bs0 a := by
   rw [MSubst.Lc.bs0 (hσ := hσ) (ha := by simp [ha]), msubst_fsv_empty (ht := ha)]
 
-theorem Tm.msubst_lift_eq (σ : MSubst) (t : Tm) {x : ℕ} (hx : x ∉ t.fvs) :
-  t.msubst (σ.lift x) = t.msubst σ
+theorem Tm.msubst_set_eq (σ : MSubst) (t : Tm) {x : ℕ} (hx : x ∉ t.fvs) (a : Tm) :
+  t.msubst (σ.set x a) = t.msubst σ
   := by induction t generalizing σ with
-  | fv y => simp only [fvs, Finset.mem_singleton] at hx; simp [MSubst.get_lift, Ne.symm hx]
+  | fv y => simp only [fvs, Finset.mem_singleton] at hx; simp [MSubst.get_set, Ne.symm hx]
   | _ =>
     simp only [msubst]
     <;> (try simp only [fvs, Finset.mem_union, not_or] at hx)
     <;> congr 1 <;> apply_assumption <;> simp [*]
+
+theorem Tm.msubst_lift_eq (σ : MSubst) (t : Tm) {x : ℕ} (hx : x ∉ t.fvs) :
+  t.msubst (σ.lift x) = t.msubst σ
+  := t.msubst_set_eq σ hx (.fv x)
 
 def Tm.MSubst.EqOn (X : Finset ℕ) (σ τ : MSubst) : Prop := ∀ x ∈ X, σ.get x = τ.get x
 

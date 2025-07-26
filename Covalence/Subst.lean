@@ -1,4 +1,4 @@
-import Covalence.Wk
+import Covalence.Regularity
 
 --TODO: SubstEq lore...
 
@@ -280,12 +280,16 @@ theorem Ctx.Subst.lift_one {Γ Δ : Ctx} {σ : Tm.MSubst}
   (hΔ : Δ.IsTy A) : (Γ.cons x (A.msubst σ)).Subst (Δ.cons x A) (σ.lift x) (σ.lift x)
   := h.lift_one' hxΓ hxΔ hΔ (hΔ.subst_one h)
 
--- theorem Ctx.Subst.set' {Γ Δ : Ctx} {σ τ : Tm.MSubst} {x : ℕ} {A : Tm} {a b : Tm}
---   (h : Γ.Subst Δ σ τ) (hxΔ : x ∉ Δ.dv) (hΔ : Δ.IsTy A)
---   (hσ : Γ.JEq (A.msubst σ) a b) (hτ : Γ.JEq (A.msubst τ) a b)
---   : Γ.Subst (Δ.cons x A) (σ.set x a) (τ.set x b)
---   := sorry
+theorem Ctx.Subst.set' {Γ Δ : Ctx} {σ τ : Tm.MSubst} {x : ℕ} {A : Tm} {a b : Tm}
+  (h : Γ.Subst Δ σ τ) (hxΔ : x ∉ Δ.dv) (hΔ : Δ.IsTy A)
+  (hσ : Γ.JEq (A.msubst σ) a b) (hτ : Γ.JEq (A.msubst τ) a b)
+  : Γ.Subst (Δ.cons x A) (σ.set x a) (τ.set x b)
+  := (h.to_eqOn
+      (fun x hx => by simp [Tm.MSubst.get_set]; intro hx'; cases hx'; contradiction)
+      (fun x hx => by simp [Tm.MSubst.get_set]; intro hx'; cases hx'; contradiction)).cons' hxΔ hΔ
+    (by rw [Tm.msubst_set_eq (hx := Finset.not_mem_subset hΔ.scoped hxΔ)]; simp [hσ])
+    (by rw [Tm.msubst_set_eq (hx := Finset.not_mem_subset hΔ.scoped hxΔ)]; simp [hτ])
 
--- theorem Ctx.JEq.m0 {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) {x : ℕ} (hx : x ∉ Γ.dv)
---   : Γ.Subst (Γ.cons x A) (a.m0 x) (b.m0 x)
---   := (Subst.refl h.ok).set' hx sorry (by simp [h]) (by simp [h])
+theorem Ctx.JEq.m0 {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) {x : ℕ} (hx : x ∉ Γ.dv)
+  : Γ.Subst (Γ.cons x A) (a.m0 x) (b.m0 x)
+  := (Subst.refl h.ok).set' hx h.regular (by simp [h]) (by simp [h])
