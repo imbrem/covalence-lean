@@ -66,11 +66,33 @@ instance Tm.MSubst.instMonoid : Monoid Tm.MSubst where
   one_mul f := by ext n; simp
   mul_one f := by ext n; simp
 
-def Tm.MSubst.lift (σ : MSubst) (x : ℕ) : MSubst := Function.update σ x (.fv x)
+def Tm.MSubst.set (σ : MSubst) (x : ℕ) (t : Tm) : MSubst := Function.update σ x t
 
-theorem Tm.MSubst.get_lift (σ : MSubst) (x : ℕ) (n : ℕ) :
-  (σ.lift x).get n = if n = x then .fv x else σ.get n
-  := by simp [lift, Function.update, get]
+theorem Tm.MSubst.get_set (σ : MSubst) (x : ℕ) (t : Tm) (y : ℕ) :
+  (σ.set x t).get y = if y = x then t else σ.get y
+  := by simp [set, Function.update, get]
+
+theorem Tm.MSubst.get_set_self (σ : MSubst) (x : ℕ) (t : Tm) :
+  (σ.set x t).get x = t := by simp [get_set]
+
+def Tm.m0 (x : ℕ) (t : Tm) : Tm.MSubst := MSubst.set 1 x t
+
+theorem Tm.get_m0 (t : Tm) (x : ℕ) (y : ℕ) :
+  (t.m0 x).get y = if y = x then t else .fv y
+  := by simp [m0, MSubst.get_set]
+
+@[simp] theorem Tm.get_m0_self (t : Tm) (x : ℕ) : (t.m0 x).get x = t := by simp [get_m0]
+
+theorem Tm.get_m0_other (t : Tm) (x : ℕ) (y : ℕ) (h : y ≠ x) : (t.m0 x).get y = .fv y
+  := by simp [get_m0, h]
+
+def Tm.ms0 (t : Tm) (x : ℕ) (a : Tm) : Tm := t.msubst (a.m0 x)
+
+def Tm.MSubst.lift (σ : MSubst) (x : ℕ) : MSubst := σ.set x (.fv x)
+
+theorem Tm.MSubst.get_lift (σ : MSubst) (x : ℕ) (y : ℕ) :
+  (σ.lift x).get y = if y = x then .fv x else σ.get y
+  := by simp [lift, get_set]
 
 @[simp]
 theorem Tm.MSubst.get_lift_self (σ : MSubst) (x : ℕ) :
@@ -81,7 +103,6 @@ theorem Tm.MSubst.lift_comm (σ : MSubst) (x : ℕ) (y : ℕ) : (σ.lift x).lift
 
 theorem Tm.MSubst.lift_lift (σ : MSubst) (x : ℕ) : (σ.lift x).lift x = σ.lift x
   := by ext n; simp only [get_lift]; grind
-
 
 def Tm.MSubst.Lc (σ : MSubst) (X : Finset ℕ) : Prop := ∀i ∈ X, (σ.get i).bvi = 0
 
@@ -278,3 +299,32 @@ theorem Tm.msubst_eqOn_subset {X : Finset ℕ} {σ τ : MSubst}
 
 theorem Tm.msubst_eqOn (t : Tm) {σ τ : MSubst} (h : σ.EqOn t.fvs τ) : t.msubst σ = t.msubst τ
 := t.msubst_eqOn_subset h (by rfl)
+
+theorem Tm.ms0_bsubst_b0_notMem (t : Tm) (a : Tm) (ha : a.bvi = 0) (n : ℕ)
+  : ∀x ∉ t.fvs, (t.bsubst (BSubst.lift^[n] (Tm.fv x).b0)).ms0 x a = t.bsubst (BSubst.lift^[n] a.b0)
+  := fun x hx => by
+  simp only [ms0]
+  induction t generalizing n with
+  | bv i =>
+    simp only [bsubst, BSubst.get_liftn]
+    split
+    · rfl
+    case isFalse h =>
+      generalize i - n = j; cases j <;> simp
+      clear h
+      induction n with
+      | zero => rfl
+      | succ n I =>
+        rw [Function.iterate_succ_apply', <-I, Tm.bwk_lc]
+        exact ha
+  | fv y => simp [get_m0]; intro hy; cases hy; simp at hx
+  | _ =>
+    simp only [bsubst, msubst, <-Function.iterate_succ_apply']
+    <;> simp at hx
+    <;> congr
+    <;> apply_assumption
+    <;> simp [*]
+
+theorem Tm.ms0_bs0_notMem (t : Tm) (a : Tm) (ha : a.bvi = 0)
+  : ∀x ∉ t.fvs, (t.bs0 (.fv x)).ms0 x a = t.bs0 a
+  := t.ms0_bsubst_b0_notMem a ha 0

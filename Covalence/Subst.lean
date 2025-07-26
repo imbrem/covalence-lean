@@ -279,3 +279,13 @@ theorem Ctx.Subst.lift_one {Γ Δ : Ctx} {σ : Tm.MSubst}
   (h : Γ.Subst Δ σ σ) {x : ℕ} (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv) {A : Tm}
   (hΔ : Δ.IsTy A) : (Γ.cons x (A.msubst σ)).Subst (Δ.cons x A) (σ.lift x) (σ.lift x)
   := h.lift_one' hxΓ hxΔ hΔ (hΔ.subst_one h)
+
+-- theorem Ctx.Subst.set' {Γ Δ : Ctx} {σ τ : Tm.MSubst} {x : ℕ} {A : Tm} {a b : Tm}
+--   (h : Γ.Subst Δ σ τ) (hxΔ : x ∉ Δ.dv) (hΔ : Δ.IsTy A)
+--   (hσ : Γ.JEq (A.msubst σ) a b) (hτ : Γ.JEq (A.msubst τ) a b)
+--   : Γ.Subst (Δ.cons x A) (σ.set x a) (τ.set x b)
+--   := sorry
+
+-- theorem Ctx.JEq.m0 {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) {x : ℕ} (hx : x ∉ Γ.dv)
+--   : Γ.Subst (Γ.cons x A) (a.m0 x) (b.m0 x)
+--   := (Subst.refl h.ok).set' hx sorry (by simp [h]) (by simp [h])

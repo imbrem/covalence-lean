@@ -49,8 +49,9 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → JEq Γ A a a'
     → JEq Γ (.univ n) (B.bs0 a) Ba
     → JEq Γ Ba (.app A B f a) (.app A' B' f' a')
-  | abs_cf {Γ : Ctx} {m : ℕ} {A A' B b b' : Tm} {L : Finset ℕ}
+  | abs_cf {Γ : Ctx} {m n : ℕ} {A A' B b b' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A'
+    → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
     → (∀ x ∉ L, JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
     → JEq Γ (.pi A B) (.abs A b) (.abs A' b')
   | sigma_cf {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' : Tm} {L : Finset ℕ}
@@ -461,3 +462,15 @@ theorem Ctx.IsTy.ok {Γ : Ctx} {A : Tm} (h : Γ.IsTy A) : Γ.Ok := TyEq.ok h
 
 theorem Ctx.IsTy.cons {Γ : Ctx} {A : Tm} (h : Γ.IsTy A) {x : ℕ} (hx : x ∉ Γ.dv)
   : (Γ.cons x A).Ok := h.ok.cons hx h
+
+theorem Ctx.Ok.univ_ty {Γ : Ctx} (h : Γ.Ok) {ℓ : ℕ} : Γ.IsTy (.univ ℓ)
+  := ⟨ℓ + 1, h.univ⟩
+
+theorem Ctx.Ok.unit_ty {Γ : Ctx} (h : Γ.Ok) {ℓ : ℕ} : Γ.IsTy (.unit ℓ)
+  := ⟨ℓ, h.unit⟩
+
+theorem Ctx.Ok.empty_ty {Γ : Ctx} (h : Γ.Ok) {ℓ : ℕ} : Γ.IsTy (.empty ℓ)
+  := ⟨ℓ, h.empty⟩
+
+theorem Ctx.Ok.nats_ty {Γ : Ctx} (h : Γ.Ok) : Γ.IsTy .nats
+  := ⟨1, h.nats⟩
