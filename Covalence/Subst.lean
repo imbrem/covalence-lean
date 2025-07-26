@@ -1,5 +1,7 @@
 import Covalence.Wk
 
+--TODO: SubstEq lore...
+
 inductive Ctx.Subst : Ctx → Ctx → Tm.MSubst → Tm.MSubst → Prop
   | nil {Γ : Ctx} {σ τ : Tm.MSubst} : Γ.Ok → Subst Γ .nil σ τ
   | cons' {Γ Δ : Ctx} {σ τ : Tm.MSubst} {x : ℕ} {A : Tm}
@@ -46,6 +48,14 @@ theorem Ctx.Subst.wk0In {Γ Δ : Ctx} {σ τ : Tm.MSubst}
   (h : Γ.Subst Δ σ τ) {x} (hx : x ∉ Γ.dv) {A : Tm} (hA : Γ.IsTy A)
   : (Γ.cons x A).Subst Δ σ τ := h.wkIn (hA.lhs_pure_wk0 hx).wk
 
+theorem Ctx.Subst.refl {Γ : Ctx} (h : Γ.Ok) : Γ.Subst Γ 1 1 := by induction h with
+  | nil => exact .nil .nil
+  | cons hΓΔ hx hA I =>
+    have h' := hΓΔ.cons hx hA;
+    exact .cons' (I.wk0In hx hA) hx hA
+      (.var h'.zero (by simp; constructor))
+      (.var h'.zero (by simp; constructor))
+
 theorem Ctx.Subst.to_eqOn {Γ Δ : Ctx}
    {σ τ σ' τ' : Tm.MSubst} (h : Γ.Subst Δ σ τ)
    (hσ : σ.EqOn Δ.dv σ') (hτ : τ.EqOn Δ.dv τ') : Γ.Subst Δ σ' τ'
@@ -65,9 +75,9 @@ theorem Ctx.Subst.to_eqOn {Γ Δ : Ctx}
       · exact hσ.1.symm
       · exact hτ.1.symm
 
---TODO: EqOn subst...
+theorem Ctx.Subst.of_wk {Γ Δ : Ctx} (h : Γ.Wk Δ) : Γ.Subst Δ 1 1 := (refl h.trg_ok).wkIn h
 
-theorem Ctx.Subst.lift_one {Γ Δ : Ctx} {σ : Tm.MSubst}
+theorem Ctx.Subst.lift_one' {Γ Δ : Ctx} {σ : Tm.MSubst}
   (h : Γ.Subst Δ σ σ) {x : ℕ} (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv) {A : Tm}
   (hΔ : Δ.IsTy A) (hΓ : Γ.IsTy (A.msubst σ))
   : (Γ.cons x (A.msubst σ)).Subst (Δ.cons x A) (σ.lift x) (σ.lift x)
@@ -129,7 +139,7 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         skip
       apply_assumption
       · exact hL
-      · (first | apply hΓΔ.lift_one hΓ hΔ | apply hΓΔ.lift_one (A := Tm.not _) hΓ hΔ)
+      · (first | apply hΓΔ.lift_one' hΓ hΔ | apply hΓΔ.lift_one' (A := Tm.not _) hΓ hΔ)
         <;> apply JEq.lhs_ty <;> (try apply JEq.not) <;> apply_assumption; assumption
     }
   | nil_ok | cons_ok => exact hΓΔ.src_ok.zero
@@ -148,7 +158,7 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         }))]
         · apply_assumption
           · exact hL
-          · apply hΓΔ.lift_one hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
+          · apply hΓΔ.lift_one' hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
         all_goals {
           apply Finset.notMem_mono _ hΔ
           apply JEq.scoped_cf_ty; assumption
@@ -182,7 +192,7 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         })) (ha := by simp)]
         · apply Ifg
           · exact hL
-          · apply hΓΔ.lift_one hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
+          · apply hΓΔ.lift_one' hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
         · apply Finset.notMem_mono _ hΔ
           apply JEq.scoped_cf_ty; assumption
       }
@@ -200,7 +210,7 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         }))]
         · apply_assumption
           · exact hL
-          · apply hΓΔ.lift_one hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
+          · apply hΓΔ.lift_one' hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
         all_goals {
           apply Finset.notMem_mono _ hΔ
           apply JEq.scoped_cf_rhs; assumption
@@ -228,8 +238,8 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         })) (ha := by simp)]
         · apply_assumption
           · exact hL
-          · first | apply hΓΔ.lift_one hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
-                  | exact hΓΔ.lift_one (A := .nats) hΓ hΔ ⟨1, hΓΔ.trg_ok.nats⟩ ⟨1, hΓΔ.src_ok.nats⟩
+          · first | apply hΓΔ.lift_one' hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
+                  | exact hΓΔ.lift_one' (A := .nats) hΓ hΔ ⟨1, hΓΔ.trg_ok.nats⟩ ⟨1, hΓΔ.src_ok.nats⟩
         all_goals {
           apply Finset.notMem_mono _ hΔ
           first | (apply JEq.scoped_cf_ty; assumption)
@@ -257,18 +267,15 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
       })
     <;> assumption
 
--- theorem Ctx.JEq.subst_both {Γ Δ : Ctx} {σ τ : Tm.MSubst} {A a b : Tm}
---   (hΓΔ : Γ.Subst Δ σ τ) (h : Δ.JEq A a b)
---   : Γ.JEq (A.msubst σ) (a.msubst σ) (b.msubst τ) ∧ Γ.JEq (A.msubst τ) (a.msubst σ) (b.msubst τ)
---   := by induction h generalizing Γ σ τ with
---   | univ | unit | nil | empty | nats | succ =>
---     constructor <;> constructor <;> apply hΓΔ.src_ok.zero
---   | var _ hA => exact ⟨hΓΔ.at hA, (hΓΔ.symm.at hA).symm⟩
---   | symm ha Ia =>sorry
---   | _ => sorry
+theorem Ctx.TyEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A B : Tm}
+  (hΓΔ : Γ.Subst Δ σ σ) (h : Δ.TyEq A B) : Γ.TyEq (A.msubst σ) (B.msubst σ)
+  := have ⟨ℓ, h⟩ := h; ⟨ℓ, h.subst_one hΓΔ⟩
 
--- TODO: need substitution to cast stuff
--- theorem Ctx.Subst.symm {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.Subst Δ σ τ) : Γ.Subst Δ τ σ := by
---   induction h with
---   | nil hΓ => exact .nil hΓ
---   | cons' hΓΔ hx hΔ hΓ IΓΔ => exact IΓΔ.cons' hx hΔ hΓ.symm
+theorem Ctx.IsTy.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A : Tm}
+  (hΓΔ : Γ.Subst Δ σ σ) (h : Δ.IsTy A) : Γ.IsTy (A.msubst σ)
+  := TyEq.subst_one hΓΔ h
+
+theorem Ctx.Subst.lift_one {Γ Δ : Ctx} {σ : Tm.MSubst}
+  (h : Γ.Subst Δ σ σ) {x : ℕ} (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv) {A : Tm}
+  (hΔ : Δ.IsTy A) : (Γ.cons x (A.msubst σ)).Subst (Δ.cons x A) (σ.lift x) (σ.lift x)
+  := h.lift_one' hxΓ hxΔ hΔ (hΔ.subst_one h)
