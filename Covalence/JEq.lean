@@ -96,8 +96,9 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → JEq Γ .nats n n'
     → JEq Γ (C.bs0 .zero) z z'
     → (∀ x ∉ L,
-        JEq (Γ.cons x .nats) (.pi (C.bs0 (.fv x)) (C.bs0 (.app .nats .nats .succ (.fv x)))) s s')
-    → (Cn = C.bs0 n)
+        JEq (Γ.cons x .nats) (.pi (C.bs0 (.fv x)) (C.bs0 (.app .nats .nats .succ (.fv x))))
+          (s.bs0 (.fv x)) (s'.bs0 (.fv x)))
+    → JEq Γ (.univ ℓ) (C.bs0 n) Cn
     → JEq Γ Cn (.natrec C n z s) (.natrec C' n' z' s')
   -- Equations
   | nil_uniq {Γ : Ctx} {A a b : Tm} : JEq Γ (.univ 0) A A → JEq Γ A a a → JEq Γ A a (.nil 0)
@@ -130,7 +131,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     : JEq Γ (.univ ℓ) A A
     → JEq Γ (.univ 0) (.trunc A) (.unit 0)
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ 0) (φ.bs0 (.fv x)) (φ.bs0 (.fv x)))
-    → (φa = φ.bs0 (.choose A φ))
+    → JEq Γ (.univ 0) (φ.bs0 (.choose A φ)) φa
     → JEq Γ (.univ 0) φa (.trunc (.sigma A φ))
   --TODO: think long and hard about the binding structure here...
   | beta_true_cf {Γ : Ctx} {ℓ : ℕ} {φ A a b : Tm} {L : Finset ℕ}
@@ -178,7 +179,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
     → JEq Γ (.pi A B) f f
     → JEq Γ (.pi A B) g g
-    → (∀ x ∉ L, JEq (Γ.cons x A) (.pi A B) (.app A B f (.fv x)) (.app A B g (.fv x)))
+    → (∀ x ∉ L, JEq (Γ.cons x A) (B.bs0 (.fv x)) (.app A B f (.fv x)) (.app A B g (.fv x)))
     → JEq Γ (.pi A B) f g
   | sigma_ext_cf {Γ : Ctx} {n m : ℕ} {A B e : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A

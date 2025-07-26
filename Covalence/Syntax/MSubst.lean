@@ -40,6 +40,9 @@ def Tm.msubst (σ : MSubst) : Tm → Tm
 theorem Tm.msubst_fst {σ : MSubst} {A B a : Tm} :
   (Tm.fst A B a).msubst σ = .fst (A.msubst σ) (B.msubst σ) (a.msubst σ) := rfl
 
+theorem Tm.msubst_choose {σ : MSubst} {A φ : Tm} :
+  (Tm.choose A φ).msubst σ = .choose (A.msubst σ) (φ.msubst σ) := rfl
+
 @[simp]
 theorem Tm.msubst_one (t : Tm) : t.msubst 1 = t := by induction t <;> simp [*]
 
@@ -102,16 +105,32 @@ theorem Tm.MSubst.Lc.lift {σ : MSubst} (X : Finset ℕ) (hσ : σ.Lc X) (x : �
   · rfl
   · apply hσ; simp [*] at hi; exact hi
 
-theorem Tm.MSubst.Lc.bsubst_var {σ : MSubst}
-  (t : Tm) (hσ : σ.Lc t.fvs) (n : ℕ) (x : ℕ) (hx : x ∉ t.fvs)
-  : (t.msubst σ).bsubst (BSubst.lift^[n] (Tm.fv x).b0)
-  = (t.bsubst (BSubst.lift^[n] (Tm.fv x).b0)).msubst (σ.lift x)
+theorem Tm.msubst_fsv_empty (σ : MSubst) (t : Tm) (ht : t.fvs = ∅)
+  : t.msubst σ = t := by induction t <;> simp at ht <;> simp [*]
+
+theorem Tm.msubst_lift_fvs_singleton (σ : MSubst) (t : Tm) (x : ℕ) (hx : t.fvs ⊆ {x})
+  : t.msubst (σ.lift x) = t := by induction t with
+  | fv y => simp at hx; cases hx; simp
+  | _ =>
+    simp only [msubst]
+    <;> simp only [fvs, Finset.union_subset_iff] at hx
+    <;> (try casesm* _ ∧ _)
+    <;> simp [*]
+
+theorem Tm.MSubst.Lc.bsubst_fvs_singleton {σ : MSubst}
+  (t : Tm) (hσ : σ.Lc t.fvs) (n : ℕ) (x : ℕ) (hx : x ∉ t.fvs) (a : Tm) (ha : a.fvs ⊆ {x})
+  : (t.msubst σ).bsubst (BSubst.lift^[n] a.b0)
+  = (t.bsubst (BSubst.lift^[n] a.b0)).msubst (σ.lift x)
   := by induction t generalizing n with
   | bv i =>
     simp only [msubst, Tm.bsubst, BSubst.get_liftn]
     split
     · rfl
     · generalize i - n = j; cases j <;> simp
+      rw [Tm.msubst_lift_fvs_singleton]
+      convert ha using 1
+      clear * -
+      induction n generalizing a <;> simp [*]
   | fv y =>
     simp at hx
     simp only [msubst, Tm.bsubst, get_lift, Ne.symm hx, ↓reduceIte]
@@ -125,6 +144,17 @@ theorem Tm.MSubst.Lc.bsubst_var {σ : MSubst}
     <;> (try constructorm* _ ∧ _)
     <;> apply_assumption
     <;> simp [*]
+
+theorem Tm.MSubst.Lc.bs0_fvs_singleton {σ : MSubst}
+  (t : Tm) (hσ : σ.Lc t.fvs) (x : ℕ) (hx : x ∉ t.fvs) (a : Tm) (ha : a.fvs ⊆ {x})
+  : (t.msubst σ).bs0 a = (t.bs0 a).msubst (σ.lift x)
+  := hσ.bsubst_fvs_singleton t 0 x hx a ha
+
+theorem Tm.MSubst.Lc.bsubst_var {σ : MSubst}
+  (t : Tm) (hσ : σ.Lc t.fvs) (n : ℕ) (x : ℕ) (hx : x ∉ t.fvs)
+  : (t.msubst σ).bsubst (BSubst.lift^[n] (Tm.fv x).b0)
+  = (t.bsubst (BSubst.lift^[n] (Tm.fv x).b0)).msubst (σ.lift x)
+  := hσ.bsubst_fvs_singleton t n x hx (Tm.fv x) (by simp)
 
 theorem Tm.MSubst.Lc.bs0_var {σ : MSubst}
   (t : Tm) (hσ : σ.Lc t.fvs) (x : ℕ) (hx : x ∉ t.fvs)
@@ -195,6 +225,11 @@ theorem Tm.MSubst.Lc.bs0 {σ : MSubst}
   (t : Tm) (hσ : σ.Lc t.fvs) (a : Tm) (ha : σ.Lc a.fvs)
   : (t.bs0 a).msubst σ = (t.msubst σ).bs0 (a.msubst σ)
   := hσ.bsubst_lift_b0 t 0 a ha
+
+theorem Tm.MSubst.Lc.bs0_fvs_empty {σ : MSubst}
+  (t : Tm) (hσ : σ.Lc t.fvs) (a : Tm) (ha : a.fvs = ∅)
+  : (t.bs0 a).msubst σ = (t.msubst σ).bs0 a := by
+  rw [MSubst.Lc.bs0 (hσ := hσ) (ha := by simp [ha]), msubst_fsv_empty (ht := ha)]
 
 theorem Tm.msubst_lift_eq (σ : MSubst) (t : Tm) {x : ℕ} (hx : x ∉ t.fvs) :
   t.msubst (σ.lift x) = t.msubst σ

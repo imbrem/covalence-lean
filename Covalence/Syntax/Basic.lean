@@ -457,7 +457,7 @@ theorem Tm.BSubst.get_fsubstOut (σ : Tm.FSubst) (f : BSubst) (i : ℕ) :
   (f.fsubstOut σ).get i = (f.get i).fsubst σ := rfl
 
 @[simp]
-  theorem Tm.fvs_bwk (t : Tm) (f : BWk) : (t.bwk f).fvs = t.fvs
+theorem Tm.fvs_bwk (t : Tm) (f : BWk) : (t.bwk f).fvs = t.fvs
   := by induction t generalizing f <;> simp [*]
 
 def Tm.BSubst.FvSub (f : Tm.BSubst) (X : Finset ℕ) : Prop := ∀i, (f.get i).fvs ⊆ X
