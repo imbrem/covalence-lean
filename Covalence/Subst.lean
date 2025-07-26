@@ -46,11 +46,46 @@ theorem Ctx.Subst.wk0In {Γ Δ : Ctx} {σ τ : Tm.MSubst}
   (h : Γ.Subst Δ σ τ) {x} (hx : x ∉ Γ.dv) {A : Tm} (hA : Γ.IsTy A)
   : (Γ.cons x A).Subst Δ σ τ := h.wkIn (hA.lhs_pure_wk0 hx).wk
 
-theorem Ctx.Subst.lift' {Γ Δ : Ctx} {σ τ : Tm.MSubst}
-  (h : Γ.Subst Δ σ τ) {x : ℕ} (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv) {A : Tm}
+theorem Ctx.Subst.to_eqOn {Γ Δ : Ctx}
+   {σ τ σ' τ' : Tm.MSubst} (h : Γ.Subst Δ σ τ)
+   (hσ : σ.EqOn Δ.dv σ') (hτ : τ.EqOn Δ.dv τ') : Γ.Subst Δ σ' τ'
+  := by induction h with
+  | nil hΓ => exact .nil hΓ
+  | cons' hΓΔ hx hΔ hσ' hτ' IΓΔ =>
+    simp only [Tm.MSubst.EqOn.union_iff, Tm.MSubst.EqOn.singleton_iff, Ctx.dv] at *
+    apply (IΓΔ hσ.2 hτ.2).cons' hx hΔ
+    · convert hσ' using 1
+      · rw [Tm.msubst_eqOn_subset (h := hσ.2.symm)]
+        exact hΔ.scoped
+      · exact hσ.1.symm
+      · exact hτ.1.symm
+    · convert hτ' using 1
+      · rw [Tm.msubst_eqOn_subset (h := hτ.2.symm)]
+        exact hΔ.scoped
+      · exact hσ.1.symm
+      · exact hτ.1.symm
+
+--TODO: EqOn subst...
+
+theorem Ctx.Subst.lift_one {Γ Δ : Ctx} {σ : Tm.MSubst}
+  (h : Γ.Subst Δ σ σ) {x : ℕ} (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv) {A : Tm}
   (hΔ : Δ.IsTy A) (hΓ : Γ.IsTy (A.msubst σ))
-  : (Γ.cons x (A.msubst σ)).Subst (Δ.cons x A) (σ.lift x) (τ.lift x)
-  := sorry--(h.wk0In hxΓ hΓ).cons' sorry sorry sorry sorry
+  : (Γ.cons x (A.msubst σ)).Subst (Δ.cons x A) (σ.lift x) (σ.lift x)
+  := by
+    apply ((h.wk0In hxΓ hΓ).to_eqOn
+      (σ.lift_eqOn_of_notMem _ _ hxΔ)
+      (σ.lift_eqOn_of_notMem _ _ hxΔ)
+    ).cons' hxΔ hΔ
+    · simp only [Tm.MSubst.get_lift_self]
+      apply JEq.var
+      · apply (hΓ.cons hxΓ).zero
+      · rw [Tm.msubst_lift_eq (hx := Finset.not_mem_subset hΔ.scoped hxΔ)]
+        constructor
+    · simp only [Tm.MSubst.get_lift_self]
+      apply JEq.var
+      · apply (hΓ.cons hxΓ).zero
+      · rw [Tm.msubst_lift_eq (hx := Finset.not_mem_subset hΔ.scoped hxΔ)]
+        constructor
 
 def Ctx.Subst.src {Γ Δ : Ctx} {σ τ : Tm.MSubst} (_ : Γ.Subst Δ σ τ) : Ctx := Γ
 
@@ -64,7 +99,6 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
   | dite_cf hφ hA ha hb Iφ IA Ia Ib
   | beta_true_cf hφ hA ha hb Iφ IA Ia Ib
   | beta_false_cf hφ hA ha hb Iφ IA Ia Ib =>
-    stop
     constructor <;> first
     | (apply_assumption ; assumption)
     | {
@@ -95,92 +129,12 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         skip
       apply_assumption
       · exact hL
-      · (first | apply hΓΔ.lift' hΓ hΔ | apply hΓΔ.lift' (A := Tm.not _) hΓ hΔ)
+      · (first | apply hΓΔ.lift_one hΓ hΔ | apply hΓΔ.lift_one (A := Tm.not _) hΓ hΔ)
         <;> apply JEq.lhs_ty <;> (try apply JEq.not) <;> apply_assumption; assumption
     }
-  -- | natrec_cf hC hn hz hs hCn IC In Iz Is ICn =>
-    -- constructor
-    -- · {
-    --     intro x hx
-    --     rename Finset ℕ => L
-    --     have ⟨hΓ, hΔ, hL⟩ : x ∉ Γ.dv ∧ x ∉ hΓΔ.trg.dv ∧ x ∉ L
-    --       := by simp only [<-Finset.notMem_union]; exact hx
-    --     repeat rw [Tm.MSubst.Lc.bs0_var (hσ := hΓΔ.lc_rhs.anti (by {
-    --       first | (apply JEq.scoped_cf_ty; assumption)
-    --             | (apply JEq.scoped_cf_rhs; assumption)
-    --             | (apply JEq.scoped_cf_lhs; assumption)
-    --     }))]
-    --     · apply_assumption
-    --       · exact hL
-    --       · first | apply hΓΔ.lift' hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
-    --               | exact hΓΔ.lift' (A := .nats) hΓ hΔ ⟨1, hΓΔ.trg_ok.nats⟩ ⟨1, hΓΔ.src_ok.nats⟩
-    --     all_goals {
-    --       apply Finset.notMem_mono _ hΔ
-    --       first | (apply JEq.scoped_cf_ty; assumption)
-    --             | (apply JEq.scoped_cf_rhs; assumption)
-    --             | (apply JEq.scoped_cf_lhs; assumption)
-    --     }
-    --   }
-    -- · apply_assumption <;> assumption
-    -- · {
-    --   (try simp only [<-Tm.msubst_fst, <-Tm.msubst_choose])
-    --   first | rw [<-Tm.MSubst.Lc.bs0] | rw [<-Tm.MSubst.Lc.bs0_fvs_empty (ha := by simp)]
-    --   apply_assumption; assumption
-    --   all_goals {
-    --     apply Tm.MSubst.Lc.anti
-    --     · (try simp only [Tm.fvs, Finset.union_subset_iff])
-    --       (try constructorm* _ ∧ _) <;>
-    --       first | (apply JEq.scoped_lhs; assumption)
-    --             -- | (apply JEq.scoped_rhs; assumption)
-    --             | (apply JEq.scoped_cf_lhs ; assumption)
-    --             -- | (apply JEq.scoped_cf_rhs ; assumption)
-    --     · first | apply Ctx.Subst.lc_lhs -- | apply Ctx.Subst.lc_rhs
-    --       assumption
-    --   }
-    -- }
-    -- · {
-    --     intro x hx
-    --     rename Finset ℕ => L
-    --     have ⟨hΓ, hΔ, hL⟩ : x ∉ Γ.dv ∧ x ∉ hΓΔ.trg.dv ∧ x ∉ L
-    --       := by simp only [<-Finset.notMem_union]; exact hx
-    --     repeat rw [Tm.MSubst.Lc.bs0_fvs_singleton (x := x) (hσ := hΓΔ.lc_rhs.anti (by {
-    --       first | (apply JEq.scoped_cf_ty; assumption)
-    --             | (apply JEq.scoped_cf_rhs; assumption)
-    --             | (apply JEq.scoped_cf_lhs; assumption)
-    --     })) (ha := by simp)]
-    --     · apply_assumption
-    --       · exact hL
-    --       · first | apply hΓΔ.lift' hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
-    --               | exact hΓΔ.lift' (A := .nats) hΓ hΔ ⟨1, hΓΔ.trg_ok.nats⟩ ⟨1, hΓΔ.src_ok.nats⟩
-    --     all_goals {
-    --       apply Finset.notMem_mono _ hΔ
-    --       first | (apply JEq.scoped_cf_ty; assumption)
-    --             | (apply JEq.scoped_cf_rhs; assumption)
-    --             | (apply JEq.scoped_cf_lhs; assumption)
-    --     }
-    --   }
-    -- · {
-    --   (try simp only [<-Tm.msubst_fst, <-Tm.msubst_choose])
-    --   first | rw [<-Tm.MSubst.Lc.bs0] | rw [<-Tm.MSubst.Lc.bs0_fvs_empty (ha := by simp)]
-    --   apply_assumption; assumption
-    --   all_goals {
-    --     apply Tm.MSubst.Lc.anti
-    --     · (try simp only [Tm.fvs, Finset.union_subset_iff])
-    --       (try constructorm* _ ∧ _) <;>
-    --       first | (apply JEq.scoped_lhs; assumption)
-    --             -- | (apply JEq.scoped_rhs; assumption)
-    --             | (apply JEq.scoped_cf_lhs ; assumption)
-    --             -- | (apply JEq.scoped_cf_rhs ; assumption)
-    --     · first | apply Ctx.Subst.lc_lhs -- | apply Ctx.Subst.lc_rhs
-    --       assumption
-    --   }
-    --   }
-  | beta_zero_cf => sorry
-  | beta_succ_cf => sorry
   | nil_ok | cons_ok => exact hΓΔ.src_ok.zero
   | eqn_ext hA ha hb he IA Ia Ib Ie => exact .eqn_ext (IA hΓΔ) (Ia hΓΔ) (Ib hΓΔ) (Ie hΓΔ)
   | pi_ext_cf hA hB hf hg hfg IA IB If Ig Ifg =>
-    stop
     rename Finset ℕ => L
     rename_i A B f g
     apply JEq.pi_ext_cf
@@ -194,7 +148,7 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         }))]
         · apply_assumption
           · exact hL
-          · apply hΓΔ.lift' hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
+          · apply hΓΔ.lift_one hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
         all_goals {
           apply Finset.notMem_mono _ hΔ
           apply JEq.scoped_cf_ty; assumption
@@ -228,12 +182,11 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         })) (ha := by simp)]
         · apply Ifg
           · exact hL
-          · apply hΓΔ.lift' hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
+          · apply hΓΔ.lift_one hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
         · apply Finset.notMem_mono _ hΔ
           apply JEq.scoped_cf_ty; assumption
       }
   | sigma_ext_cf =>
-    stop
     apply JEq.sigma_ext_cf <;>
     (first
     | apply_assumption
@@ -247,7 +200,7 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         }))]
         · apply_assumption
           · exact hL
-          · apply hΓΔ.lift' hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
+          · apply hΓΔ.lift_one hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
         all_goals {
           apply Finset.notMem_mono _ hΔ
           apply JEq.scoped_cf_rhs; assumption
@@ -275,8 +228,8 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         })) (ha := by simp)]
         · apply_assumption
           · exact hL
-          · first | apply hΓΔ.lift' hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
-                  | exact hΓΔ.lift' (A := .nats) hΓ hΔ ⟨1, hΓΔ.trg_ok.nats⟩ ⟨1, hΓΔ.src_ok.nats⟩
+          · first | apply hΓΔ.lift_one hΓ hΔ <;> apply JEq.lhs_ty <;> apply_assumption; assumption
+                  | exact hΓΔ.lift_one (A := .nats) hΓ hΔ ⟨1, hΓΔ.trg_ok.nats⟩ ⟨1, hΓΔ.src_ok.nats⟩
         all_goals {
           apply Finset.notMem_mono _ hΔ
           first | (apply JEq.scoped_cf_ty; assumption)
@@ -285,8 +238,8 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         }
       }
     | {
-      (try simp only [<-Tm.msubst_fst, <-Tm.msubst_choose])
-      first | rw [<-Tm.MSubst.Lc.bs0] | rw [<-Tm.MSubst.Lc.bs0_fvs_empty (ha := by simp)]
+      (try simp only [<-Tm.msubst_fst, <-Tm.msubst_choose, <-Tm.msubst_app_succ])
+      repeat first | rw [<-Tm.MSubst.Lc.bs0] | rw [<-Tm.MSubst.Lc.bs0_fvs_empty (ha := by simp)]
       apply_assumption; assumption
       all_goals {
         apply Tm.MSubst.Lc.anti
@@ -297,6 +250,7 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
                 | (apply JEq.scoped_cf_lhs ; assumption)
                 | (apply JEq.scoped_cf_ty ; assumption)
                 -- | (apply JEq.scoped_cf_rhs ; assumption)
+                | simp
         · first | apply Ctx.Subst.lc_lhs -- | apply Ctx.Subst.lc_rhs
           assumption
       }

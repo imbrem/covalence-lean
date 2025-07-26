@@ -150,15 +150,17 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     : (∀ x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.bs0 (.fv x)) (C.bs0 (.fv x)))
     → JEq Γ (C.bs0 .zero) z z
     → (∀ x ∉ L,
-        JEq (Γ.cons x .nats) (.pi (C.bs0 (.fv x)) (C.bs0 (.app .nats .nats .succ (.fv x)))) s s)
-    → (C0 = C.bs0 .zero)
+        JEq (Γ.cons x .nats) (.pi (C.bs0 (.fv x)) (C.bs0 (.app .nats .nats .succ (.fv x))))
+          (s.bs0 (.fv x)) (s.bs0 (.fv x)))
+    → JEq Γ (.univ ℓ) (C.bs0 .zero) C0
     → JEq Γ C0 (.natrec C .zero z s) z
   | beta_succ_cf {Γ : Ctx} {ℓ : ℕ} {C n z s sn Cn Cs : Tm} {L : Finset ℕ}
     : (∀ x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.bs0 (.fv x)) (C.bs0 (.fv x)))
     → JEq Γ .nats n n
     → JEq Γ (C.bs0 .zero) z z
     → (∀ x ∉ L,
-        JEq (Γ.cons x .nats) (.pi (C.bs0 (.fv x)) (C.bs0 (.app .nats .nats .succ (.fv x)))) s s)
+        JEq (Γ.cons x .nats) (.pi (C.bs0 (.fv x)) (C.bs0 (.app .nats .nats .succ (.fv x))))
+          (s.bs0 (.fv x)) (s.bs0 (.fv x)))
     → JEq Γ (.pi (C.bs0 n) (C.bs0 (.app .nats .nats .succ n))) (s.bs0 n) sn
     → JEq Γ (.univ ℓ) (C.bs0 n) Cn
     → JEq Γ (.univ ℓ) (C.bs0 (.app .nats .nats .succ n)) Cs
@@ -312,8 +314,6 @@ theorem Ctx.JEq.scoped_all {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
   | cons_ok => simp [Scoped.cons_iff, *]
   | _ =>
     simp only [forall_and, Ctx.dv, Tm.bs0_var_cofinite_iff, Tm.fsv_cofinite_iff] at *
-    simp [Finset.union_subset_iff, *] <;>
-    apply Tm.bs0_fv_sub <;>
     simp [Finset.union_subset_iff, *]
 
 theorem Ctx.JEq.scoped_ctx {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
@@ -389,6 +389,15 @@ theorem Ctx.JEq.scoped_cf_rhs' {Γ : Ctx} {A b : Tm} {Bx ax : ℕ → Tm} {L : F
   apply scoped_cf_lhs'
   apply h'
 
+theorem Ctx.TyEq.scoped_lhs {Γ : Ctx} {A B : Tm} (h : Ctx.TyEq Γ A B) : A.fvs ⊆ Γ.dv
+  := have ⟨_, h⟩ := h; h.scoped_lhs
+
+theorem Ctx.TyEq.scoped_rhs {Γ : Ctx} {A B : Tm} (h : Ctx.TyEq Γ A B) : B.fvs ⊆ Γ.dv
+  := have ⟨_, h⟩ := h; h.scoped_rhs
+
+theorem Ctx.IsTy.scoped {Γ : Ctx} {A : Tm} (h : Γ.IsTy A) : A.fvs ⊆ Γ.dv
+  := h.scoped_lhs
+
 theorem Ctx.Ok.scoped {Γ : Ctx} (h : Γ.Ok) : Γ.Scoped := h.zero.scoped_ctx
 
 inductive Ctx.Lc : Ctx → Prop
@@ -417,10 +426,7 @@ theorem Ctx.JEq.lc_all {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
     simp only [
       Tm.bvi, forall_and, true_and, and_true, Nat.max_eq_zero_iff, Ctx.Lc.nil,
       Nat.sub_eq_zero_iff_le, Tm.bs0_lc_cofinite_iff, Tm.lc_cofinite_iff
-    ] at * <;>
-    simp [*] <;>
-    (try apply Tm.bs0_lc_of) <;>
-    simp [Tm.bvi, *]
+    ] at * <;> simp [*]
 
 theorem Ctx.JEq.lc_ctx {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
   : Γ.Lc := h.lc_all.1
@@ -451,6 +457,7 @@ theorem Ctx.TyEq.not {Γ : Ctx} {A A' : Tm} (h : TyEq Γ A A')
 theorem Ctx.TyEq.not_ty {Γ : Ctx} {A A' : Tm} (h : TyEq Γ A A')
   : Γ.TyEq (.not A) (.not A') := ⟨0, h.not⟩
 
--- def Ctx.IsTy (Γ : Ctx) (A : Tm) : Prop := Γ.TyEq A A
+theorem Ctx.IsTy.ok {Γ : Ctx} {A : Tm} (h : Γ.IsTy A) : Γ.Ok := TyEq.ok h
 
--- theorem Ctx.IsTy.ok {Γ : Ctx} {A : Tm} (h : Γ.IsTy A) : Γ.Ok := TyEq.ok h
+theorem Ctx.IsTy.cons {Γ : Ctx} {A : Tm} (h : Γ.IsTy A) {x : ℕ} (hx : x ∉ Γ.dv)
+  : (Γ.cons x A).Ok := h.ok.cons hx h

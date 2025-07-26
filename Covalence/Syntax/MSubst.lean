@@ -43,6 +43,9 @@ theorem Tm.msubst_fst {σ : MSubst} {A B a : Tm} :
 theorem Tm.msubst_choose {σ : MSubst} {A φ : Tm} :
   (Tm.choose A φ).msubst σ = .choose (A.msubst σ) (φ.msubst σ) := rfl
 
+theorem Tm.msubst_app_succ {σ : MSubst} {n : Tm} :
+  (Tm.app .nats .nats .succ n).msubst σ = .app .nats .nats .succ (n.msubst σ) := rfl
+
 @[simp]
 theorem Tm.msubst_one (t : Tm) : t.msubst 1 = t := by induction t <;> simp [*]
 
@@ -239,3 +242,39 @@ theorem Tm.msubst_lift_eq (σ : MSubst) (t : Tm) {x : ℕ} (hx : x ∉ t.fvs) :
     simp only [msubst]
     <;> (try simp only [fvs, Finset.mem_union, not_or] at hx)
     <;> congr 1 <;> apply_assumption <;> simp [*]
+
+def Tm.MSubst.EqOn (X : Finset ℕ) (σ τ : MSubst) : Prop := ∀ x ∈ X, σ.get x = τ.get x
+
+theorem Tm.MSubst.EqOn.symm {σ τ : MSubst} {X : Finset ℕ}
+  (h : σ.EqOn X τ) : τ.EqOn X σ := fun x hx => (h x hx).symm
+
+theorem Tm.MSubst.lift_eqOn_of_notMem (σ : MSubst) (x : ℕ) (X : Finset ℕ) (h : x ∉ X)
+  : σ.EqOn X (σ.lift x) := fun y hy => by
+  rw [get_lift]
+  split
+  case isTrue h => cases h; contradiction
+  simp
+
+@[simp] theorem Tm.MSubst.EqOn.empty (σ τ : MSubst) : σ.EqOn ∅ τ := fun _ h => by cases h
+
+@[simp]
+theorem Tm.MSubst.EqOn.singleton_iff {σ τ : MSubst} {x : ℕ} :
+  σ.EqOn {x} τ ↔ σ.get x = τ.get x := by
+  simp only [EqOn, Finset.mem_singleton, forall_eq]
+
+theorem Tm.MSubst.EqOn.union_iff {σ τ : MSubst} {X Y : Finset ℕ} :
+  σ.EqOn (X ∪ Y) τ ↔ σ.EqOn X τ ∧ σ.EqOn Y τ := by
+  simp only [EqOn, Finset.forall_mem_union]
+
+theorem Tm.msubst_eqOn_subset {X : Finset ℕ} {σ τ : MSubst}
+  (h : σ.EqOn X τ) (t : Tm) (hX : t.fvs ⊆ X) : t.msubst σ = t.msubst τ := by
+  induction t generalizing X σ τ with
+  | fv x => apply h; convert hX; simp
+  | _ =>
+    simp only [msubst] <;>
+    congr 1 <;>
+    apply_assumption <;>
+    first | exact h | (simp only [fvs, Finset.union_subset_iff] at hX; simp [*])
+
+theorem Tm.msubst_eqOn (t : Tm) {σ τ : MSubst} (h : σ.EqOn t.fvs τ) : t.msubst σ = t.msubst τ
+:= t.msubst_eqOn_subset h (by rfl)
