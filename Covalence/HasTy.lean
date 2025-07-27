@@ -1,4 +1,4 @@
-import Covalence.Wk
+import Covalence.Subst
 
 inductive Ctx.HasTy : Ctx → Tm → Tm → Prop
   | univ {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → HasTy Γ (.univ (ℓ + 1)) (.univ ℓ)
@@ -131,33 +131,33 @@ theorem Ctx.Cmp.trans {Γ : Ctx} {A a b c : Tm} (hab : Γ.Cmp A a b) (hbc : Γ.C
   : Γ.Cmp A a c := ⟨hab.1, hbc.2⟩
 
 --TODO: we need substitution here...
--- theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
---   : Γ.Cmp A a b
---   := by induction h with
---   | nil_ok => apply HasTy.cmp; apply HasTy.zero; constructor
---   | cons_ok hΓ =>
---     apply HasTy.cmp; apply HasTy.zero; constructor
---     · exact hΓ.ok
---     · assumption
---     · apply JEq.lhs_ty; assumption
---   | univ | var | unit | nil | empty | nats | succ =>
---     apply HasTy.cmp; constructor <;> (try apply ok) <;> assumption
---   | eqn hA ha hb IA Ia Ib
---     => exact ⟨IA.1.eqn Ia.1 Ib.1, IA.2.eqn (Ia.2.cast hA.ty_eq) (Ib.2.cast hA.ty_eq)⟩
---   | pi_cf hA hB hℓ IA IB =>
---     exact ⟨
---       IA.1.pi_cf (fun x hx => (IB x hx).1) hℓ,
---       IA.2.pi_cf (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm) hℓ
---     ⟩
---   | app_cf hA hB hf hg hBa IA IB If Ig IBa =>
---     exact ⟨
---       IA.1.app_cf (fun x hx => (IB x hx).1) If.1 Ig.1 hBa,
---       (IA.2.app_cf (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm)
---        (If.2.cast ⟨_, hA.pi_cf hB rfl⟩) (Ig.2.cast ⟨_, hA⟩) sorry)
---     ⟩
---   | eqn_ext => sorry
---   | pi_ext_cf hA hB hf hg hL => sorry
---   | sigma_ext_cf hA hB he => sorry
---   | prop_ext hA hB mp mpr => sorry
---   | cast => sorry
---   | _ => sorry
+theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
+  : Γ.Cmp A a b
+  := by induction h with
+  | nil_ok => apply HasTy.cmp; apply HasTy.zero; constructor
+  | cons_ok hΓ =>
+    apply HasTy.cmp; apply HasTy.zero; constructor
+    · exact hΓ.ok
+    · assumption
+    · apply JEq.lhs_ty; assumption
+  | univ | var | unit | nil | empty | nats | succ =>
+    apply HasTy.cmp; constructor <;> (try apply ok) <;> assumption
+  | eqn hA ha hb IA Ia Ib
+    => exact ⟨IA.1.eqn Ia.1 Ib.1, IA.2.eqn (Ia.2.cast hA.ty_eq) (Ib.2.cast hA.ty_eq)⟩
+  | pi_cf hA hB hℓ IA IB =>
+    exact ⟨
+      IA.1.pi_cf (fun x hx => (IB x hx).1) hℓ,
+      IA.2.pi_cf (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm) hℓ
+    ⟩
+  | app_cf hA hB hf hg hBa IA IB If Ig IBa =>
+    exact ⟨
+      IA.1.app_cf (fun x hx => (IB x hx).1) If.1 Ig.1 hBa,
+      (IA.2.app_cf (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm)
+       (If.2.cast ⟨_, hA.pi_cf hB rfl⟩) (Ig.2.cast ⟨_, hA⟩) (.trans sorry hBa))
+    ⟩
+  | eqn_ext => sorry
+  | pi_ext_cf hA hB hf hg hL => sorry
+  | sigma_ext_cf hA hB he => sorry
+  | prop_ext hA hB mp mpr => sorry
+  | cast => sorry
+  | _ => sorry
