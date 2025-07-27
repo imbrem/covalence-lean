@@ -26,7 +26,7 @@ inductive Tm : Type
 | zero : Tm
 | succ : Tm
 | natrec (C n z s : Tm) : Tm
--- | let₁ (A a b : Tm) : Tm
+| let₁ (A a b : Tm) : Tm
 | invalid : Tm
 
 abbrev Tm.not (t : Tm) : Tm := .pi t (.empty 0)
@@ -46,7 +46,7 @@ def Tm.fvs : Tm → Finset ℕ
   | .trunc A => A.fvs
   | .choose A φ => A.fvs ∪ φ.fvs
   | .natrec C n z s => C.fvs ∪ n.fvs ∪ z.fvs ∪ s.fvs
-  -- | .let₁ A a b => A.fvs ∪ a.fvs ∪ b.fvs
+  | .let₁ A a b => A.fvs ∪ a.fvs ∪ b.fvs
   | _ => ∅
 
 def Tm.bvi : Tm → ℕ
@@ -63,7 +63,7 @@ def Tm.bvi : Tm → ℕ
   | .trunc A => A.bvi
   | .choose A φ => A.bvi ⊔ (φ.bvi - 1)
   | .natrec C n z s => (C.bvi - 1) ⊔ n.bvi ⊔ z.bvi ⊔ (s.bvi - 1)
-  -- | .let₁ A a b => A.bvi ⊔ a.bvi ⊔ (b.bvi - 1)
+  | .let₁ A a b => A.bvi ⊔ a.bvi ⊔ (b.bvi - 1)
   | _ => 0
 
 @[simp]
@@ -89,7 +89,7 @@ def Tm.bwk (ρ : BWk) : Tm → Tm
   | .zero => .zero
   | .succ => .succ
   | .natrec C n z s => .natrec (C.bwk (↑b ρ)) (n.bwk ρ) (z.bwk ρ) (s.bwk (↑b ρ))
-  -- | .let₁ A a b => .let₁ (A.bwk ρ) (a.bwk ρ) (b.bwk (↑b ρ))
+  | .let₁ A a b => .let₁ (A.bwk ρ) (a.bwk ρ) (b.bwk (↑b ρ))
   | .invalid => .invalid
 
 @[simp] theorem Tm.bwk_one (t : Tm) : t.bwk 1 = t := by induction t <;> simp [*]
@@ -160,7 +160,7 @@ def Tm.bsubst (σ : BSubst) : Tm → Tm
   | .zero => .zero
   | .succ => .succ
   | .natrec C n z s => .natrec (C.bsubst (↑s σ)) (n.bsubst σ) (z.bsubst σ) (s.bsubst (↑s σ))
-  -- | .let₁ A a b => .let₁ (A.bsubst σ) (a.bsubst σ) (b.bsubst (↑s σ))
+  | .let₁ A a b => .let₁ (A.bsubst σ) (a.bsubst σ) (b.bsubst (↑s σ))
   | .invalid => .invalid
 
 @[simp] theorem Tm.bsubst_one (t : Tm) : t.bsubst 1 = t := by induction t <;> simp [*]
@@ -397,7 +397,7 @@ def Tm.fsubst (σ : FSubst) : Tm → Tm
   | .zero => .zero
   | .succ => .succ
   | .natrec C n z s => .natrec (C.fsubst (↑f σ)) (n.fsubst σ) (z.fsubst σ) (s.fsubst (↑f σ))
-  -- | .let₁ A a b => .let₁ (A.fsubst σ) (a.fsubst σ) (b.fsubst (↑f σ))
+  | .let₁ A a b => .let₁ (A.fsubst σ) (a.fsubst σ) (b.fsubst (↑f σ))
   | .invalid => .invalid
 
 @[simp]
@@ -607,6 +607,7 @@ def Tm.bvs : Tm → Set ℕ
   | .trunc A => A.bvs
   | .choose A φ => A.bvs ∪ liftBvSet φ.bvs
   | .natrec C n z s => liftBvSet C.bvs ∪ n.bvs ∪ z.bvs ∪ liftBvSet s.bvs
+  | .let₁ A a b => A.bvs ∪ a.bvs ∪ liftBvSet b.bvs
   | _ => ∅
 
 theorem Tm.bvs_max (t : Tm) : ∀ i ∈ t.bvs, i < t.bvi := by
@@ -637,6 +638,7 @@ def Tm.bvsi : Tm → Set ℕ
   | .trunc A => A.bvsi
   | .choose A φ => A.bvsi ∪ Nat.pred '' φ.bvsi
   | .natrec C n z s => Nat.pred '' C.bvsi ∪ n.bvsi ∪ z.bvsi ∪ Nat.pred '' s.bvsi
+  | .let₁ A a b => A.bvsi ∪ a.bvsi ∪ Nat.pred '' b.bvsi
   | _ => {0}
 
 theorem pred_image_zero_union_succ_image (S : Set ℕ) :

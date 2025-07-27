@@ -34,7 +34,7 @@ def Tm.msubst (σ : MSubst) : Tm → Tm
   | .zero => .zero
   | .succ => .succ
   | .natrec C n z s => .natrec (C.msubst σ) (n.msubst σ) (z.msubst σ) (s.msubst σ)
-  -- | .let₁ A a b => .let₁ (A.msubst σ) (a.msubst σ) (b.msubst σ)
+  | .let₁ A a b => .let₁ (A.msubst σ) (a.msubst σ) (b.msubst σ)
   | .invalid => .invalid
 
 theorem Tm.msubst_fst {σ : MSubst} {A B a : Tm} :

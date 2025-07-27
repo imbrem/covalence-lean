@@ -140,7 +140,6 @@ theorem Ctx.TyEq.wk0
   {x : ℕ} {C D : Tm} (hx : x ∉ Γ.dv) (hB : Γ.TyEq C D) : (Γ.cons x C).TyEq A B
   := have ⟨ℓ, h⟩ := h; ⟨ℓ, h.wk0 hx hB⟩
 
-
 theorem Ctx.IsTy.wk0
   {Γ : Ctx} {A : Tm} (h : Γ.IsTy A)
   {x : ℕ} {B C : Tm} (hx : x ∉ Γ.dv) (hB : Γ.TyEq B C) : (Γ.cons x B).IsTy A
