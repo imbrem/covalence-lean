@@ -318,21 +318,47 @@ theorem Ctx.TyEq.bs0_one {Γ : Ctx} {A B B' a : Tm} {x : ℕ} (hx : x ∉ B.fvs 
   have ⟨ℓ, hb⟩ := hb;
   exact ⟨ℓ, hb.bs0_one (B := .univ ℓ) (by simp [hx]) ha⟩
 
--- theorem Ctx.TyEq.bs0_one_cf {Γ : Ctx} {A B a b b' : Tm} {L : Finset ℕ}
---   (hb : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
---   (ha : Ctx.JEq Γ A a a) : Γ.JEq (B.bs0 a) (b.bs0 a) (b'.bs0 a) := by
---   have ⟨x, hx⟩ := Finset.exists_notMem (L ∪ (B.fvs ∪ b.fvs ∪ b'.fvs))
---   rw [Finset.notMem_union] at hx
---   exact (hb x hx.1).bs0_one hx.2 ha
+theorem Ctx.TyEq.bs0_one_cf {Γ : Ctx} {A B a b b' : Tm} {L : Finset ℕ}
+  (hb : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
+  (ha : Ctx.JEq Γ A a a) : Γ.JEq (B.bs0 a) (b.bs0 a) (b'.bs0 a) := by
+  have ⟨x, hx⟩ := Finset.exists_notMem (L ∪ (B.fvs ∪ b.fvs ∪ b'.fvs))
+  rw [Finset.notMem_union] at hx
+  exact (hb x hx.1).bs0_one hx.2 ha
 
--- theorem Ctx.JEq.beta_abs_cf' {Γ : Ctx} {m : ℕ} {A B a b Ba ba : Tm} {L : Finset ℕ}
---   (hA : JEq Γ (.univ m) A A)
---   (hB : ∀ x ∉ L, JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b.bs0 (.fv x)))
---   (ha : JEq Γ A a a)
---   : JEq Γ (B.bs0 a) (.app A B (.abs A b) a) (b.bs0 a)
---   := .beta_abs_cf (L := L) hA hB ha sorry sorry
+theorem Ctx.JEq.bs0_cf_univ {Γ : Ctx} {m n : ℕ} {A B B' a a' : Tm} {L : Finset ℕ}
+  (hA : Ctx.JEq Γ (.univ m) A A)
+  (hB : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
+  (ha : Ctx.JEq Γ A a a') : Γ.JEq (.univ n) (B.bs0 a) (B'.bs0 a') :=
+  have app_eq
+    : Ctx.JEq Γ (.univ n) (.app A (.univ n) (.abs A B) a) (.app A (.univ n) (.abs A B') a')
+    := .app_cf hA (fun x hx => (hB x hx).ok.univ)
+                  (.abs_cf hA (fun x hx => (hB x hx).ok.univ) hB) ha hA.ok.univ
+  have hba : Ctx.JEq Γ (.univ n) (.app A (.univ n) (.abs A B) a) (B.bs0 a)
+    := .beta_abs_cf hA
+        (fun x hx => (hB x hx).lhs) ha.lhs hA.ok.univ
+        (ha.lhs.bs0_one_cf (B := .univ n) (fun x hx => (hB x hx).lhs))
+  have hba' : Ctx.JEq Γ (.univ n) (.app A (.univ n) (.abs A B') a') (B'.bs0 a')
+    := .beta_abs_cf hA
+        (fun x hx => (hB x hx).rhs) ha.rhs hA.ok.univ
+        (ha.rhs.bs0_one_cf (B := .univ n) (fun x hx => (hB x hx).rhs))
+  hba.symm.trans (app_eq.trans hba')
 
--- theorem Ctx.JEq.bs0_cf {Γ : Ctx} {A B a a' b b' : Tm} {L : Finset ℕ}
---   (hb : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
---   (ha : Ctx.JEq Γ A a a') : Γ.JEq (B.bs0 a) (b.bs0 a) (b'.bs0 a) := by
---   sorry
+theorem Ctx.JEq.bs0_cf {Γ : Ctx} {m n : ℕ} {A B a a' b b' : Tm} {L : Finset ℕ}
+  (hA : Ctx.JEq Γ (.univ m) A A)
+  (hB : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
+  (hb : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
+  (ha : Ctx.JEq Γ A a a') : Γ.JEq (B.bs0 a) (b.bs0 a) (b'.bs0 a') :=
+  have hB' : Ctx.JEq Γ (.univ n) (B.bs0 a) (B.bs0 a')
+    := .bs0_cf_univ hA hB ha
+  have app_eq
+    : Ctx.JEq Γ (B.bs0 a) (.app A B (.abs A b) a) (.app A B (.abs A b') a')
+    := .app_cf hA hB (.abs_cf hA hB hb) ha hB'.lhs
+  have hba : Ctx.JEq Γ (B.bs0 a) (.app A B (.abs A b) a) (b.bs0 a)
+    := .beta_abs_cf hA
+        (fun x hx => (hb x hx).lhs) ha.lhs (ha.lhs.bs0_one_cf (B := .univ n) hB)
+        (ha.lhs.bs0_one_cf (fun x hx => (hb x hx).lhs))
+  have hba' : Ctx.JEq Γ (B.bs0 a') (.app A B (.abs A b') a') (b'.bs0 a')
+    := .beta_abs_cf hA
+        (fun x hx => (hb x hx).rhs) ha.rhs (ha.rhs.bs0_one_cf (B := .univ n) hB)
+        (ha.rhs.bs0_one_cf (fun x hx => (hb x hx).rhs))
+  hba.symm.trans (app_eq.trans (hB'.symm.cast hba'))
