@@ -293,3 +293,46 @@ theorem Ctx.Subst.set' {Γ Δ : Ctx} {σ τ : Tm.MSubst} {x : ℕ} {A : Tm} {a b
 theorem Ctx.JEq.m0 {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) {x : ℕ} (hx : x ∉ Γ.dv)
   : Γ.Subst (Γ.cons x A) (a.m0 x) (b.m0 x)
   := (Subst.refl h.ok).set' hx h.regular (by simp [h]) (by simp [h])
+
+theorem Ctx.JEq.ms0_one {Γ : Ctx} {A B a b b' : Tm} {x : ℕ}
+  (hb : Ctx.JEq (Γ.cons x A) B b b') (ha : Ctx.JEq Γ A a a)
+  : Γ.JEq (B.ms0 x a) (b.ms0 x a) (b'.ms0 x a)
+  := hb.subst_one (ha.m0 hb.ok.var)
+
+theorem Ctx.JEq.bs0_one {Γ : Ctx} {A B a b b' : Tm} {x : ℕ} (hx : x ∉ B.fvs ∪ b.fvs ∪ b'.fvs)
+  (hb : Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
+  (ha : Ctx.JEq Γ A a a) : Γ.JEq (B.bs0 a) (b.bs0 a) (b'.bs0 a) := by
+  simp at hx
+  convert hb.ms0_one ha using 1 <;> rw [Tm.ms0_bs0_notMem (ha := ha.lc_lhs)] <;> simp [*]
+
+theorem Ctx.JEq.bs0_one_cf {Γ : Ctx} {A B a b b' : Tm} {L : Finset ℕ}
+  (hb : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
+  (ha : Ctx.JEq Γ A a a) : Γ.JEq (B.bs0 a) (b.bs0 a) (b'.bs0 a) := by
+  have ⟨x, hx⟩ := Finset.exists_notMem (L ∪ (B.fvs ∪ b.fvs ∪ b'.fvs))
+  rw [Finset.notMem_union] at hx
+  exact (hb x hx.1).bs0_one hx.2 ha
+
+theorem Ctx.TyEq.bs0_one {Γ : Ctx} {A B B' a : Tm} {x : ℕ} (hx : x ∉ B.fvs ∪ B'.fvs)
+  (hb : Ctx.TyEq (Γ.cons x A) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
+  (ha : Ctx.JEq Γ A a a) : Γ.TyEq (B.bs0 a) (B'.bs0 a) := by
+  have ⟨ℓ, hb⟩ := hb;
+  exact ⟨ℓ, hb.bs0_one (B := .univ ℓ) (by simp [hx]) ha⟩
+
+-- theorem Ctx.TyEq.bs0_one_cf {Γ : Ctx} {A B a b b' : Tm} {L : Finset ℕ}
+--   (hb : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
+--   (ha : Ctx.JEq Γ A a a) : Γ.JEq (B.bs0 a) (b.bs0 a) (b'.bs0 a) := by
+--   have ⟨x, hx⟩ := Finset.exists_notMem (L ∪ (B.fvs ∪ b.fvs ∪ b'.fvs))
+--   rw [Finset.notMem_union] at hx
+--   exact (hb x hx.1).bs0_one hx.2 ha
+
+-- theorem Ctx.JEq.beta_abs_cf' {Γ : Ctx} {m : ℕ} {A B a b Ba ba : Tm} {L : Finset ℕ}
+--   (hA : JEq Γ (.univ m) A A)
+--   (hB : ∀ x ∉ L, JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b.bs0 (.fv x)))
+--   (ha : JEq Γ A a a)
+--   : JEq Γ (B.bs0 a) (.app A B (.abs A b) a) (b.bs0 a)
+--   := .beta_abs_cf (L := L) hA hB ha sorry sorry
+
+-- theorem Ctx.JEq.bs0_cf {Γ : Ctx} {A B a a' b b' : Tm} {L : Finset ℕ}
+--   (hb : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
+--   (ha : Ctx.JEq Γ A a a') : Γ.JEq (B.bs0 a) (b.bs0 a) (b'.bs0 a) := by
+--   sorry
