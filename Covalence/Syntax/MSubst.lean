@@ -330,6 +330,13 @@ theorem Tm.ms0_bsubst_b0_notMem (t : Tm) (a : Tm) (ha : a.bvi = 0) (n : ℕ)
     <;> apply_assumption
     <;> simp [*]
 
+theorem Tm.msubst_eqOn_subset_one {X : Finset ℕ} {σ : MSubst}
+  (h : σ.EqOn X 1) (t : Tm) (hX : t.fvs ⊆ X) : t.msubst σ = t
+  := by rw [t.msubst_eqOn_subset h hX, msubst_one]
+
+theorem Tm.msubst_eqOn_one (t : Tm) {σ : MSubst} (h : σ.EqOn t.fvs 1) : t.msubst σ = t
+  := by rw [t.msubst_eqOn h, msubst_one]
+
 theorem Tm.ms0_bs0_notMem (t : Tm) (a : Tm) (ha : a.bvi = 0)
   : ∀x ∉ t.fvs, (t.bs0 (.fv x)).ms0 x a = t.bs0 a
   := t.ms0_bsubst_b0_notMem a ha 0

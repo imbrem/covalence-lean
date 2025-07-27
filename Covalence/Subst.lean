@@ -343,7 +343,7 @@ theorem Ctx.JEq.bs0_cf_univ {Γ : Ctx} {m n : ℕ} {A B B' a a' : Tm} {L : Finse
         (ha.rhs.bs0_one_cf (B := .univ n) (fun x hx => (hB x hx).rhs))
   hba.symm.trans (app_eq.trans hba')
 
-theorem Ctx.JEq.bs0_cf {Γ : Ctx} {m n : ℕ} {A B a a' b b' : Tm} {L : Finset ℕ}
+theorem Ctx.JEq.bs0_cf_helper {Γ : Ctx} {m n : ℕ} {A B a a' b b' : Tm} {L : Finset ℕ}
   (hA : Ctx.JEq Γ (.univ m) A A)
   (hB : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
   (hb : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
@@ -362,3 +362,42 @@ theorem Ctx.JEq.bs0_cf {Γ : Ctx} {m n : ℕ} {A B a a' b b' : Tm} {L : Finset �
         (fun x hx => (hb x hx).rhs) ha.rhs (ha.rhs.bs0_one_cf (B := .univ n) hB)
         (ha.rhs.bs0_one_cf (fun x hx => (hb x hx).rhs))
   hba.symm.trans (app_eq.trans (hB'.symm.cast hba'))
+
+def Ctx.Ok.fromName0 {Γ : Ctx} {x : ℕ} {A : Tm} (hΓ : (Γ.cons x A).Ok) (y : ℕ) (hy : y ∉ Γ.dv)
+  : (Γ.cons x A).Subst (Γ.cons y A) ((Tm.fv x).m0 y) ((Tm.fv x).m0 y) :=
+  have hset : Tm.MSubst.EqOn Γ.dv 1 (.set 1 y (.fv x)) := fun z hz => by
+    simp [Tm.MSubst.get_set]; intro hz; cases hz; exact (hy hz).elim
+  have hA : (Γ.cons x A).JEq
+              (Tm.msubst (Tm.MSubst.set 1 y (Tm.fv x)) A)
+              ((Tm.MSubst.set 1 y (Tm.fv x)).get y)
+              ((Tm.MSubst.set 1 y (Tm.fv x)).get y) := by
+    simp only [Tm.MSubst.get_set_self]
+    rw [Tm.msubst_eqOn_subset_one hset.symm _ hΓ.ty.scoped]
+    exact .var hΓ.zero .here
+  .cons' (.wk0In (.to_eqOn (.refl hΓ.tail) hset hset) hΓ.var hΓ.ty) hy hΓ.ty hA hA
+
+def Ctx.Ok.toName0 {Γ : Ctx} {x : ℕ} {A : Tm} (hΓ : (Γ.cons x A).Ok) (y : ℕ) (hy : y ∉ Γ.dv)
+  : (Γ.cons y A).Subst (Γ.cons x A) ((Tm.fv y).m0 x) ((Tm.fv y).m0 x) :=
+  fromName0 (hΓ.tail.cons hy hΓ.ty) x hΓ.var
+
+theorem Ctx.JEq.rename0 {Γ : Ctx} {x : ℕ} {A B a b : Tm}
+  (h : Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (a.bs0 (.fv x)) (b.bs0 (.fv x)))
+  (hB : x ∉ B.fvs) (ha : x ∉ a.fvs) (hb : x ∉ b.fvs)
+  : ∀y ∉ Γ.dv, Ctx.JEq (Γ.cons y A) (B.bs0 (.fv y)) (a.bs0 (.fv y)) (b.bs0 (.fv y)) := by
+  intro y hy
+  convert h.subst_one (h.ok.toName0 y hy) using 1
+  <;> exact (Tm.ms0_bs0_notMem _ _ (by simp [Tm.bvi]) x (by assumption)).symm
+
+theorem Ctx.JEq.univ_of_cf {Γ : Ctx} {A B C : Tm} {L : Finset ℕ}
+  (h : ∀ x ∉ L, Ctx.TyEq (Γ.cons x A) (B.bs0 (.fv x)) (C.bs0 (.fv x)))
+  : ∃ℓ, ∀ x ∉ Γ.dv, Ctx.JEq (Γ.cons x A) (.univ ℓ) (B.bs0 (.fv x)) (C.bs0 (.fv x)) := by
+  have ⟨x, hx⟩ := Finset.exists_notMem (L ∪ Γ.dv ∪ B.fvs ∪ C.fvs)
+  have ⟨hL, hΓ, hB, hC⟩ : x ∉ L ∧ x ∉ Γ.dv ∧ x ∉ B.fvs ∧ x ∉ C.fvs
+    := by simp only [Finset.notMem_union] at hx; simp only [not_false_eq_true, and_self, hx]
+  have ⟨ℓ, h'⟩ := h x hL;
+  exact ⟨ℓ, h'.rename0 (B := .univ ℓ) (by simp) hB hC⟩
+
+theorem Ctx.JEq.univ_cf_iff {Γ : Ctx} {A B C : Tm}
+  : (∀ x ∉ Γ.dv, Ctx.TyEq (Γ.cons x A) (B.bs0 (.fv x)) (C.bs0 (.fv x)))
+  ↔ ∃ℓ, ∀ x ∉ Γ.dv, Ctx.JEq (Γ.cons x A) (.univ ℓ) (B.bs0 (.fv x)) (C.bs0 (.fv x)) :=
+  ⟨JEq.univ_of_cf, fun ⟨ℓ, h⟩ x hx => ⟨ℓ, h x hx⟩⟩
