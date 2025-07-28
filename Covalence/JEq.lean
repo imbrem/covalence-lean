@@ -1,4 +1,5 @@
 import Covalence.Syntax
+import Mathlib.Algebra.Order.Group.Nat
 
 inductive Ctx : Type where
   | nil : Ctx
@@ -211,6 +212,20 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → JEq Γ (.pi A B) mp mp
     → JEq Γ (.pi B A) mpr mpr
     → JEq Γ (.univ 0) A B
+  -- Universe levels
+  | univ_succ {Γ : Ctx} {ℓ ℓ' : ℕ}
+    : JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ')
+    → JEq Γ (.univ (ℓ + 2)) (.univ (ℓ + 1)) (.univ (ℓ' + 1))
+  | univ_max {Γ : Ctx} {ℓ ℓ' m m' n n' : ℕ}
+    : JEq Γ (.univ (m + 1)) (.univ m) (.univ m')
+    → JEq Γ (.univ (n + 1)) (.univ n) (.univ n')
+    → ℓ = m ⊔ n → ℓ' = m' ⊔ n'
+    → JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ')
+  | univ_imax {Γ : Ctx} {ℓ ℓ' m m' n n' : ℕ}
+    : JEq Γ (.univ (m + 1)) (.univ m) (.univ m')
+    → JEq Γ (.univ (n + 1)) (.univ n) (.univ n')
+    → ℓ = m.imax n → ℓ' = m'.imax n'
+    → JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ')
   -- Equivalence relations
   | trans {Γ : Ctx} {A a b c : Tm} : JEq Γ A a b → JEq Γ A b c → JEq Γ A a c
   | symm {Γ : Ctx} {A a b : Tm} : JEq Γ A a b → JEq Γ A b a
@@ -493,3 +508,31 @@ theorem Ctx.Ok.empty_ty {Γ : Ctx} (h : Γ.Ok) {ℓ : ℕ} : Γ.IsTy (.empty ℓ
 
 theorem Ctx.Ok.nats_ty {Γ : Ctx} (h : Γ.Ok) : Γ.IsTy .nats
   := ⟨1, h.nats⟩
+
+theorem Ctx.JEq.univ_add {Γ : Ctx} {m n : ℕ} (k : ℕ)
+  (hm : JEq Γ (.univ (m + 1)) (.univ m) (.univ n))
+  : JEq Γ (.univ (m + k + 1)) (.univ (m + k)) (.univ (n + k))
+  := by induction k with
+  | zero => exact hm
+  | succ k I => exact I.univ_succ
+
+theorem Ctx.JEq.univ_explode_succ {Γ : Ctx} {m : ℕ} (k : ℕ)
+  (h : JEq Γ (.univ (m + 1)) (.univ m) (.univ (m + 1)))
+  : JEq Γ (.univ (m + 1)) (.univ m) (.univ (m + k))
+  := by induction k generalizing m with
+  | zero => exact h.ok.univ
+  | succ k I =>
+    exact (I h).trans ((I h).univ_succ.symm.cast (by convert JEq.univ_add k h using 2; omega))
+
+-- theorem Ctx.JEq.univ_imax' {Γ : Ctx} {m m' n n' : ℕ}
+--   (hm : JEq Γ (.univ (m + 1)) (.univ m) (.univ m'))
+--   (hn : JEq Γ (.univ (n + 1)) (.univ n) (.univ n'))
+--   : JEq Γ (.univ ((m.imax n) + 1)) (.univ (m.imax n)) (.univ (m'.imax n'))
+--   := by
+--   cases n with
+--   | zero => cases n' with
+--     | zero => simp only [Nat.imax, ↓reduceIte, zero_add]; exact hm.ok.univ
+--     | succ n' =>
+--       simp [Nat.imax]
+--       sorry
+--   | succ => sorry

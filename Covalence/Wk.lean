@@ -87,6 +87,9 @@ theorem Ctx.JEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A a b : Tm} (h
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
     · exact Ie hΓΔ
   | prop_ext => apply JEq.prop_ext <;> apply_assumption <;> assumption
+  | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
+  | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'
+  | univ_imax _ _ hℓ hℓ' Im In => exact JEq.univ_imax (Im hΓΔ) (In hΓΔ) hℓ hℓ'
   | trans => apply JEq.trans <;> apply_assumption <;> assumption
   | symm => apply JEq.symm; apply_assumption; assumption
   | cast => apply JEq.cast <;> apply_assumption <;> assumption
@@ -295,6 +298,9 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
     · exact Ie hΓΔ
   | prop_ext => apply JEq.prop_ext <;> apply_assumption <;> assumption
+  | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
+  | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'
+  | univ_imax _ _ hℓ hℓ' Im In => exact JEq.univ_imax (Im hΓΔ) (In hΓΔ) hℓ hℓ'
   | trans => apply JEq.trans <;> apply_assumption <;> assumption
   | symm => apply JEq.symm; apply_assumption; assumption
   | cast => apply JEq.cast <;> apply_assumption <;> assumption

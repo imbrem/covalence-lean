@@ -350,9 +350,12 @@ theorem Ctx.Subst.set' {Γ Δ : Ctx} {σ : Tm.MSubst} {x : ℕ} {A : Tm} {a : Tm
       ).cons' hxΔ hΔ
     (by rw [Tm.msubst_set_eq (hx := Finset.not_mem_subset hΔ.scoped hxΔ)]; simp [hσ])
 
+theorem Ctx.HasTy.regular {Γ : Ctx} {A a : Tm} (h : Ctx.HasTy Γ A a) : Γ.IsTy A
+  := h.refl.regular
+
 theorem Ctx.HasTy.m0 {Γ : Ctx} {A a : Tm} (h : Ctx.HasTy Γ A a) {x : ℕ} (hx : x ∉ Γ.dv)
   : Γ.Subst (Γ.cons x A) (a.m0 x)
-  := (Subst.one h.ok).set' hx h.refl.regular (by simp [h])
+  := (Subst.one h.ok).set' hx h.regular (by simp [h])
 
 theorem Ctx.HasTy.ms0_one {Γ : Ctx} {A B a b : Tm} {x : ℕ}
   (hb : Ctx.HasTy (Γ.cons x A) B b) (ha : Ctx.HasTy Γ A a)
@@ -407,6 +410,10 @@ theorem Ctx.Cmp.trans {Γ : Ctx} {A a b c : Tm} (hab : Γ.Cmp A a b) (hbc : Γ.C
 
 theorem Ctx.Cmp.cast {Γ : Ctx} {A B a b : Tm} (h : Γ.Cmp A a b) (hAB : Γ.TyEq A B)
   : Γ.Cmp B a b := ⟨h.1.cast hAB, h.2.cast hAB⟩
+
+theorem Ctx.Cmp.ok {Γ : Ctx} {A a b : Tm} (h : Γ.Cmp A a b) : Γ.Ok := h.lhs_ty.ok
+
+theorem Ctx.Cmp.regular {Γ : Ctx} {A a b : Tm} (h : Γ.Cmp A a b) : Γ.IsTy A := h.lhs_ty.regular
 
 --TODO: we need substitution here...
 theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
@@ -550,6 +557,15 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
               (.fst_cf IA.1 (fun x hx => (IB x hx).1) Ie.1)
               (.snd_cf IA.1 (fun x hx => (IB x hx).1) Ie.1 (.bs0_cf_univ hB (.fst_cf hA hB he)))⟩
   | prop_ext hA hB hmp hmpr IA IB Imp Impr => exact ⟨IA.1, IB.1⟩
+  | univ_succ hs Is => exact ⟨.univ hs.ok, .cast (.symm ⟨_, hs.univ_succ.univ_succ⟩) (.univ hs.ok)⟩
+  | univ_max hm hn hℓ hℓ' _ _ => exact ⟨
+    .univ hm.ok,
+    .cast (.symm ⟨_, .univ_succ (.univ_max hm hn hℓ hℓ')⟩) (.univ hm.ok)
+  ⟩
+  | univ_imax hm hn hℓ hℓ' Im In => exact ⟨
+    .univ hm.ok,
+    .cast (.symm ⟨_, .univ_succ (.univ_imax hm hn hℓ hℓ')⟩) (.univ hm.ok)
+  ⟩
   | symm => apply Ctx.Cmp.symm; assumption
   | trans => apply Ctx.Cmp.trans <;> assumption
   | cast hA ha IA Ia => exact Ia.cast ⟨_, hA⟩
