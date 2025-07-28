@@ -189,6 +189,11 @@ theorem Ctx.WfEq.ty_left {Γ : Ctx} {A B : Tm} (h : Γ.WfEq A B) (hA : Γ.IsTy A
 theorem Ctx.WfEq.ty_right {Γ : Ctx} {A B : Tm} (h : Γ.WfEq A B) (hB : Γ.IsTy B) : Γ.TyEq A B :=
   (h.symm.ty_left hB).symm
 
+theorem Ctx.WfEq.lc_lhs {Γ : Ctx} {a b : Tm} (h : Γ.WfEq a b) : a.bvi = 0 :=
+  have ⟨_, h⟩ := h; h.lc_lhs
+
+theorem Ctx.WfEq.lc_rhs {Γ : Ctx} {a b : Tm} (h : Γ.WfEq a b) : b.bvi = 0 := h.symm.lc_lhs
+
 def Ctx.Wf (Γ : Ctx) (a : Tm) := Γ.WfEq a a
 
 theorem Ctx.WfEq.lhs {Γ : Ctx} {a b : Tm} (h : Γ.WfEq a b) : Γ.Wf a := h.trans h.symm
@@ -197,3 +202,13 @@ theorem Ctx.WfEq.rhs {Γ : Ctx} {a b : Tm} (h : Γ.WfEq a b) : Γ.Wf b := h.symm
 
 theorem Ctx.Wf.has_ty {Γ : Ctx} {a : Tm} (h : Γ.Wf a) : ∃A, Γ.HasTy A a
   := let ⟨A, hA⟩ := h; ⟨A, hA.ty_lhs⟩
+
+theorem Ctx.Wf.lc {Γ : Ctx} {a : Tm} (h : Γ.Wf a) : a.bvi = 0 := h.lc_lhs
+
+theorem Ctx.Wf.of_ty {Γ : Ctx} {A a : Tm} (h : Γ.HasTy A a) : Γ.Wf a := ⟨A, h.refl⟩
+
+theorem Ctx.WfEq.jeq {Γ : Ctx} {A a b : Tm} (h : Γ.WfEq a b) (ha : Γ.HasTy A a) : Γ.JEq A a b :=
+  let ⟨_, h⟩ := h; have hAB := h.ty_lhs.unique ha; hAB.cast h
+
+theorem Ctx.WfEq.wk0 {Γ : Ctx} {A a b : Tm} (h : Γ.WfEq a b) {x} (hx : x ∉ Γ.dv) (hA : Γ.IsTy A)
+  : (Γ.cons x A).WfEq a b := have ⟨_, h⟩ := h; ⟨_, h.wk0 hx hA⟩
