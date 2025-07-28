@@ -12,13 +12,13 @@ inductive Tm : Type
 | nil (ℓ : ℕ) : Tm
 | empty (ℓ : ℕ) : Tm
 | eqn (A a b : Tm) : Tm
-| pi (A B : Tm) : Tm
-| abs (A b : Tm) : Tm
-| app (A B f a : Tm) : Tm
-| sigma (A B : Tm) : Tm
-| pair (A B a b : Tm) : Tm
-| fst (A B a : Tm) : Tm
-| snd (A B a : Tm) : Tm
+| pi (ℓ : ℕ) (A B : Tm) : Tm
+| abs (ℓ : ℕ) (A b : Tm) : Tm
+| app (ℓ : ℕ) (A B f a : Tm) : Tm
+| sigma (ℓ : ℕ) (A B : Tm) : Tm
+| pair (ℓ : ℕ) (A B a b : Tm) : Tm
+| fst (ℓ : ℕ) (A B a : Tm) : Tm
+| snd (ℓ : ℕ) (A B a : Tm) : Tm
 | dite (φ A a b : Tm) : Tm
 | trunc (A : Tm) : Tm
 | choose (A φ : Tm) : Tm
@@ -29,19 +29,19 @@ inductive Tm : Type
 | let₁ (A a b : Tm) : Tm
 | invalid : Tm
 
-abbrev Tm.not (t : Tm) : Tm := .pi t (.empty 0)
+abbrev Tm.not (t : Tm) : Tm := .pi 0 t (.empty 0)
 
 @[simp]
 def Tm.fvs : Tm → Finset ℕ
   | .fv x => {x}
   | .eqn A a b => A.fvs ∪ a.fvs ∪ b.fvs
-  | .pi A B => A.fvs ∪ B.fvs
-  | .abs A b => A.fvs ∪ b.fvs
-  | .app A B f a => A.fvs ∪ B.fvs ∪ f.fvs ∪ a.fvs
-  | .sigma A B => A.fvs ∪ B.fvs
-  | .pair A B a b => A.fvs ∪ B.fvs ∪ a.fvs ∪ b.fvs
-  | .fst A B a => A.fvs ∪ B.fvs ∪ a.fvs
-  | .snd A B a => A.fvs ∪ B.fvs ∪ a.fvs
+  | .pi _ A B => A.fvs ∪ B.fvs
+  | .abs _ A b => A.fvs ∪ b.fvs
+  | .app _ A B f a => A.fvs ∪ B.fvs ∪ f.fvs ∪ a.fvs
+  | .sigma _ A B => A.fvs ∪ B.fvs
+  | .pair _ A B a b => A.fvs ∪ B.fvs ∪ a.fvs ∪ b.fvs
+  | .fst _ A B a => A.fvs ∪ B.fvs ∪ a.fvs
+  | .snd _ A B a => A.fvs ∪ B.fvs ∪ a.fvs
   | .dite φ A a b => φ.fvs ∪ A.fvs ∪ a.fvs ∪ b.fvs
   | .trunc A => A.fvs
   | .choose A φ => A.fvs ∪ φ.fvs
@@ -52,13 +52,13 @@ def Tm.fvs : Tm → Finset ℕ
 def Tm.bvi : Tm → ℕ
   | .bv i => (i + 1)
   | .eqn A a b => A.bvi ⊔ a.bvi ⊔ b.bvi
-  | .pi A B => A.bvi ⊔ (B.bvi - 1)
-  | .abs A b => A.bvi ⊔ (b.bvi - 1)
-  | .app A B f a => A.bvi ⊔ (B.bvi - 1) ⊔ f.bvi ⊔ a.bvi
-  | .sigma A B => A.bvi ⊔ (B.bvi - 1)
-  | .pair A B a b => A.bvi ⊔ (B.bvi - 1) ⊔ a.bvi ⊔ b.bvi
-  | .fst A B a => A.bvi ⊔ (B.bvi - 1) ⊔ a.bvi
-  | .snd A B a => A.bvi ⊔ (B.bvi - 1) ⊔ a.bvi
+  | .pi _ A B => A.bvi ⊔ (B.bvi - 1)
+  | .abs _ A b => A.bvi ⊔ (b.bvi - 1)
+  | .app _ A B f a => A.bvi ⊔ (B.bvi - 1) ⊔ f.bvi ⊔ a.bvi
+  | .sigma _ A B => A.bvi ⊔ (B.bvi - 1)
+  | .pair _ A B a b => A.bvi ⊔ (B.bvi - 1) ⊔ a.bvi ⊔ b.bvi
+  | .fst _ A B a => A.bvi ⊔ (B.bvi - 1) ⊔ a.bvi
+  | .snd _ A B a => A.bvi ⊔ (B.bvi - 1) ⊔ a.bvi
   | .dite φ A a b => φ.bvi ⊔ A.bvi ⊔ a.bvi ⊔ b.bvi
   | .trunc A => A.bvi
   | .choose A φ => A.bvi ⊔ (φ.bvi - 1)
@@ -75,13 +75,13 @@ def Tm.bwk (ρ : BWk) : Tm → Tm
   | .nil ℓ => .nil ℓ
   | .empty ℓ => .empty ℓ
   | .eqn A a b => .eqn (A.bwk ρ) (a.bwk ρ) (b.bwk ρ)
-  | .pi A B => .pi (A.bwk ρ) (B.bwk (↑b ρ))
-  | .abs A b => .abs (A.bwk ρ) (b.bwk (↑b ρ))
-  | .app A B f a => .app (A.bwk ρ) (B.bwk (↑b ρ)) (f.bwk ρ) (a.bwk ρ)
-  | .sigma A B => .sigma (A.bwk ρ) (B.bwk (↑b ρ))
-  | .pair A B a b => .pair (A.bwk ρ) (B.bwk (↑b ρ)) (a.bwk ρ) (b.bwk ρ)
-  | .fst A B a => .fst (A.bwk ρ) (B.bwk (↑b ρ)) (a.bwk ρ)
-  | .snd A B a => .snd (A.bwk ρ) (B.bwk (↑b ρ)) (a.bwk ρ)
+  | .pi ℓ A B => .pi ℓ (A.bwk ρ) (B.bwk (↑b ρ))
+  | .abs ℓ A b => .abs ℓ (A.bwk ρ) (b.bwk (↑b ρ))
+  | .app ℓ A B f a => .app ℓ (A.bwk ρ) (B.bwk (↑b ρ)) (f.bwk ρ) (a.bwk ρ)
+  | .sigma ℓ A B => .sigma ℓ (A.bwk ρ) (B.bwk (↑b ρ))
+  | .pair ℓ A B a b => .pair ℓ (A.bwk ρ) (B.bwk (↑b ρ)) (a.bwk ρ) (b.bwk ρ)
+  | .fst ℓ A B a => .fst ℓ (A.bwk ρ) (B.bwk (↑b ρ)) (a.bwk ρ)
+  | .snd ℓ A B a => .snd ℓ (A.bwk ρ) (B.bwk (↑b ρ)) (a.bwk ρ)
   | .dite φ A a b => .dite (φ.bwk ρ) (A.bwk ρ) (a.bwk ρ) (b.bwk ρ)
   | .trunc A => .trunc (A.bwk ρ)
   | .choose A φ => .choose (A.bwk ρ) (φ.bwk (↑b ρ))
@@ -146,13 +146,13 @@ def Tm.bsubst (σ : BSubst) : Tm → Tm
   | .nil ℓ => .nil ℓ
   | .empty ℓ => .empty ℓ
   | .eqn A a b => .eqn (A.bsubst σ) (a.bsubst σ) (b.bsubst σ)
-  | .pi A B => .pi (A.bsubst σ) (B.bsubst (↑s σ))
-  | .abs A b => .abs (A.bsubst σ) (b.bsubst (↑s σ))
-  | .app A B f a => .app (A.bsubst σ) (B.bsubst (↑s σ)) (f.bsubst σ) (a.bsubst σ)
-  | .sigma A B => .sigma (A.bsubst σ) (B.bsubst (↑s σ))
-  | .pair A B a b => .pair (A.bsubst σ) (B.bsubst (↑s σ)) (a.bsubst σ) (b.bsubst σ)
-  | .fst A B a => .fst (A.bsubst σ) (B.bsubst (↑s σ)) (a.bsubst σ)
-  | .snd A B a => .snd (A.bsubst σ) (B.bsubst (↑s σ)) (a.bsubst σ)
+  | .pi ℓ A B => .pi ℓ (A.bsubst σ) (B.bsubst (↑s σ))
+  | .abs ℓ A b => .abs ℓ (A.bsubst σ) (b.bsubst (↑s σ))
+  | .app ℓ A B f a => .app ℓ (A.bsubst σ) (B.bsubst (↑s σ)) (f.bsubst σ) (a.bsubst σ)
+  | .sigma ℓ A B => .sigma ℓ (A.bsubst σ) (B.bsubst (↑s σ))
+  | .pair ℓ A B a b => .pair ℓ (A.bsubst σ) (B.bsubst (↑s σ)) (a.bsubst σ) (b.bsubst σ)
+  | .fst ℓ A B a => .fst ℓ (A.bsubst σ) (B.bsubst (↑s σ)) (a.bsubst σ)
+  | .snd ℓ A B a => .snd ℓ (A.bsubst σ) (B.bsubst (↑s σ)) (a.bsubst σ)
   | .dite φ A a b => .dite (φ.bsubst σ) (A.bsubst σ) (a.bsubst σ) (b.bsubst σ)
   | .trunc A => .trunc (A.bsubst σ)
   | .choose A φ => .choose (A.bsubst σ) (φ.bsubst (↑s σ))
@@ -383,13 +383,13 @@ def Tm.fsubst (σ : FSubst) : Tm → Tm
   | .nil ℓ => .nil ℓ
   | .empty ℓ => .empty ℓ
   | .eqn A a b => .eqn (A.fsubst σ) (a.fsubst σ) (b.fsubst σ)
-  | .pi A B => .pi (A.fsubst σ) (B.fsubst (↑f σ))
-  | .abs A b => .abs (A.fsubst σ) (b.fsubst (↑f σ))
-  | .app A B f a => .app (A.fsubst σ) (B.fsubst (↑f σ)) (f.fsubst σ) (a.fsubst σ)
-  | .sigma A B => .sigma (A.fsubst σ) (B.fsubst (↑f σ))
-  | .pair A B a b => .pair (A.fsubst σ) (B.fsubst (↑f σ)) (a.fsubst σ) (b.fsubst σ)
-  | .fst A B a => .fst (A.fsubst σ) (B.fsubst (↑f σ)) (a.fsubst σ)
-  | .snd A B a => .snd (A.fsubst σ) (B.fsubst (↑f σ)) (a.fsubst σ)
+  | .pi ℓ A B => .pi ℓ (A.fsubst σ) (B.fsubst (↑f σ))
+  | .abs ℓ A b => .abs ℓ (A.fsubst σ) (b.fsubst (↑f σ))
+  | .app ℓ A B f a => .app ℓ (A.fsubst σ) (B.fsubst (↑f σ)) (f.fsubst σ) (a.fsubst σ)
+  | .sigma ℓ A B => .sigma ℓ (A.fsubst σ) (B.fsubst (↑f σ))
+  | .pair ℓ A B a b => .pair ℓ (A.fsubst σ) (B.fsubst (↑f σ)) (a.fsubst σ) (b.fsubst σ)
+  | .fst ℓ A B a => .fst ℓ (A.fsubst σ) (B.fsubst (↑f σ)) (a.fsubst σ)
+  | .snd ℓ A B a => .snd ℓ (A.fsubst σ) (B.fsubst (↑f σ)) (a.fsubst σ)
   | .dite φ A a b => .dite (φ.fsubst σ) (A.fsubst σ) (a.fsubst σ) (b.fsubst σ)
   | .trunc A => .trunc (A.fsubst σ)
   | .choose A φ => .choose (A.fsubst σ) (φ.fsubst (↑f σ))
@@ -596,13 +596,13 @@ theorem mem_liftBvSet_iff {S : Set ℕ} {i : ℕ} :
 def Tm.bvs : Tm → Set ℕ
   | .bv i => {i}
   | .eqn A a b => A.bvs ∪ a.bvs ∪ b.bvs
-  | .pi A B => A.bvs ∪ liftBvSet B.bvs
-  | .abs A b => A.bvs ∪ liftBvSet b.bvs
-  | .app A B f a => A.bvs ∪ liftBvSet B.bvs ∪ f.bvs ∪ a.bvs
-  | .sigma A B => A.bvs ∪ liftBvSet B.bvs
-  | .pair A B a b => A.bvs ∪ liftBvSet B.bvs ∪ a.bvs ∪ b.bvs
-  | .fst A B a => A.bvs ∪ liftBvSet B.bvs ∪ a.bvs
-  | .snd A B a => A.bvs ∪ liftBvSet B.bvs ∪ a.bvs
+  | .pi _ A B => A.bvs ∪ liftBvSet B.bvs
+  | .abs _ A b => A.bvs ∪ liftBvSet b.bvs
+  | .app _ A B f a => A.bvs ∪ liftBvSet B.bvs ∪ f.bvs ∪ a.bvs
+  | .sigma _ A B => A.bvs ∪ liftBvSet B.bvs
+  | .pair _ A B a b => A.bvs ∪ liftBvSet B.bvs ∪ a.bvs ∪ b.bvs
+  | .fst _ A B a => A.bvs ∪ liftBvSet B.bvs ∪ a.bvs
+  | .snd _ A B a => A.bvs ∪ liftBvSet B.bvs ∪ a.bvs
   | .dite φ A a b => φ.bvs ∪ A.bvs ∪ a.bvs ∪ b.bvs
   | .trunc A => A.bvs
   | .choose A φ => A.bvs ∪ liftBvSet φ.bvs
@@ -627,13 +627,13 @@ theorem Tm.bvs_max (t : Tm) : ∀ i ∈ t.bvs, i < t.bvi := by
 def Tm.bvsi : Tm → Set ℕ
   | .bv i => {i + 1, 0}
   | .eqn A a b => A.bvsi ∪ a.bvsi ∪ b.bvsi
-  | .pi A B => A.bvsi ∪ Nat.pred '' B.bvsi
-  | .abs A b => A.bvsi ∪ Nat.pred '' b.bvsi
-  | .app A B f a => A.bvsi ∪ Nat.pred '' B.bvsi ∪ f.bvsi ∪ a.bvsi
-  | .sigma A B => A.bvsi ∪ Nat.pred '' B.bvsi
-  | .pair A B a b => A.bvsi ∪ Nat.pred '' B.bvsi ∪ a.bvsi ∪ b.bvsi
-  | .fst A B a => A.bvsi ∪ Nat.pred '' B.bvsi ∪ a.bvsi
-  | .snd A B a => A.bvsi ∪ Nat.pred '' B.bvsi ∪ a.bvsi
+  | .pi _ A B => A.bvsi ∪ Nat.pred '' B.bvsi
+  | .abs _ A b => A.bvsi ∪ Nat.pred '' b.bvsi
+  | .app _ A B f a => A.bvsi ∪ Nat.pred '' B.bvsi ∪ f.bvsi ∪ a.bvsi
+  | .sigma _ A B => A.bvsi ∪ Nat.pred '' B.bvsi
+  | .pair _ A B a b => A.bvsi ∪ Nat.pred '' B.bvsi ∪ a.bvsi ∪ b.bvsi
+  | .fst _ A B a => A.bvsi ∪ Nat.pred '' B.bvsi ∪ a.bvsi
+  | .snd _ A B a => A.bvsi ∪ Nat.pred '' B.bvsi ∪ a.bvsi
   | .dite φ A a b => φ.bvsi ∪ A.bvsi ∪ a.bvsi ∪ b.bvsi
   | .trunc A => A.bvsi
   | .choose A φ => A.bvsi ∪ Nat.pred '' φ.bvsi

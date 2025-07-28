@@ -144,9 +144,9 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
     }
   | nil_ok | cons_ok => exact hΓΔ.src_ok.zero
   | eqn_ext hA ha hb he IA Ia Ib Ie => exact .eqn_ext (IA hΓΔ) (Ia hΓΔ) (Ib hΓΔ) (Ie hΓΔ)
-  | pi_ext_cf hA hB hf hg hfg IA IB If Ig Ifg =>
+  | pi_ext_cf hA hB hℓ hf hg hfg IA IB If Ig Ifg =>
     rename Finset ℕ => L
-    rename_i A B f g
+    rename_i ℓ m n A B f g
     apply JEq.pi_ext_cf
     · exact IA hΓΔ
     · {
@@ -164,22 +164,23 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
           apply JEq.scoped_cf_ty; assumption
         }
       }
+    · exact hℓ
     · exact If hΓΔ
     · exact Ig hΓΔ
     · {
         intro x hx
         have ⟨hΓ, hΔ, hL⟩ : x ∉ Γ.dv ∧ x ∉ hΓΔ.trg.dv ∧ x ∉ L
           := by simp only [<-Finset.notMem_union]; exact hx
-        have hABf : (Tm.app (A.msubst σ) (B.msubst σ) (f.msubst σ) (.fv x))
-                  = (Tm.app A B f (.fv x)).msubst (σ.lift x) := by
+        have hABf : (Tm.app ℓ (A.msubst σ) (B.msubst σ) (f.msubst σ) (.fv x))
+                  = (Tm.app ℓ A B f (.fv x)).msubst (σ.lift x) := by
                   simp; constructorm* _ ∧ _
                   <;> rw [Tm.msubst_lift_eq]
                   <;> apply Finset.notMem_mono _ hΔ
                   <;> first
                   | (apply JEq.scoped_cf_ty; assumption)
                   | (apply JEq.scoped_rhs; assumption)
-        have hABg : (Tm.app (A.msubst σ) (B.msubst σ) (g.msubst σ) (.fv x))
-                  = (Tm.app A B g (.fv x)).msubst (σ.lift x) := by
+        have hABg : (Tm.app ℓ (A.msubst σ) (B.msubst σ) (g.msubst σ) (.fv x))
+                  = (Tm.app ℓ A B g (.fv x)).msubst (σ.lift x) := by
                   simp; constructorm* _ ∧ _
                   <;> rw [Tm.msubst_lift_eq]
                   <;> apply Finset.notMem_mono _ hΔ
@@ -218,9 +219,9 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
       })
     <;> assumption
   | prop_ext hA hB hmp hmpr IA IB Imp Impr => exact .prop_ext (IA hΓΔ) (IB hΓΔ) (Imp hΓΔ) (Impr hΓΔ)
-  | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
-  | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'
-  | univ_imax _ _ hℓ hℓ' Im In => exact JEq.univ_imax (Im hΓΔ) (In hΓΔ) hℓ hℓ'
+  -- | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
+  -- | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'
+  -- | univ_imax _ _ hℓ hℓ' Im In => exact JEq.univ_imax (Im hΓΔ) (In hΓΔ) hℓ hℓ'
   | var _ hA => exact hΓΔ.at hA
   | trans _ _ Ia Ib => exact (Ia hΓΔ).trans (Ib hΓΔ)
   | symm _ Ia => exact (Ia hΓΔ).symm
@@ -336,19 +337,25 @@ theorem Ctx.TyEq.bs0_one_cf {Γ : Ctx} {A B a b b' : Tm} {L : Finset ℕ}
 theorem Ctx.JEq.bs0_cf_univ {Γ : Ctx} {n : ℕ} {A B B' a a' : Tm} {L : Finset ℕ}
   (hB : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
   (ha : Ctx.JEq Γ A a a') : Γ.JEq (.univ n) (B.bs0 a) (B'.bs0 a') :=
-  have ⟨_, hA⟩ := ha.regular;
+  have ⟨m, hA⟩ := ha.regular;
   have app_eq
-    : Ctx.JEq Γ (.univ n) (.app A (.univ n) (.abs A B) a) (.app A (.univ n) (.abs A B') a')
-    := .app_cf hA (fun x hx => (hB x hx).ok.univ)
-                  (.abs_cf hA (fun x hx => (hB x hx).ok.univ) hB) ha hA.ok.univ
-  have hba : Ctx.JEq Γ (.univ n) (.app A (.univ n) (.abs A B) a) (B.bs0 a)
+    : Ctx.JEq Γ (.univ n)
+      (.app (m.imax (n + 1)) A (.univ n) (.abs (m.imax (n + 1)) A B) a)
+      (.app (m.imax (n + 1)) A (.univ n) (.abs (m.imax (n + 1)) A B') a')
+    := .app_cf hA (fun x hx => (hB x hx).ok.univ) rfl
+                  (.abs_cf hA (fun x hx => (hB x hx).ok.univ) rfl hB) ha hA.ok.univ
+  have hba : Ctx.JEq Γ (.univ n)
+              (.app (m.imax (n + 1)) A (.univ n) (.abs (m.imax (n + 1)) A B) a) (B.bs0 a)
     := .beta_abs_cf (L := L ∪ Γ.dv) hA
         (fun x hx => by simp at hx; exact (hA.lhs_cons hx.2).ok.univ)
+        rfl
         (fun x hx => by simp at hx; exact (hB x hx.1).lhs) ha.lhs hA.ok.univ
         (ha.lhs.bs0_one_cf (B := .univ n) (fun x hx => (hB x hx).lhs))
-  have hba' : Ctx.JEq Γ (.univ n) (.app A (.univ n) (.abs A B') a') (B'.bs0 a')
+  have hba' : Ctx.JEq Γ (.univ n)
+                (.app (m.imax (n + 1)) A (.univ n) (.abs (m.imax (n + 1)) A B') a') (B'.bs0 a')
     := .beta_abs_cf (L := L ∪ Γ.dv) hA
         (fun x hx => by simp at hx; exact (hA.lhs_cons hx.2).ok.univ)
+        rfl
         (fun x hx => by simp at hx; exact (hB x hx.1).rhs) ha.rhs hA.ok.univ
         (ha.rhs.bs0_one_cf (B := .univ n) (fun x hx => (hB x hx).rhs))
   hba.symm.trans (app_eq.trans hba')
@@ -416,14 +423,15 @@ theorem Ctx.JEq.bs0_cf {Γ : Ctx} {A B a a' b b' : Tm} {L : Finset ℕ}
   have hb : ∀x ∉ L ∪ Γ.dv, Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x))
     := fun x hx => by simp at hx; exact hb x hx.1
   have app_eq
-    : Ctx.JEq Γ (B.bs0 a) (.app A B (.abs A b) a) (.app A B (.abs A b') a')
-    := .app_cf hA hB (.abs_cf hA hB hb) ha hB'.lhs
-  have hba : Ctx.JEq Γ (B.bs0 a) (.app A B (.abs A b) a) (b.bs0 a)
-    := .beta_abs_cf hA
-        hB (fun x hx => (hb x hx).lhs) ha.lhs (ha.lhs.bs0_one_cf (B := .univ n) hB)
+    : Ctx.JEq Γ (B.bs0 a) (.app (m.imax n) A B (.abs (m.imax n) A b) a)
+                          (.app (m.imax n) A B (.abs (m.imax n) A b') a')
+    := .app_cf hA hB rfl (.abs_cf hA hB rfl hb) ha hB'.lhs
+  have hba : Ctx.JEq Γ (B.bs0 a) (.app (m.imax n) A B (.abs (m.imax n) A b) a) (b.bs0 a)
+    := .beta_abs_cf hA hB rfl
+        (fun x hx => (hb x hx).lhs) ha.lhs (ha.lhs.bs0_one_cf (B := .univ n) hB)
         (ha.lhs.bs0_one_cf (fun x hx => (hb x hx).lhs))
-  have hba' : Ctx.JEq Γ (B.bs0 a') (.app A B (.abs A b') a') (b'.bs0 a')
-    := .beta_abs_cf hA
-        hB (fun x hx => (hb x hx).rhs) ha.rhs (ha.rhs.bs0_one_cf (B := .univ n) hB)
+  have hba' : Ctx.JEq Γ (B.bs0 a') (.app (m.imax n) A B (.abs (m.imax n) A b') a') (b'.bs0 a')
+    := .beta_abs_cf hA hB rfl
+        (fun x hx => (hb x hx).rhs) ha.rhs (ha.rhs.bs0_one_cf (B := .univ n) hB)
         (ha.rhs.bs0_one_cf (fun x hx => (hb x hx).rhs))
   exact hba.symm.trans (app_eq.trans (hB'.symm.cast hba'))

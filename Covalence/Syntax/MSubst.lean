@@ -20,13 +20,13 @@ def Tm.msubst (σ : MSubst) : Tm → Tm
   | .nil ℓ => .nil ℓ
   | .empty ℓ => .empty ℓ
   | .eqn A a b => .eqn (A.msubst σ) (a.msubst σ) (b.msubst σ)
-  | .pi A B => .pi (A.msubst σ) (B.msubst σ)
-  | .abs A b => .abs (A.msubst σ) (b.msubst σ)
-  | .app A B f a => .app (A.msubst σ) (B.msubst σ) (f.msubst σ) (a.msubst σ)
-  | .sigma A B => .sigma (A.msubst σ) (B.msubst σ)
-  | .pair A B a b => .pair (A.msubst σ) (B.msubst σ) (a.msubst σ) (b.msubst σ)
-  | .fst A B a => .fst (A.msubst σ) (B.msubst σ) (a.msubst σ)
-  | .snd A B a => .snd (A.msubst σ) (B.msubst σ) (a.msubst σ)
+  | .pi ℓ A B => .pi ℓ (A.msubst σ) (B.msubst σ)
+  | .abs ℓ A b => .abs ℓ (A.msubst σ) (b.msubst σ)
+  | .app ℓ A B f a => .app ℓ (A.msubst σ) (B.msubst σ) (f.msubst σ) (a.msubst σ)
+  | .sigma ℓ A B => .sigma ℓ (A.msubst σ) (B.msubst σ)
+  | .pair ℓ A B a b => .pair ℓ (A.msubst σ) (B.msubst σ) (a.msubst σ) (b.msubst σ)
+  | .fst ℓ A B a => .fst ℓ (A.msubst σ) (B.msubst σ) (a.msubst σ)
+  | .snd ℓ A B a => .snd ℓ (A.msubst σ) (B.msubst σ) (a.msubst σ)
   | .dite φ A a b => .dite (φ.msubst σ) (A.msubst σ) (a.msubst σ) (b.msubst σ)
   | .trunc A => .trunc (A.msubst σ)
   | .choose A φ => .choose (A.msubst σ) (φ.msubst σ)
@@ -37,14 +37,14 @@ def Tm.msubst (σ : MSubst) : Tm → Tm
   | .let₁ A a b => .let₁ (A.msubst σ) (a.msubst σ) (b.msubst σ)
   | .invalid => .invalid
 
-theorem Tm.msubst_fst {σ : MSubst} {A B a : Tm} :
-  (Tm.fst A B a).msubst σ = .fst (A.msubst σ) (B.msubst σ) (a.msubst σ) := rfl
+theorem Tm.msubst_fst {σ : MSubst} {ℓ : ℕ} {A B a : Tm} :
+  (Tm.fst ℓ A B a).msubst σ = .fst ℓ (A.msubst σ) (B.msubst σ) (a.msubst σ) := rfl
 
 theorem Tm.msubst_choose {σ : MSubst} {A φ : Tm} :
   (Tm.choose A φ).msubst σ = .choose (A.msubst σ) (φ.msubst σ) := rfl
 
-theorem Tm.msubst_app_succ {σ : MSubst} {n : Tm} :
-  (Tm.app .nats .nats .succ n).msubst σ = .app .nats .nats .succ (n.msubst σ) := rfl
+theorem Tm.msubst_app_succ {σ : MSubst} {ℓ : ℕ} {n : Tm} :
+  (Tm.app ℓ .nats .nats .succ n).msubst σ = .app ℓ .nats .nats .succ (n.msubst σ) := rfl
 
 @[simp]
 theorem Tm.msubst_one (t : Tm) : t.msubst 1 = t := by induction t <;> simp [*]
