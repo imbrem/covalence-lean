@@ -150,6 +150,191 @@ theorem Ctx.HasTy.abs_k {Γ : Ctx} {m n : ℕ} {A B b : Tm}
   : Γ.HasTy (.pi A B) (.abs A b)
   := .abs_cf hA (hB.to_cf_dv hA.refl.ty_eq) (hb.to_cf_dv hA.refl.ty_eq)
 
+inductive Ctx.Subst : Ctx → Ctx → Tm.MSubst → Prop
+  | nil {Γ : Ctx} {σ : Tm.MSubst} : Γ.Ok → Subst Γ .nil σ
+  | cons' {Γ Δ : Ctx} {σ : Tm.MSubst} {x : ℕ} {A : Tm}
+    : Γ.Subst Δ σ
+    → x ∉ Δ.dv
+    → Δ.IsTy A
+    → Γ.HasTy (A.msubst σ) (σ.get x)
+    → Γ.Subst (Δ.cons x A) σ
+
+theorem Ctx.Subst.at {Γ Δ : Ctx} {σ : Tm.MSubst} (h : Γ.Subst Δ σ)
+  {x : ℕ} {A : Tm} (hA : Δ.At x A) : Γ.HasTy (A.msubst σ) (σ x) := by
+  induction hA <;> cases h <;> apply_assumption; assumption
+
+theorem Ctx.Subst.refl {Γ Δ : Ctx} {σ : Tm.MSubst} (h : Γ.Subst Δ σ) : Γ.SubstEq Δ σ σ
+  := by induction h <;> constructor <;> (first | apply HasTy.refl | apply_assumption) <;> assumption
+
+def Ctx.Subst.src {Γ Δ : Ctx} {σ : Tm.MSubst} (_ : Γ.Subst Δ σ) : Ctx := Γ
+
+def Ctx.Subst.trg {Γ Δ : Ctx} {σ : Tm.MSubst} (_ : Γ.Subst Δ σ) : Ctx := Δ
+
+theorem Ctx.Subst.src_ok {Γ Δ : Ctx} {σ : Tm.MSubst} (h : Γ.Subst Δ σ) : Γ.Ok := by
+  induction h <;> assumption
+
+theorem Ctx.Subst.trg_ok {Γ Δ : Ctx} {σ : Tm.MSubst} (h : Γ.Subst Δ σ) : Δ.Ok := by
+  induction h <;> constructor <;> assumption
+
+theorem Ctx.JEq.subst {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
+  (hΓΔ : Γ.Subst Δ σ) (h : Δ.JEq A a b) : Γ.JEq (A.msubst σ) (a.msubst σ) (b.msubst σ)
+  := h.subst_one hΓΔ.refl
+
+theorem Ctx.JEq.subst_univ {Γ Δ : Ctx} {σ : Tm.MSubst} {ℓ : ℕ} {A B : Tm}
+  (hΓΔ : Γ.Subst Δ σ) (h : Δ.JEq (.univ ℓ) A B)
+  : Γ.JEq (.univ ℓ) (A.msubst σ) (B.msubst σ)
+  := h.subst hΓΔ
+
+theorem Ctx.TyEq.subst {Γ Δ : Ctx} {σ : Tm.MSubst} {A B : Tm}
+  (hΓΔ : Γ.Subst Δ σ) (h : Δ.TyEq A B) : Γ.TyEq (A.msubst σ) (B.msubst σ)
+  := have ⟨ℓ, h⟩ := h; ⟨ℓ, h.subst hΓΔ⟩
+
+theorem Ctx.IsTy.subst {Γ Δ : Ctx} {σ : Tm.MSubst} {A : Tm}
+  (hΓΔ : Γ.Subst Δ σ) (h : Δ.IsTy A) : Γ.IsTy (A.msubst σ)
+  := TyEq.subst hΓΔ h
+
+theorem Ctx.Subst.lc {Γ Δ : Ctx} {σ : Tm.MSubst} (h : Γ.Subst Δ σ)
+  : σ.Lc Δ.dv := h.refl.lc_lhs
+
+theorem Ctx.Subst.wkIn {Γ Δ Θ : Ctx} {σ : Tm.MSubst} (hΓΔ : Γ.Wk Δ) (hΔΘ : Δ.Subst Θ σ)
+  : Γ.Subst Θ σ := by
+  induction hΔΘ with
+  | nil _ => exact .nil hΓΔ.src_ok
+  | cons' hΔΘ hx hΘ hσ I => exact I.cons' hx hΘ (hσ.wk hΓΔ)
+
+theorem Ctx.Subst.wk0In {Γ Δ : Ctx} {σ : Tm.MSubst}
+  (h : Γ.Subst Δ σ) {x} (hx : x ∉ Γ.dv) {A : Tm} (hA : Γ.IsTy A)
+  : (Γ.cons x A).Subst Δ σ := h.wkIn (hA.lhs_pure_wk0 hx).wk
+
+theorem Ctx.Subst.one {Γ : Ctx} (h : Γ.Ok) : Γ.Subst Γ 1 := by induction h with
+  | nil => exact .nil .nil
+  | cons hΓΔ hx hA I =>
+    have h' := hΓΔ.cons hx hA;
+    exact .cons' (I.wk0In hx hA) hx hA
+      (.var h' (by simp; constructor))
+
+theorem Ctx.Subst.to_eqOn {Γ Δ : Ctx}
+   {σ σ' : Tm.MSubst} (h : Γ.Subst Δ σ)
+   (hσ : σ.EqOn Δ.dv σ') : Γ.Subst Δ σ'
+  := by induction h with
+  | nil hΓ => exact .nil hΓ
+  | cons' hΓΔ hx hΔ hσ' IΓΔ =>
+    simp only [Tm.MSubst.EqOn.union_iff, Tm.MSubst.EqOn.singleton_iff, Ctx.dv] at *
+    apply (IΓΔ hσ.2).cons' hx hΔ
+    · convert hσ' using 1
+      · rw [Tm.msubst_eqOn_subset (h := hσ.2.symm)]
+        exact hΔ.scoped
+      · exact hσ.1.symm
+
+theorem Ctx.Subst.of_wk {Γ Δ : Ctx} (h : Γ.Wk Δ) : Γ.Subst Δ 1 := (one h.trg_ok).wkIn h
+
+theorem Ctx.Subst.lift' {Γ Δ : Ctx} {σ : Tm.MSubst}
+  (h : Γ.Subst Δ σ) {x : ℕ} (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv) {A : Tm}
+  (hΔ : Δ.IsTy A) (hΓ : Γ.IsTy (A.msubst σ))
+  : (Γ.cons x (A.msubst σ)).Subst (Δ.cons x A) (σ.lift x)
+  := by
+    apply ((h.wk0In hxΓ hΓ).to_eqOn (σ.lift_eqOn_of_notMem _ _ hxΔ)).cons' hxΔ hΔ
+    · simp only [Tm.MSubst.get_lift_self]
+      apply HasTy.var
+      · exact (hΓ.cons hxΓ)
+      · rw [Tm.msubst_lift_eq (hx := Finset.not_mem_subset hΔ.scoped hxΔ)]
+        constructor
+
+theorem Ctx.HasTy.subst {Γ Δ : Ctx} {σ} (hΓΔ : Γ.Subst Δ σ) {A a : Tm} (h : Δ.HasTy A a)
+  : Γ.HasTy (A.msubst σ) (a.msubst σ) := by
+  induction h generalizing Γ σ with
+  | var hΓ hA => exact hΓΔ.at hA
+  | dite_cf hφ hA ha hb Iφ IA Ia Ib =>
+    rename Finset ℕ => L
+    apply (Iφ hΓΔ).dite_cf (IA hΓΔ)
+    all_goals {
+      intro x hx
+      have ⟨hΓ, hΔ, hL⟩ : x ∉ Γ.dv ∧ x ∉ hΓΔ.trg.dv ∧ x ∉ L
+          := by simp only [<-Finset.notMem_union]; exact hx
+      conv =>
+        arg 2
+        rw [<-Tm.msubst_lift_eq σ (x := x) (hx := by
+          apply Finset.notMem_mono _ hΔ
+          apply JEq.scoped_lhs
+          apply HasTy.refl
+          assumption)]
+        skip
+      conv =>
+        arg 3
+        rw [<-Tm.msubst_lift_eq σ (x := x) (hx := by
+          apply Finset.notMem_mono _ hΔ
+          apply JEq.scoped_cf_lhs'
+          intros
+          apply HasTy.refl
+          apply_assumption
+          assumption)]
+        skip
+      apply_assumption
+      · exact hL
+      · (first | apply hΓΔ.lift' hΓ hΔ | apply hΓΔ.lift' (A := Tm.not _) hΓ hΔ)
+        <;> apply JEq.lhs_ty <;> ((try apply JEq.not); apply HasTy.refl; apply_assumption)
+            ; assumption
+    }
+  | choose_cf hA ht hφ Ia Iφ => exact (Ia hΓΔ).choose_cf (ht.subst hΓΔ) (fun x hx => by
+        rename Finset ℕ => L
+        have ⟨hΓ, hΔ, hL⟩ : x ∉ Γ.dv ∧ x ∉ hΓΔ.trg.dv ∧ x ∉ L
+          := by simp only [<-Finset.notMem_union]; exact hx
+        repeat rw [Tm.MSubst.Lc.bs0_fvs_singleton (x := x) (hσ := hΓΔ.lc.anti (by {
+          (apply JEq.scoped_cf_lhs; intros; apply HasTy.refl; apply_assumption; assumption)
+        })) (ha := by simp)]
+        · apply_assumption
+          · exact hL
+          · first | apply hΓΔ.lift' hΓ hΔ
+                    <;> (apply JEq.lhs_ty <;> (try apply HasTy.refl) <;> apply_assumption)
+                    ; assumption
+        all_goals {
+          apply Finset.notMem_mono _ hΔ
+          apply JEq.scoped_cf_lhs; intros; apply HasTy.refl; apply_assumption; assumption
+        }
+    )
+  | cast hA ha Ia => exact (Ia hΓΔ).cast (hA.subst hΓΔ)
+  | _ =>
+    constructor <;> first
+    | exact hΓΔ.src_ok
+    | apply_assumption <;> assumption
+    | {
+        intro x hx
+        rename Finset ℕ => L
+        have ⟨hΓ, hΔ, hL⟩ : x ∉ Γ.dv ∧ x ∉ hΓΔ.trg.dv ∧ x ∉ L
+          := by simp only [<-Finset.notMem_union]; exact hx
+        repeat rw [Tm.MSubst.Lc.bs0_fvs_singleton (x := x) (hσ := hΓΔ.lc.anti (by {
+          first | (apply JEq.scoped_cf_ty; intros;
+                    apply HasTy.refl; apply_assumption; assumption)
+                | (apply JEq.scoped_cf_lhs; intros;
+                    apply HasTy.refl; apply_assumption; assumption)
+        })) (ha := by simp)]
+        · apply_assumption
+          · exact hL
+          · first | apply hΓΔ.lift' hΓ hΔ
+                    <;> (apply JEq.lhs_ty <;> (try apply HasTy.refl) <;> apply_assumption)
+                    ; assumption
+                  | exact hΓΔ.lift' (A := .nats) hΓ hΔ ⟨1, hΓΔ.trg_ok.nats⟩ ⟨1, hΓΔ.src_ok.nats⟩
+        all_goals {
+          apply Finset.notMem_mono _ hΔ
+          first | (apply JEq.scoped_cf_ty; intros; apply HasTy.refl; apply_assumption; assumption)
+                | (apply JEq.scoped_cf_lhs; intros; apply HasTy.refl; apply_assumption; assumption)
+        }
+      }
+    | {
+      (try simp only [<-Tm.msubst_fst])
+      repeat first | rw [<-Tm.MSubst.Lc.bs0] | rw [<-Tm.MSubst.Lc.bs0_fvs_empty (ha := by simp)]
+      (first | apply JEq.subst_univ | apply_assumption) <;> assumption
+      all_goals {
+        apply Tm.MSubst.Lc.anti
+        · (try simp only [Tm.fvs, Finset.union_subset_iff])
+          (try constructorm* _ ∧ _) <;>
+          first | (apply JEq.scoped_cf_lhs; intros; apply HasTy.refl; apply_assumption; assumption)
+                | (apply JEq.scoped_lhs; apply HasTy.refl; apply_assumption; try assumption)
+        · first | apply Ctx.Subst.lc
+          assumption
+      }
+    }
+
 def Ctx.Cmp (Γ : Ctx) (A a b : Tm) : Prop := Γ.HasTy A a ∧ Γ.HasTy A b
 
 theorem Ctx.Cmp.lhs_ty {Γ : Ctx} {A a b : Tm} (h : Γ.Cmp A a b) : Γ.HasTy A a := h.1

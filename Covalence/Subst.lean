@@ -2,53 +2,53 @@ import Covalence.Wk
 
 --TODO: SubstEq lore...
 
-inductive Ctx.Subst : Ctx → Ctx → Tm.MSubst → Tm.MSubst → Prop
-  | nil {Γ : Ctx} {σ τ : Tm.MSubst} : Γ.Ok → Subst Γ .nil σ τ
+inductive Ctx.SubstEq : Ctx → Ctx → Tm.MSubst → Tm.MSubst → Prop
+  | nil {Γ : Ctx} {σ τ : Tm.MSubst} : Γ.Ok → SubstEq Γ .nil σ τ
   | cons' {Γ Δ : Ctx} {σ τ : Tm.MSubst} {x : ℕ} {A : Tm}
-    : Γ.Subst Δ σ τ
+    : Γ.SubstEq Δ σ τ
     → x ∉ Δ.dv
     → Δ.IsTy A
     → Γ.JEq (A.msubst σ) (σ.get x) (τ.get x)
     → Γ.JEq (A.msubst τ) (σ.get x) (τ.get x)
-    → Γ.Subst (Δ.cons x A) σ τ
+    → Γ.SubstEq (Δ.cons x A) σ τ
 
-theorem Ctx.Subst.src_ok {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.Subst Δ σ τ) : Γ.Ok := by
+theorem Ctx.SubstEq.src_ok {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.SubstEq Δ σ τ) : Γ.Ok := by
   induction h <;> assumption
 
-theorem Ctx.Subst.trg_ok {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.Subst Δ σ τ) : Δ.Ok := by
+theorem Ctx.SubstEq.trg_ok {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.SubstEq Δ σ τ) : Δ.Ok := by
   induction h <;> constructor <;> assumption
 
-theorem Ctx.Subst.symm {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.Subst Δ σ τ) : Γ.Subst Δ τ σ := by
+theorem Ctx.SubstEq.symm {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.SubstEq Δ σ τ) : Γ.SubstEq Δ τ σ := by
   induction h with
   | nil hΓ => exact .nil hΓ
   | cons' hΓΔ hx hΔ hσ hτ IΓΔ => exact IΓΔ.cons' hx hΔ hτ.symm hσ.symm
 
-theorem Ctx.Subst.at {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.Subst Δ σ τ)
+theorem Ctx.SubstEq.at {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.SubstEq Δ σ τ)
   {x : ℕ} {A : Tm} (hA : Δ.At x A) : Γ.JEq (A.msubst σ) (σ x) (τ x) := by
   induction hA <;> cases h <;> apply_assumption; assumption
 
-theorem Ctx.Subst.lc_both {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.Subst Δ σ τ) : σ.Lc Δ.dv ∧ τ.Lc Δ.dv
-  := by induction h with
+theorem Ctx.SubstEq.lc_both {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.SubstEq Δ σ τ)
+  : σ.Lc Δ.dv ∧ τ.Lc Δ.dv := by induction h with
   | nil => simp [dv]
   | cons' _ _ _ h => simp [dv, Tm.MSubst.Lc.union_iff, h.lc_lhs, h.lc_rhs, *]
 
-theorem Ctx.Subst.lc_lhs {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.Subst Δ σ τ) : σ.Lc Δ.dv
+theorem Ctx.SubstEq.lc_lhs {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.SubstEq Δ σ τ) : σ.Lc Δ.dv
   := h.lc_both.1
 
-theorem Ctx.Subst.lc_rhs {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.Subst Δ σ τ) : τ.Lc Δ.dv
+theorem Ctx.SubstEq.lc_rhs {Γ Δ : Ctx} {σ τ : Tm.MSubst} (h : Γ.SubstEq Δ σ τ) : τ.Lc Δ.dv
   := h.lc_both.2
 
-theorem Ctx.Subst.wkIn {Γ Δ Θ : Ctx} {σ τ : Tm.MSubst} (hΓΔ : Γ.Wk Δ) (hΔΘ : Δ.Subst Θ σ τ)
-  : Γ.Subst Θ σ τ := by
+theorem Ctx.SubstEq.wkIn {Γ Δ Θ : Ctx} {σ τ : Tm.MSubst} (hΓΔ : Γ.Wk Δ) (hΔΘ : Δ.SubstEq Θ σ τ)
+  : Γ.SubstEq Θ σ τ := by
   induction hΔΘ with
   | nil _ => exact .nil hΓΔ.src_ok
   | cons' hΔΘ hx hΘ hσ hτ I => exact I.cons' hx hΘ (hσ.wk hΓΔ) (hτ.wk hΓΔ)
 
-theorem Ctx.Subst.wk0In {Γ Δ : Ctx} {σ τ : Tm.MSubst}
-  (h : Γ.Subst Δ σ τ) {x} (hx : x ∉ Γ.dv) {A : Tm} (hA : Γ.IsTy A)
-  : (Γ.cons x A).Subst Δ σ τ := h.wkIn (hA.lhs_pure_wk0 hx).wk
+theorem Ctx.SubstEq.wk0In {Γ Δ : Ctx} {σ τ : Tm.MSubst}
+  (h : Γ.SubstEq Δ σ τ) {x} (hx : x ∉ Γ.dv) {A : Tm} (hA : Γ.IsTy A)
+  : (Γ.cons x A).SubstEq Δ σ τ := h.wkIn (hA.lhs_pure_wk0 hx).wk
 
-theorem Ctx.Subst.refl {Γ : Ctx} (h : Γ.Ok) : Γ.Subst Γ 1 1 := by induction h with
+theorem Ctx.SubstEq.refl {Γ : Ctx} (h : Γ.Ok) : Γ.SubstEq Γ 1 1 := by induction h with
   | nil => exact .nil .nil
   | cons hΓΔ hx hA I =>
     have h' := hΓΔ.cons hx hA;
@@ -56,9 +56,9 @@ theorem Ctx.Subst.refl {Γ : Ctx} (h : Γ.Ok) : Γ.Subst Γ 1 1 := by induction 
       (.var h'.zero (by simp; constructor))
       (.var h'.zero (by simp; constructor))
 
-theorem Ctx.Subst.to_eqOn {Γ Δ : Ctx}
-   {σ τ σ' τ' : Tm.MSubst} (h : Γ.Subst Δ σ τ)
-   (hσ : σ.EqOn Δ.dv σ') (hτ : τ.EqOn Δ.dv τ') : Γ.Subst Δ σ' τ'
+theorem Ctx.SubstEq.to_eqOn {Γ Δ : Ctx}
+   {σ τ σ' τ' : Tm.MSubst} (h : Γ.SubstEq Δ σ τ)
+   (hσ : σ.EqOn Δ.dv σ') (hτ : τ.EqOn Δ.dv τ') : Γ.SubstEq Δ σ' τ'
   := by induction h with
   | nil hΓ => exact .nil hΓ
   | cons' hΓΔ hx hΔ hσ' hτ' IΓΔ =>
@@ -75,12 +75,12 @@ theorem Ctx.Subst.to_eqOn {Γ Δ : Ctx}
       · exact hσ.1.symm
       · exact hτ.1.symm
 
-theorem Ctx.Subst.of_wk {Γ Δ : Ctx} (h : Γ.Wk Δ) : Γ.Subst Δ 1 1 := (refl h.trg_ok).wkIn h
+theorem Ctx.SubstEq.of_wk {Γ Δ : Ctx} (h : Γ.Wk Δ) : Γ.SubstEq Δ 1 1 := (refl h.trg_ok).wkIn h
 
-theorem Ctx.Subst.lift_one' {Γ Δ : Ctx} {σ : Tm.MSubst}
-  (h : Γ.Subst Δ σ σ) {x : ℕ} (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv) {A : Tm}
+theorem Ctx.SubstEq.lift_one' {Γ Δ : Ctx} {σ : Tm.MSubst}
+  (h : Γ.SubstEq Δ σ σ) {x : ℕ} (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv) {A : Tm}
   (hΔ : Δ.IsTy A) (hΓ : Γ.IsTy (A.msubst σ))
-  : (Γ.cons x (A.msubst σ)).Subst (Δ.cons x A) (σ.lift x) (σ.lift x)
+  : (Γ.cons x (A.msubst σ)).SubstEq (Δ.cons x A) (σ.lift x) (σ.lift x)
   := by
     apply ((h.wk0In hxΓ hΓ).to_eqOn
       (σ.lift_eqOn_of_notMem _ _ hxΔ)
@@ -97,12 +97,12 @@ theorem Ctx.Subst.lift_one' {Γ Δ : Ctx} {σ : Tm.MSubst}
       · rw [Tm.msubst_lift_eq (hx := Finset.not_mem_subset hΔ.scoped hxΔ)]
         constructor
 
-def Ctx.Subst.src {Γ Δ : Ctx} {σ τ : Tm.MSubst} (_ : Γ.Subst Δ σ τ) : Ctx := Γ
+def Ctx.SubstEq.src {Γ Δ : Ctx} {σ τ : Tm.MSubst} (_ : Γ.SubstEq Δ σ τ) : Ctx := Γ
 
-def Ctx.Subst.trg {Γ Δ : Ctx} {σ τ : Tm.MSubst} (_ : Γ.Subst Δ σ τ) : Ctx := Δ
+def Ctx.SubstEq.trg {Γ Δ : Ctx} {σ τ : Tm.MSubst} (_ : Γ.SubstEq Δ σ τ) : Ctx := Δ
 
 theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
-  (hΓΔ : Γ.Subst Δ σ σ) (h : Δ.JEq A a b)
+  (hΓΔ : Γ.SubstEq Δ σ σ) (h : Δ.JEq A a b)
   : Γ.JEq (A.msubst σ) (a.msubst σ) (b.msubst σ)
   := by induction h generalizing Γ σ with
   | univ | unit | nil | empty | nats | succ => constructor; apply hΓΔ.src_ok.zero
@@ -261,29 +261,34 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
                 -- | (apply JEq.scoped_cf_ty ; assumption)
                 -- | (apply JEq.scoped_cf_rhs ; assumption)
                 | simp
-        · first | apply Ctx.Subst.lc_lhs -- | apply Ctx.Subst.lc_rhs
+        · first | apply Ctx.SubstEq.lc_lhs -- | apply Ctx.SubstEq.lc_rhs
           assumption
       }
       })
     <;> assumption
 
+theorem Ctx.JEq.subst_one_univ {Γ Δ : Ctx} {σ : Tm.MSubst} {ℓ : ℕ} {A B : Tm}
+  (hΓΔ : Γ.SubstEq Δ σ σ) (h : Δ.JEq (.univ ℓ) A B)
+  : Γ.JEq (.univ ℓ) (A.msubst σ) (B.msubst σ)
+  := h.subst_one hΓΔ
+
 theorem Ctx.TyEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A B : Tm}
-  (hΓΔ : Γ.Subst Δ σ σ) (h : Δ.TyEq A B) : Γ.TyEq (A.msubst σ) (B.msubst σ)
+  (hΓΔ : Γ.SubstEq Δ σ σ) (h : Δ.TyEq A B) : Γ.TyEq (A.msubst σ) (B.msubst σ)
   := have ⟨ℓ, h⟩ := h; ⟨ℓ, h.subst_one hΓΔ⟩
 
 theorem Ctx.IsTy.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A : Tm}
-  (hΓΔ : Γ.Subst Δ σ σ) (h : Δ.IsTy A) : Γ.IsTy (A.msubst σ)
+  (hΓΔ : Γ.SubstEq Δ σ σ) (h : Δ.IsTy A) : Γ.IsTy (A.msubst σ)
   := TyEq.subst_one hΓΔ h
 
-theorem Ctx.Subst.lift_one {Γ Δ : Ctx} {σ : Tm.MSubst}
-  (h : Γ.Subst Δ σ σ) {x : ℕ} (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv) {A : Tm}
-  (hΔ : Δ.IsTy A) : (Γ.cons x (A.msubst σ)).Subst (Δ.cons x A) (σ.lift x) (σ.lift x)
+theorem Ctx.SubstEq.lift_one {Γ Δ : Ctx} {σ : Tm.MSubst}
+  (h : Γ.SubstEq Δ σ σ) {x : ℕ} (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv) {A : Tm}
+  (hΔ : Δ.IsTy A) : (Γ.cons x (A.msubst σ)).SubstEq (Δ.cons x A) (σ.lift x) (σ.lift x)
   := h.lift_one' hxΓ hxΔ hΔ (hΔ.subst_one h)
 
-theorem Ctx.Subst.set' {Γ Δ : Ctx} {σ τ : Tm.MSubst} {x : ℕ} {A : Tm} {a b : Tm}
-  (h : Γ.Subst Δ σ τ) (hxΔ : x ∉ Δ.dv) (hΔ : Δ.IsTy A)
+theorem Ctx.SubstEq.set' {Γ Δ : Ctx} {σ τ : Tm.MSubst} {x : ℕ} {A : Tm} {a b : Tm}
+  (h : Γ.SubstEq Δ σ τ) (hxΔ : x ∉ Δ.dv) (hΔ : Δ.IsTy A)
   (hσ : Γ.JEq (A.msubst σ) a b) (hτ : Γ.JEq (A.msubst τ) a b)
-  : Γ.Subst (Δ.cons x A) (σ.set x a) (τ.set x b)
+  : Γ.SubstEq (Δ.cons x A) (σ.set x a) (τ.set x b)
   := (h.to_eqOn
       (fun x hx => by simp [Tm.MSubst.get_set]; intro hx'; cases hx'; contradiction)
       (fun x hx => by simp [Tm.MSubst.get_set]; intro hx'; cases hx'; contradiction)).cons' hxΔ hΔ
@@ -291,8 +296,8 @@ theorem Ctx.Subst.set' {Γ Δ : Ctx} {σ τ : Tm.MSubst} {x : ℕ} {A : Tm} {a b
     (by rw [Tm.msubst_set_eq (hx := Finset.not_mem_subset hΔ.scoped hxΔ)]; simp [hτ])
 
 theorem Ctx.JEq.m0 {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) {x : ℕ} (hx : x ∉ Γ.dv)
-  : Γ.Subst (Γ.cons x A) (a.m0 x) (b.m0 x)
-  := (Subst.refl h.ok).set' hx h.regular (by simp [h]) (by simp [h])
+  : Γ.SubstEq (Γ.cons x A) (a.m0 x) (b.m0 x)
+  := (SubstEq.refl h.ok).set' hx h.regular (by simp [h]) (by simp [h])
 
 theorem Ctx.JEq.ms0_one {Γ : Ctx} {A B a b b' : Tm} {x : ℕ}
   (hb : Ctx.JEq (Γ.cons x A) B b b') (ha : Ctx.JEq Γ A a a)
@@ -346,7 +351,7 @@ theorem Ctx.JEq.bs0_cf_univ {Γ : Ctx} {n : ℕ} {A B B' a a' : Tm} {L : Finset 
   hba.symm.trans (app_eq.trans hba')
 
 def Ctx.Ok.fromName0 {Γ : Ctx} {x : ℕ} {A : Tm} (hΓ : (Γ.cons x A).Ok) (y : ℕ) (hy : y ∉ Γ.dv)
-  : (Γ.cons x A).Subst (Γ.cons y A) ((Tm.fv x).m0 y) ((Tm.fv x).m0 y) :=
+  : (Γ.cons x A).SubstEq (Γ.cons y A) ((Tm.fv x).m0 y) ((Tm.fv x).m0 y) :=
   have hset : Tm.MSubst.EqOn Γ.dv 1 (.set 1 y (.fv x)) := fun z hz => by
     simp [Tm.MSubst.get_set]; intro hz; cases hz; exact (hy hz).elim
   have hA : (Γ.cons x A).JEq
@@ -359,7 +364,7 @@ def Ctx.Ok.fromName0 {Γ : Ctx} {x : ℕ} {A : Tm} (hΓ : (Γ.cons x A).Ok) (y :
   .cons' (.wk0In (.to_eqOn (.refl hΓ.tail) hset hset) hΓ.var hΓ.ty) hy hΓ.ty hA hA
 
 def Ctx.Ok.toName0 {Γ : Ctx} {x : ℕ} {A : Tm} (hΓ : (Γ.cons x A).Ok) (y : ℕ) (hy : y ∉ Γ.dv)
-  : (Γ.cons y A).Subst (Γ.cons x A) ((Tm.fv y).m0 x) ((Tm.fv y).m0 x) :=
+  : (Γ.cons y A).SubstEq (Γ.cons x A) ((Tm.fv y).m0 x) ((Tm.fv y).m0 x) :=
   fromName0 (hΓ.tail.cons hy hΓ.ty) x hΓ.var
 
 theorem Ctx.JEq.rename0 {Γ : Ctx} {x : ℕ} {A B a b : Tm}
