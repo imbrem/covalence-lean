@@ -95,6 +95,12 @@ theorem Ctx.HasTy.is_ty {Γ : Ctx} {ℓ : ℕ} {A : Tm} (h : Ctx.HasTy Γ (.univ
 
 theorem Ctx.HasTy.ok {Γ : Ctx} {A a : Tm} (h : Ctx.HasTy Γ A a) : Γ.Ok := h.refl.ok
 
+theorem Ctx.HasTy.lc_ty {Γ : Ctx} {A a : Tm} (h : Ctx.HasTy Γ A a) : A.bvi = 0
+  := h.refl.lc_ty
+
+theorem Ctx.HasTy.lc_tm {Γ : Ctx} {A a : Tm} (h : Ctx.HasTy Γ A a) : a.bvi = 0
+  := h.refl.lc_lhs
+
 theorem Ctx.HasTy.not {Γ : Ctx} {ℓ : ℕ} {φ : Tm} (h : Ctx.HasTy Γ (.univ ℓ) φ)
   : Γ.HasTy (.univ 0) φ.not
   :=  .pi_cf (L := Γ.dv) h (fun _ hx => .empty (h.ok.cons hx h.is_ty)) rfl
@@ -335,6 +341,57 @@ theorem Ctx.HasTy.subst {Γ Δ : Ctx} {σ} (hΓΔ : Γ.Subst Δ σ) {A a : Tm} (
       }
     }
 
+theorem Ctx.Subst.set' {Γ Δ : Ctx} {σ : Tm.MSubst} {x : ℕ} {A : Tm} {a : Tm}
+  (h : Γ.Subst Δ σ) (hxΔ : x ∉ Δ.dv) (hΔ : Δ.IsTy A)
+  (hσ : Γ.HasTy (A.msubst σ) a)
+  : Γ.Subst (Δ.cons x A) (σ.set x a)
+  := (h.to_eqOn
+      (fun x hx => by simp [Tm.MSubst.get_set]; intro hx'; cases hx'; contradiction)
+      ).cons' hxΔ hΔ
+    (by rw [Tm.msubst_set_eq (hx := Finset.not_mem_subset hΔ.scoped hxΔ)]; simp [hσ])
+
+theorem Ctx.HasTy.m0 {Γ : Ctx} {A a : Tm} (h : Ctx.HasTy Γ A a) {x : ℕ} (hx : x ∉ Γ.dv)
+  : Γ.Subst (Γ.cons x A) (a.m0 x)
+  := (Subst.one h.ok).set' hx h.refl.regular (by simp [h])
+
+theorem Ctx.HasTy.ms0_one {Γ : Ctx} {A B a b : Tm} {x : ℕ}
+  (hb : Ctx.HasTy (Γ.cons x A) B b) (ha : Ctx.HasTy Γ A a)
+  : Γ.HasTy (B.ms0 x a) (b.ms0 x a)
+  := hb.subst (ha.m0 hb.ok.var)
+
+theorem Ctx.HasTy.bs0 {Γ : Ctx} {A B a b : Tm} {x : ℕ} (hx : x ∉ B.fvs ∪ b.fvs)
+  (hb : Ctx.HasTy (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)))
+  (ha : Ctx.HasTy Γ A a) : Γ.HasTy (B.bs0 a) (b.bs0 a) := by
+  simp at hx
+  convert hb.ms0_one ha using 1 <;> rw [Tm.ms0_bs0_notMem (ha := ha.lc_tm)] <;> simp [*]
+
+theorem Ctx.HasTy.bs0_cf {Γ : Ctx} {A B a b : Tm} {L : Finset ℕ}
+  (hb : ∀ x ∉ L, Ctx.HasTy (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)))
+  (ha : Ctx.HasTy Γ A a) : Γ.HasTy (B.bs0 a) (b.bs0 a) := by
+  have ⟨x, hx⟩ := Finset.exists_notMem (L ∪ (B.fvs ∪ b.fvs))
+  rw [Finset.notMem_union] at hx
+  exact (hb x hx.1).bs0 hx.2 ha
+
+theorem Ctx.HasTy.strengthen_inhab_cf {Γ : Ctx} {A B a b : Tm} {L : Finset ℕ}
+  (hb : ∀ x ∉ L, Ctx.HasTy (Γ.cons x A) B b)
+  (ha : Ctx.HasTy Γ A a)
+  : Γ.HasTy B b := by
+  have ⟨x, hx⟩ := Finset.exists_notMem (L ∪ B.fvs ∪ b.fvs ∪ Γ.dv);
+  simp only [Finset.union_assoc, Finset.mem_union, not_or] at hx
+  convert bs0_cf (L := L ∪ B.fvs ∪ b.fvs ∪ Γ.dv) (B := B) (b := b) _ ha using 1
+  · rw [Tm.bs0, Tm.bsubst_lc]; exact (hb x hx.1).lc_ty
+  · rw [Tm.bs0, Tm.bsubst_lc]; exact (hb x hx.1).lc_tm
+  intro y hy
+  simp only [Finset.union_assoc, Finset.mem_union, not_or] at hy
+  convert hb y hy.1
+  · rw [Tm.bs0, Tm.bsubst_lc]; exact (hb x hx.1).lc_ty
+  · rw [Tm.bs0, Tm.bsubst_lc]; exact (hb x hx.1).lc_tm
+
+theorem Ctx.HasTy.strengthen_unit {ℓ : ℕ} {Γ : Ctx} {A B b : Tm} {L : Finset ℕ}
+  (hb : ∀ x ∉ L, Ctx.HasTy (Γ.cons x A) B b)
+  (ha : Ctx.TyEq Γ A (.unit ℓ))
+  : Γ.HasTy B b := .strengthen_inhab_cf hb (.cast ha.symm (.nil ha.ok))
+
 def Ctx.Cmp (Γ : Ctx) (A a b : Tm) : Prop := Γ.HasTy A a ∧ Γ.HasTy A b
 
 theorem Ctx.Cmp.lhs_ty {Γ : Ctx} {A a b : Tm} (h : Γ.Cmp A a b) : Γ.HasTy A a := h.1
@@ -469,12 +526,12 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
   | inhab hA ha IA Ia => exact ⟨.trunc IA.1, .unit hA.ok⟩
   | spec_cf hA ht hφ hφa IA It Iφ Iφa =>
     exact ⟨Iφa.2, .trunc (.sigma_cf IA.1 (fun x hx => (Iφ x hx).1) rfl)⟩
-  | beta_true_cf hφ hA ha hb Iφ IA Ia Ib =>
-    --TODO true substitution
-    exact ⟨Iφ.1.dite_cf IA.1 (fun x hx => (Ia x hx).1) (fun x hx => (Ib x hx).1), sorry⟩
-  | beta_false_cf hφ hA ha hb Iφ IA Ia Ib =>
-    --TODO true substitution of false substitution
-    exact ⟨Iφ.1.dite_cf IA.1 (fun x hx => (Ia x hx).1) (fun x hx => (Ib x hx).1), sorry⟩
+  | beta_true_cf hφ hA ha hb Iφ IA Ia Ib => exact ⟨
+    Iφ.1.dite_cf IA.1 (fun x hx => (Ia x hx).1) (fun x hx => (Ib x hx).1),
+    .strengthen_unit (fun x hx => (Ia x hx).1) hφ.ty_eq⟩
+  | beta_false_cf hφ hA ha hb Iφ IA Ia Ib => exact ⟨
+    Iφ.1.dite_cf IA.1 (fun x hx => (Ia x hx).1) (fun x hx => (Ib x hx).1),
+    .strengthen_unit (ℓ := 0) (fun x hx => (Ib x hx).1) ⟨_, hφ.not_empty⟩⟩
   | beta_zero_cf hC hz hs hC0 IC Iz Is IC0 => exact ⟨
       .natrec_cf (fun x hx => (IC x hx).1) (.zero hz.ok) Iz.1 (fun x hx => (Is x hx).1) hC0,
       Iz.1.cast ⟨_, hC0⟩

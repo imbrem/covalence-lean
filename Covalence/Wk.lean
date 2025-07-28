@@ -153,6 +153,10 @@ theorem Ctx.JEq.to_cf_dv {Γ : Ctx} {A B a b : Tm} (h : Γ.JEq A a b) (hB : Γ.I
     · rw [Tm.bs0, Tm.bsubst_lc]; exact h.lc_lhs
     · rw [Tm.bs0, Tm.bsubst_lc]; exact h.lc_rhs
 
+theorem Ctx.JEq.to_cf_dv' {Γ : Ctx} {A B a b : Tm} (h : Γ.JEq A a b) (hB : Γ.IsTy B) {L : Finset ℕ}
+  (hL : Γ.dv ⊆ L) : ∀x ∉ L, (Γ.cons x B).JEq (A.bs0 (.fv x)) (a.bs0 (.fv x)) (b.bs0 (.fv x))
+  := fun x hx => h.to_cf_dv hB x (Finset.not_mem_subset hL hx)
+
 theorem Ctx.JEq.pi_k {Γ : Ctx} {m n : ℕ} {A A' B B' : Tm}
   (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B')
   : Γ.JEq (.univ (Nat.imax m n)) (.pi A B) (.pi A' B')
@@ -381,3 +385,54 @@ theorem Ctx.JEq.abs_k {Γ : Ctx} {m : ℕ} {A A' B b b' : Tm}
 theorem Ctx.JEq.prop_ext_true {Γ : Ctx} {A a : Tm}
   (hA : Γ.JEq (.univ 0) A A) (ha : Γ.JEq A a a) : Γ.JEq (.univ 0) A (.unit 0)
   := .prop_ext hA hA.ok.unit (.abs_k hA hA.ok.nil') (.abs_k hA.ok.unit ha)
+
+theorem Ctx.JEq.dite_k {Γ : Ctx} {ℓ : ℕ} {φ φ' A A' a a' b b' : Tm}
+  (hφ : Γ.JEq (.univ 0) φ φ') (hA : Γ.JEq (.univ ℓ) A A') (ha : Γ.JEq A a a') (hb : Γ.JEq A b b')
+  : Γ.JEq A (.dite φ A a b) (.dite φ' A' a' b')
+  := .dite_cf hφ hA (fun _ hx => ha.wk0 hx hφ.lhs_ty) (fun _ hx => hb.wk0 hx hφ.not.lhs_ty)
+
+theorem Ctx.JEq.beta_true_k {Γ : Ctx} {ℓ : ℕ} {φ A a b : Tm}
+  (hφ : Γ.JEq (.univ 0) φ (.unit 0)) (hA : Γ.JEq (.univ ℓ) A A)
+  (ha : Γ.JEq A a a) (hb : Γ.JEq A b b) : Γ.JEq A (.dite φ A a b) a
+  := .beta_true_cf hφ hA (fun _ hx => ha.wk0 hx hφ.lhs_ty) (fun _ hx => hb.wk0 hx hφ.not.lhs_ty)
+
+theorem Ctx.JEq.beta_false_k {Γ : Ctx} {ℓ : ℕ} {φ A a b : Tm}
+  (hφ : Γ.JEq (.univ 0) φ (.empty 0)) (hA : Γ.JEq (.univ ℓ) A A)
+  (ha : Γ.JEq A a a) (hb : Γ.JEq A b b) : Γ.JEq A (.dite φ A a b) b
+  := .beta_false_cf hφ hA (fun _ hx => ha.wk0 hx hφ.lhs_ty) (fun _ hx => hb.wk0 hx hφ.not.lhs_ty)
+
+theorem Ctx.JEq.beta_true_kk {Γ : Ctx} {ℓ : ℕ} {A a b : Tm}
+  (hA : Γ.JEq (.univ ℓ) A A)
+  (ha : Γ.JEq A a a) (hb : Γ.JEq A b b) : Γ.JEq A (.dite (.unit 0) A a b) a
+  := .beta_true_cf hA.ok.unit hA (fun _ hx => ha.wk0 hx hA.ok.unit_ty)
+                                  (fun _ hx => hb.wk0 hx hA.ok.unit.not.lhs_ty)
+
+theorem Ctx.JEq.beta_false_kk {Γ : Ctx} {ℓ : ℕ} {A a b : Tm}
+  (hA : Γ.JEq (.univ ℓ) A A)
+  (ha : Γ.JEq A a a) (hb : Γ.JEq A b b) : Γ.JEq A (.dite (.empty 0) A a b) b
+  := .beta_false_cf hA.ok.empty hA (fun _ hx => ha.wk0 hx hA.ok.empty_ty)
+                                    (fun _ hx => hb.wk0 hx hA.ok.empty.not.lhs_ty)
+
+theorem Ctx.JEq.explode' {Γ : Ctx} {ℓ : ℕ} {A e a b : Tm}
+  (he : Γ.JEq (.empty ℓ) e e) (ha : Γ.JEq A a a) (hb : Γ.JEq A b b)
+  : Γ.JEq A a b :=
+  have ⟨_, hA⟩ := ha.regular
+  (hA.beta_true_kk ha hb).symm.trans ((he.explode.dite_k hA ha hb).trans (hA.beta_false_kk ha hb))
+
+theorem Ctx.JEq.from_empty {Γ : Ctx} {m n : ℕ} {A : Tm}
+  (hA : Γ.JEq (.univ m) A A)
+  : Γ.JEq (.pi (.empty n) A) (.abs (.empty n) (.nil m)) (.abs (.empty n) (.nil m))
+  := .abs_cf hA.ok.empty (hA.to_cf_dv hA.ok.empty_ty) (by
+    intro x hx
+    have hA' := hA.wk0 hx (hA.ok.empty_ty (ℓ := n));
+    simp only [Tm.bs0, Tm.bsubst, A.bsubst_lc hA.lc_lhs]
+    exact cast (.explode' (.var hA'.ok.zero .here) hA'.ok.unit hA') hA'.ok.nil'
+  )
+
+theorem Ctx.Ok.not_empty {ℓ : ℕ} {Γ : Ctx} (hΓ : Γ.Ok)
+  : Γ.JEq (.univ 0) (.not (.empty ℓ)) (.unit 0)
+  := .prop_ext_true (.not hΓ.empty) (.from_empty hΓ.empty)
+
+theorem Ctx.JEq.not_empty {Γ : Ctx} {φ : Tm}
+  (hφ : Γ.JEq (.univ 0) φ (.empty 0)) : Ctx.JEq Γ (.univ 0) (.not φ) (.unit 0)
+  := hφ.not.trans hφ.ok.not_empty
