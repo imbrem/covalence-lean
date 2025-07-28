@@ -51,12 +51,12 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → JEq Γ A a a'
     → JEq Γ (.univ n) (B.bs0 a) Ba
     → JEq Γ Ba (.app ℓ A B f a) (.app ℓ A' B' f' a')
-  | abs_cf {Γ : Ctx} {ℓ m n : ℕ} {A A' B b b' : Tm} {L : Finset ℕ}
+  | abs_cf {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' b b' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A'
-    → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
+    → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
     → (ℓ = m.imax n)
     → (∀ x ∉ L, JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
-    → JEq Γ (.pi ℓ A B) (.abs ℓ A b) (.abs ℓ A' b')
+    → JEq Γ (.pi ℓ A B) (.abs ℓ A B b) (.abs ℓ A' B' b')
   | sigma_cf {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A'
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
@@ -127,7 +127,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → JEq Γ A a a
     → JEq Γ (.univ n) (B.bs0 a) Ba
     → JEq Γ Ba (b.bs0 a) ba
-    → JEq Γ Ba (.app ℓ A B (.abs ℓ A b) a) ba
+    → JEq Γ Ba (.app ℓ A B (.abs ℓ A B b) a) ba
   -- | beta_let₁_cf {Γ : Ctx} {m n : ℕ} {A B a b Ba ba : Tm} {L : Finset ℕ}
   --   : JEq Γ (.univ m) A A
   --   → (∀ x ∉ L, JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b.bs0 (.fv x)))

@@ -385,9 +385,9 @@ theorem Ctx.JEq.regular {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) : Γ.IsTy
                       | intros; apply JEq.lhs; apply_assumption; assumption
                       | apply Ok.zero; apply JEq.ok ; assumption)
 
-theorem Ctx.JEq.abs_k {Γ : Ctx} {ℓ n m : ℕ} {A A' B b b' : Tm}
-  (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B) (hℓ : ℓ = Nat.imax m n) (hb : Γ.JEq B b b')
-  : Γ.JEq (.pi ℓ A B) (.abs ℓ A b) (.abs ℓ A' b')
+theorem Ctx.JEq.abs_k {Γ : Ctx} {ℓ n m : ℕ} {A A' B B' b b' : Tm}
+  (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B')
+  (hℓ : ℓ = Nat.imax m n) (hb : Γ.JEq B b b') : Γ.JEq (.pi ℓ A B) (.abs ℓ A B b) (.abs ℓ A' B' b')
   := .abs_cf hA (hB.to_cf_dv hA.lhs_ty) hℓ (hb.to_cf_dv hA.lhs_ty)
 
 theorem Ctx.JEq.prop_ext_true {Γ : Ctx} {A a : Tm}
@@ -431,7 +431,7 @@ theorem Ctx.JEq.explode' {Γ : Ctx} {ℓ : ℕ} {A e a b : Tm}
 theorem Ctx.JEq.from_empty {Γ : Ctx} {m n : ℕ} {A : Tm}
   (hA : Γ.JEq (.univ n) A A)
   : Γ.JEq (.pi (m.imax n) (.empty m) A)
-          (.abs (m.imax n) (.empty m) (.nil n)) (.abs (m.imax n) (.empty m) (.nil n))
+          (.abs (m.imax n) (.empty m) A (.nil n)) (.abs (m.imax n) (.empty m) A (.nil n))
   := .abs_cf hA.ok.empty (hA.to_cf_dv hA.ok.empty_ty) rfl (by
     intro x hx
     have hA' := hA.wk0 hx (hA.ok.empty_ty (ℓ := m));

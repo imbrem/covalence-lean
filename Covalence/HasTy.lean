@@ -29,7 +29,7 @@ inductive Ctx.HasTy : Ctx → Tm → Tm → Prop
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
     → (ℓ = m.imax n)
     → (∀ x ∉ L, HasTy (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)))
-    → HasTy Γ (.pi ℓ A B) (.abs ℓ A b)
+    → HasTy Γ (.pi ℓ A B) (.abs ℓ A B b)
   | sigma_cf {Γ : Ctx} {ℓ m n : ℕ} {A B : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
@@ -158,7 +158,7 @@ theorem Ctx.HasTy.app_k {Γ : Ctx} {ℓ m n : ℕ} {A B f a : Tm}
 
 theorem Ctx.HasTy.abs_k {Γ : Ctx} {ℓ m n : ℕ} {A B b : Tm}
   (hA : Γ.HasTy (.univ m) A) (hB : Γ.HasTy (.univ n) B) (hℓ : ℓ = m.imax n) (hb : Γ.HasTy B b)
-  : Γ.HasTy (.pi ℓ A B) (.abs ℓ A b)
+  : Γ.HasTy (.pi ℓ A B) (.abs ℓ A B b)
   := .abs_cf hA (hB.to_cf_dv hA.refl.ty_eq) hℓ (hb.to_cf_dv hA.refl.ty_eq)
 
 inductive Ctx.Subst : Ctx → Ctx → Tm.MSubst → Prop
@@ -451,8 +451,9 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
       IA.1.abs_cf (fun x hx => (IB x hx).1) hℓ (fun x hx => (Ib x hx).1),
       (IA.2.abs_cf
         (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm) hℓ
-        (fun x hx => (Ib x hx).2.cast0 hA.ty_eq.symm)).cast
-        ⟨_, .pi_cf hA.symm (fun x hx => (hB x hx).cast0 hA.ty_eq.symm) hℓ⟩
+        (fun x hx =>
+          ((Ib x hx).2.cast0 hA.ty_eq.symm).cast ((hB x hx).cast0 hA.ty_eq.symm).ty_eq)).cast
+        ⟨_, .symm (.pi_cf hA hB hℓ)⟩
     ⟩
   | sigma_cf hA hB hℓ IA IB => exact ⟨
       IA.1.sigma_cf (fun x hx => (IB x hx).1) hℓ,

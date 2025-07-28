@@ -21,7 +21,7 @@ def Tm.msubst (σ : MSubst) : Tm → Tm
   | .empty ℓ => .empty ℓ
   | .eqn A a b => .eqn (A.msubst σ) (a.msubst σ) (b.msubst σ)
   | .pi ℓ A B => .pi ℓ (A.msubst σ) (B.msubst σ)
-  | .abs ℓ A b => .abs ℓ (A.msubst σ) (b.msubst σ)
+  | .abs ℓ A B b => .abs ℓ (A.msubst σ) (B.msubst σ) (b.msubst σ)
   | .app ℓ A B f a => .app ℓ (A.msubst σ) (B.msubst σ) (f.msubst σ) (a.msubst σ)
   | .sigma ℓ A B => .sigma ℓ (A.msubst σ) (B.msubst σ)
   | .pair ℓ A B a b => .pair ℓ (A.msubst σ) (B.msubst σ) (a.msubst σ) (b.msubst σ)

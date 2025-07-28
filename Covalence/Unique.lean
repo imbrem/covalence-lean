@@ -11,6 +11,9 @@ theorem Ctx.TyEq'.trans {Γ : Ctx} {A B C : Tm} (hAB : Γ.TyEq' A B) (hBC : Γ.T
 theorem Ctx.HasTy.multicast {Γ : Ctx} {A B : Tm} (hAB : Γ.TyEq' A B) {a : Tm} (h : Γ.HasTy A a)
   : Γ.HasTy B a := by induction hAB <;> apply HasTy.cast <;> assumption
 
+theorem Ctx.JEq.multicast {Γ : Ctx} {A B : Tm} (hAB : Γ.TyEq' A B) {a b : Tm} (h : Γ.JEq A a b)
+  : Γ.JEq B a b := by induction hAB <;> apply TyEq.cast <;> assumption
+
 theorem Ctx.TyEq'.of_ty {Γ : Ctx} {A B : Tm} (hAB : Γ.TyEq A B) : Γ.TyEq' A B
   := .single hAB
 
@@ -43,7 +46,7 @@ inductive Ctx.InnerTy : Ctx → Tm → Tm → Prop
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
     → (ℓ = m.imax n)
     → (∀ x ∉ L, HasTy (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)))
-    → InnerTy Γ (.pi ℓ A B) (.abs ℓ A b)
+    → InnerTy Γ (.pi ℓ A B) (.abs ℓ A B b)
   | sigma_cf {Γ : Ctx} {ℓ m n : ℕ} {A B : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
@@ -128,33 +131,69 @@ theorem Ctx.Ok.at_eq {Γ : Ctx} {x : ℕ} {A B : Tm} (h : Γ.Ok) (hA : Γ.At x A
     | here => exact (h.var hx.mem_dv).elim
     | there hy => exact I h.tail hy
 
-theorem Ctx.HasTy.unique_helper {Γ : Ctx} {X Y a : Tm} (hX : Γ.HasTy X a) (hY : Γ.InnerTy Y a)
+theorem Ctx.HasTy.unique_inner_multi {Γ : Ctx} {X Y a : Tm} (hX : Γ.HasTy X a) (hY : Γ.InnerTy Y a)
   : TyEq' Γ X Y := by induction hX generalizing Y with
   | var hΓ hA => cases hY with | var hΓ' hB =>
     cases hΓ.at_eq hA hB; exact .single (JEq.regular (.var hΓ.zero hA))
   | univ | unit | nil | empty | eqn | pi_cf | sigma_cf | trunc | nats | zero =>
     cases hY; apply TyEq'.of_ty; constructor; constructor; apply Ctx.Ok.zero
             ; first | assumption | apply HasTy.ok; assumption
+  | fst_cf | dite_cf | choose_cf =>
+    cases hY; constructor; apply JEq.ty_eq <;> (apply HasTy.refl; assumption)
   | app_cf hA hB hℓ hf ha hBa IA IB If Ia => cases hY with | app_cf hA' hB' hℓ' hf' ha' hBa' =>
     exact .trans (.single hBa.symm.ty_eq) (.single hBa'.ty_eq)
   | abs_cf hA hB hℓ hb IA IB Ib => cases hY with | abs_cf hA' hB' hℓ' hb' =>
-    apply Relation.TransGen.single
-    constructor
-    apply JEq.pi_cf (L := _ ∪ _) hA.refl
-    · intro x hx
-      simp only [Finset.mem_union, not_or] at hx
-      apply JEq.symm
-      have hBx := hB x hx.1
-      have hBx' := hB' x hx.2
-      have ⟨C, hCx, hC⟩ := hBx.outer_ty;
-      have hn := IB x hx.1 hCx
-      sorry
-    exact hℓ
+    exact .single ⟨_, JEq.pi_cf hA.refl (fun x hx => (hB x hx).refl) hℓ⟩
+  | pair_cf hA hB hℓ ha hb IA IB => cases hY with | pair_cf hA' hB' hℓ' ha' hb' =>
+    exact .single ⟨_, JEq.sigma_cf hA.refl (fun x hx => (hB x hx).refl) hℓ⟩
+  | snd_cf hA hB hℓ he hBa IA IB Ie => cases hY with | snd_cf hA' hB' hℓ' he' hBa' =>
+    exact .trans (.single hBa.symm.ty_eq) (.single hBa'.ty_eq)
+  | succ hΓ => cases hY; exact .single ⟨_, .pi_k hΓ.nats hΓ.nats rfl⟩
+  | natrec_cf hC hn hz hs hCn IC In Iz Is => cases hY with | natrec_cf hC' hn' hz' hs' hCn' =>
+    exact .trans (.single hCn.symm.ty_eq) (.single hCn'.ty_eq)
   | cast hAB ha IA => exact .head hAB.symm (IA hY)
-  | _ => sorry
 
--- -- Step 6: hasty is TyEq* unique
+theorem Ctx.HasTy.unique_multi {Γ : Ctx} {X Y a : Tm} (hX : Γ.HasTy X a) (hY : Γ.HasTy Y a)
+  : TyEq' Γ X Y := have ⟨_, hCa, hC⟩ := hY.outer_ty; (hX.unique_inner_multi hCa).trans hC
 
--- -- Step 7: TyEq is transitive, so TyEq* == TyEq
+theorem Ctx.TyEq.trans {Γ : Ctx} {A B C : Tm} (hAB : Γ.TyEq A B) (hBC : Γ.TyEq B C) : Γ.TyEq A C :=
+  have ⟨_, hAB⟩ := hAB; have ⟨n, hBC⟩ := hBC;
+  have hmn := hAB.ty_rhs.unique_multi hBC.ty_lhs;
+  ⟨n, (hAB.multicast hmn).trans hBC⟩
 
--- -- Step 8: hasty is unique
+theorem Ctx.TyEq'.merge {Γ : Ctx} {A B : Tm} (hAB : Γ.TyEq' A B) : Γ.TyEq A B
+  := by induction hAB with | single => assumption | tail => apply TyEq.trans <;> assumption
+
+theorem Ctx.HasTy.unique {Γ : Ctx} {A B a : Tm} (hX : Γ.HasTy A a) (hY : Γ.HasTy B a)
+  : TyEq Γ A B := (hX.unique_multi hY).merge
+
+def Ctx.WfEq (Γ : Ctx) (a b : Tm) := ∃A, Γ.JEq A a b
+
+theorem Ctx.WfEq.symm {Γ : Ctx} {a b : Tm} (h : Γ.WfEq a b) : Γ.WfEq b a
+  := let ⟨A, hA⟩ := h; ⟨A, hA.symm⟩
+
+theorem Ctx.WfEq.trans {Γ : Ctx} {a b c : Tm} (hAB : Γ.WfEq a b) (hBC : Γ.WfEq b c) : Γ.WfEq a c :=
+  let ⟨_, hab⟩ := hAB; let ⟨B, hbc⟩ := hBC;
+  have hAB := hab.ty_rhs.unique hbc.ty_lhs;
+  ⟨B, (hAB.cast hab).trans hbc⟩
+
+theorem Ctx.TyEq.wf_eq {Γ : Ctx} {A B : Tm} (hAB : Γ.TyEq A B) : Γ.WfEq A B
+  := have ⟨_, hAB⟩ := hAB; ⟨_, hAB⟩
+
+theorem Ctx.WfEq.ty_left {Γ : Ctx} {A B : Tm} (h : Γ.WfEq A B) (hA : Γ.IsTy A) : Γ.TyEq A B :=
+  let ⟨_, hAB⟩ := h;
+  let ⟨_, hA⟩ := hA;
+  have hu := hAB.ty_lhs.unique hA.ty_rhs;
+  ⟨_, .symm ((hu.cast hAB.symm).trans hA)⟩
+
+theorem Ctx.WfEq.ty_right {Γ : Ctx} {A B : Tm} (h : Γ.WfEq A B) (hB : Γ.IsTy B) : Γ.TyEq A B :=
+  (h.symm.ty_left hB).symm
+
+def Ctx.Wf (Γ : Ctx) (a : Tm) := Γ.WfEq a a
+
+theorem Ctx.WfEq.lhs {Γ : Ctx} {a b : Tm} (h : Γ.WfEq a b) : Γ.Wf a := h.trans h.symm
+
+theorem Ctx.WfEq.rhs {Γ : Ctx} {a b : Tm} (h : Γ.WfEq a b) : Γ.Wf b := h.symm.lhs
+
+theorem Ctx.Wf.has_ty {Γ : Ctx} {a : Tm} (h : Γ.Wf a) : ∃A, Γ.HasTy A a
+  := let ⟨A, hA⟩ := h; ⟨A, hA.ty_lhs⟩
