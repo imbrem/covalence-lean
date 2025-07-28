@@ -258,7 +258,7 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
           first | (apply JEq.scoped_lhs; assumption)
                 -- | (apply JEq.scoped_rhs; assumption)
                 | (apply JEq.scoped_cf_lhs ; assumption)
-                | (apply JEq.scoped_cf_ty ; assumption)
+                -- | (apply JEq.scoped_cf_ty ; assumption)
                 -- | (apply JEq.scoped_cf_rhs ; assumption)
                 | simp
         · first | apply Ctx.Subst.lc_lhs -- | apply Ctx.Subst.lc_rhs
@@ -334,12 +334,14 @@ theorem Ctx.JEq.bs0_cf_univ {Γ : Ctx} {n : ℕ} {A B B' a a' : Tm} {L : Finset 
     := .app_cf hA (fun x hx => (hB x hx).ok.univ)
                   (.abs_cf hA (fun x hx => (hB x hx).ok.univ) hB) ha hA.ok.univ
   have hba : Ctx.JEq Γ (.univ n) (.app A (.univ n) (.abs A B) a) (B.bs0 a)
-    := .beta_abs_cf hA
-        (fun x hx => (hB x hx).lhs) ha.lhs hA.ok.univ
+    := .beta_abs_cf (L := L ∪ Γ.dv) hA
+        (fun x hx => by simp at hx; exact (hA.lhs_cons hx.2).ok.univ)
+        (fun x hx => by simp at hx; exact (hB x hx.1).lhs) ha.lhs hA.ok.univ
         (ha.lhs.bs0_one_cf (B := .univ n) (fun x hx => (hB x hx).lhs))
   have hba' : Ctx.JEq Γ (.univ n) (.app A (.univ n) (.abs A B') a') (B'.bs0 a')
-    := .beta_abs_cf hA
-        (fun x hx => (hB x hx).rhs) ha.rhs hA.ok.univ
+    := .beta_abs_cf (L := L ∪ Γ.dv) hA
+        (fun x hx => by simp at hx; exact (hA.lhs_cons hx.2).ok.univ)
+        (fun x hx => by simp at hx; exact (hB x hx.1).rhs) ha.rhs hA.ok.univ
         (ha.rhs.bs0_one_cf (B := .univ n) (fun x hx => (hB x hx).rhs))
   hba.symm.trans (app_eq.trans hba')
 
@@ -410,10 +412,10 @@ theorem Ctx.JEq.bs0_cf {Γ : Ctx} {A B a a' b b' : Tm} {L : Finset ℕ}
     := .app_cf hA hB (.abs_cf hA hB hb) ha hB'.lhs
   have hba : Ctx.JEq Γ (B.bs0 a) (.app A B (.abs A b) a) (b.bs0 a)
     := .beta_abs_cf hA
-        (fun x hx => (hb x hx).lhs) ha.lhs (ha.lhs.bs0_one_cf (B := .univ n) hB)
+        hB (fun x hx => (hb x hx).lhs) ha.lhs (ha.lhs.bs0_one_cf (B := .univ n) hB)
         (ha.lhs.bs0_one_cf (fun x hx => (hb x hx).lhs))
   have hba' : Ctx.JEq Γ (B.bs0 a') (.app A B (.abs A b') a') (b'.bs0 a')
     := .beta_abs_cf hA
-        (fun x hx => (hb x hx).rhs) ha.rhs (ha.rhs.bs0_one_cf (B := .univ n) hB)
+        hB (fun x hx => (hb x hx).rhs) ha.rhs (ha.rhs.bs0_one_cf (B := .univ n) hB)
         (ha.rhs.bs0_one_cf (fun x hx => (hb x hx).rhs))
   exact hba.symm.trans (app_eq.trans (hB'.symm.cast hba'))

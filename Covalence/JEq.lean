@@ -111,9 +111,11 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
   -- Equations
   | nil_uniq {Γ : Ctx} {A a b : Tm} : JEq Γ (.univ 0) A A → JEq Γ A a a → JEq Γ A a (.nil 0)
   | explode {Γ : Ctx} {ℓ : ℕ} {a : Tm} : JEq Γ (.empty ℓ) a a → JEq Γ (.univ 0) (.unit 0) (.empty 0)
-  | eqn_rfl {Γ : Ctx} {A a b : Tm} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn A a b) (.unit 0)
+  | eqn_rfl {Γ : Ctx} {ℓ : ℕ} {A a b : Tm} :
+    JEq Γ (.univ ℓ) A A → JEq Γ A a b → JEq Γ (.univ 0) (.eqn A a b) (.unit 0)
   | beta_abs_cf {Γ : Ctx} {m n : ℕ} {A B a b Ba ba : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A
+    → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
     → (∀ x ∉ L, JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b.bs0 (.fv x)))
     → JEq Γ A a a
     → JEq Γ (.univ n) (B.bs0 a) Ba
@@ -139,8 +141,9 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → JEq Γ (B.bs0 a) b b
     → JEq Γ (.univ n) (B.bs0 a) Ba
     → JEq Γ Ba (.snd A B (.pair A B a b)) b
-  | inhab {Γ : Ctx} {A a : Tm}
-    : JEq Γ A a a
+  | inhab {Γ : Ctx} {ℓ : ℕ} {A a : Tm}
+    : JEq Γ (.univ ℓ) A A
+    → JEq Γ A a a
     → JEq Γ (.univ 0) (.trunc A) (.unit 0)
   | spec_cf {Γ : Ctx} {ℓ} {A φ φa : Tm} {L : Finset ℕ}
     : JEq Γ (.univ ℓ) A A
@@ -278,6 +281,9 @@ theorem Ctx.Ok.univ {Γ : Ctx} (h : Γ.Ok) {ℓ : ℕ} : Γ.JEq (.univ (ℓ + 1)
 
 theorem Ctx.Ok.unit {Γ : Ctx} (h : Γ.Ok) {ℓ : ℕ} : Γ.JEq (.univ ℓ) (.unit ℓ) (.unit ℓ)
   := h.zero.unit
+
+theorem Ctx.Ok.nil' {Γ : Ctx} (h : Γ.Ok) {ℓ : ℕ} : Γ.JEq (.unit ℓ) (.nil ℓ) (.nil ℓ)
+  := h.zero.nil
 
 theorem Ctx.Ok.empty {Γ : Ctx} (h : Γ.Ok) {ℓ : ℕ} : Γ.JEq (.univ ℓ) (.empty ℓ) (.empty ℓ)
   := h.zero.empty

@@ -145,6 +145,49 @@ theorem Ctx.IsTy.wk0
   {x : ℕ} {B C : Tm} (hx : x ∉ Γ.dv) (hB : Γ.TyEq B C) : (Γ.cons x B).IsTy A
   := TyEq.wk0 h hx hB
 
+theorem Ctx.JEq.to_cf_dv {Γ : Ctx} {A B a b : Tm} (h : Γ.JEq A a b) (hB : Γ.IsTy B)
+  : ∀x ∉ Γ.dv, (Γ.cons x B).JEq (A.bs0 (.fv x)) (a.bs0 (.fv x)) (b.bs0 (.fv x))
+  := fun x hx => by
+    convert h.wk0 hx hB using 1
+    · rw [Tm.bs0, Tm.bsubst_lc]; exact h.lc_ty
+    · rw [Tm.bs0, Tm.bsubst_lc]; exact h.lc_lhs
+    · rw [Tm.bs0, Tm.bsubst_lc]; exact h.lc_rhs
+
+theorem Ctx.JEq.pi_k {Γ : Ctx} {m n : ℕ} {A A' B B' : Tm}
+  (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B')
+  : Γ.JEq (.univ (Nat.imax m n)) (.pi A B) (.pi A' B')
+  := .pi_cf hA (hB.to_cf_dv hA.lhs_ty) rfl
+
+theorem Ctx.JEq.app_k {Γ : Ctx} {m n : ℕ} {A A' B B' f f' a a' : Tm}
+  (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B')
+  (hf : Γ.JEq (.pi A B) f f') (ha : Γ.JEq A a a')
+  : Γ.JEq B (.app A B f a) (.app A' B' f' a')
+  := .app_cf hA (hB.to_cf_dv hA.lhs_ty) hf ha
+      (by convert hB.lhs; rw [Tm.bs0, Tm.bsubst_lc]; exact hB.lc_lhs)
+
+theorem Ctx.JEq.lhs_pure_wk1
+  {Γ : Ctx} {ℓ : ℕ} {A B : Tm}
+    (h : Γ.JEq (.univ ℓ) A B)
+    {x : ℕ} (hx : x ∉ Γ.dv)
+    {y : ℕ} (hy : y ∉ {x} ∪ Γ.dv)
+    {Y : Tm} (hY : Γ.IsTy Y)
+  : ((Γ.cons x A).cons y Y).PureWk (Γ.cons y Y) := (h.ok.pure_wk.skip hx h.lhs_ty).lift hy hY
+
+theorem Ctx.TyEq.lhs_pure_wk1
+  {Γ : Ctx} {A B : Tm}
+    (h : Γ.TyEq A B)
+    {x : ℕ} (hx : x ∉ Γ.dv)
+    {y : ℕ} (hy : y ∉ {x} ∪ Γ.dv)
+    {Y : Tm} (hY : Γ.IsTy Y)
+  : ((Γ.cons x A).cons y Y).PureWk (Γ.cons y Y) := have ⟨_, h⟩ := h; h.lhs_pure_wk1 hx hy hY
+
+theorem Ctx.JEq.wk1
+  {Γ : Ctx} {y : ℕ} {Y A a b : Tm} (h : (Γ.cons y Y).JEq A a b)
+  {x : ℕ} {B C : Tm} (hx : x ∉ {y} ∪ Γ.dv) (hB : Γ.TyEq B C) : ((Γ.cons x B).cons y Y).JEq A a b
+  := h.pure_wk (hB.lhs_pure_wk1
+    (by simp at hx; exact hx.2)
+    (by simp at hx; simp [h.ok.var, Ne.symm hx.1]) h.ok.ty)
+
 theorem Ctx.JEq.lhs_cons {Γ : Ctx} {ℓ : ℕ} {A B : Tm}
   (h : Γ.JEq (.univ ℓ) A B) {x : ℕ} (hx : x ∉ Γ.dv) : (Γ.cons x A).JEq (.univ ℓ) A B
   := h.wk0 hx h.ty_eq
@@ -327,3 +370,14 @@ theorem Ctx.JEq.regular {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) : Γ.IsTy
                       | apply JEq.lhs; assumption
                       | intros; apply JEq.lhs; apply_assumption; assumption
                       | apply Ok.zero; apply JEq.ok ; assumption)
+
+theorem Ctx.JEq.abs_k {Γ : Ctx} {m : ℕ} {A A' B b b' : Tm}
+  (hA : Γ.JEq (.univ m) A A') (hb : Γ.JEq B b b')
+  : Γ.JEq (.pi A B) (.abs A b) (.abs A' b')
+  :=
+  have ⟨_, hB⟩ := hb.regular;
+  .abs_cf hA (hB.to_cf_dv hA.lhs_ty) (hb.to_cf_dv hA.lhs_ty)
+
+theorem Ctx.JEq.prop_ext_true {Γ : Ctx} {A a : Tm}
+  (hA : Γ.JEq (.univ 0) A A) (ha : Γ.JEq A a a) : Γ.JEq (.univ 0) A (.unit 0)
+  := .prop_ext hA hA.ok.unit (.abs_k hA hA.ok.nil') (.abs_k hA.ok.unit ha)
