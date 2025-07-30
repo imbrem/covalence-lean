@@ -1,13 +1,9 @@
-# covalence
+# Covalence Formalization
 
-## GitHub configuration
+This repository contains the formalization and design document for `covalence`, an experimental
+LCF-style theorem prover for extensional Martin-Löf type theory.
 
-To set up your new GitHub repository, follow these steps:
+The formalization is in Lean 4, and can be (after installing Lean) checked by cloning the repository
+and running `lake build`.
 
-* Under your repository name, click **Settings**.
-* In the **Actions** section of the sidebar, click "General".
-* Check the box **Allow GitHub Actions to create and approve pull requests**.
-* Click the **Pages** section of the settings sidebar.
-* In the **Source** dropdown menu, select "GitHub Actions".
-
-After following the steps above, you can remove this section from the README file.
+The design document is written in Typst, and can be compiled with `typst c design.typ`.
