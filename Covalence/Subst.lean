@@ -218,7 +218,6 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         }
       })
     <;> assumption
-  | prop_ext hA hB hmp hmpr IA IB Imp Impr => exact .prop_ext (IA hΓΔ) (IB hΓΔ) (Imp hΓΔ) (Impr hΓΔ)
   -- | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
   -- | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'
   -- | univ_imax _ _ hℓ hℓ' Im In => exact JEq.univ_imax (Im hΓΔ) (In hΓΔ) hℓ hℓ'

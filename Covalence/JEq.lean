@@ -115,7 +115,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
   --   → JEq Γ (.univ n) (B.bs0 a) Ba
   --   → JEq Γ Ba (.let₁ A a b) (.let₁ A' a' b')
   -- Equations
-  | nil_uniq {Γ : Ctx} {A a b : Tm} : JEq Γ (.univ 0) A A → JEq Γ A a a → JEq Γ A a (.nil 0)
+  | nil_uniq {Γ : Ctx} {ℓ : ℕ} {a : Tm} : JEq Γ (.unit ℓ) a a → JEq Γ (.unit ℓ) a (.nil ℓ)
   | explode {Γ : Ctx} {ℓ : ℕ} {a : Tm} : JEq Γ (.empty ℓ) a a → JEq Γ (.univ 0) (.unit 0) (.empty 0)
   | eqn_rfl {Γ : Ctx} {ℓ : ℕ} {A a b : Tm} :
     JEq Γ (.univ ℓ) A A → JEq Γ A a b → JEq Γ (.univ 0) (.eqn A a b) (.unit 0)
@@ -191,6 +191,10 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → JEq Γ (.univ ℓ) (C.bs0 n) Cn
     → JEq Γ (.univ ℓ) (C.bs0 (.app 1 .nats .nats .succ n)) Cs
     → JEq Γ Cs (.natrec C (.app 1 .nats .nats .succ n) z s) (.app ℓ Cn Cs sn (.natrec C n z s))
+  | unit_uniq {Γ : Ctx} {φ a : Tm}
+    : JEq Γ (.univ 0) φ φ → JEq Γ φ a a → JEq Γ (.univ 0) φ (.unit 0)
+  | empty_uniq {Γ : Ctx} {φ a : Tm}
+    : JEq Γ (.univ 0) φ φ → JEq Γ φ.not a a → JEq Γ (.univ 0) φ (.empty 0)
   -- Context well-formedness
   | nil_ok : JEq .nil .nats .zero .zero
   | cons_ok {Γ : Ctx} {ℓ : ℕ} {x : ℕ} {A : Tm}
@@ -216,12 +220,6 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → (ℓ = m ⊔ n)
     → JEq Γ (.sigma ℓ A B) e e
     → JEq Γ (.sigma ℓ A B) e (.pair ℓ A B (.fst ℓ A B e) (.snd ℓ A B e))
-  | prop_ext {Γ : Ctx} {A B mp mpr : Tm}
-    : JEq Γ (.univ 0) A A
-    → JEq Γ (.univ 0) B B
-    → JEq Γ (.pi 0 A B) mp mp
-    → JEq Γ (.pi 0 B A) mpr mpr
-    → JEq Γ (.univ 0) A B
   -- -- Universe levels
   -- | univ_succ {Γ : Ctx} {ℓ ℓ' : ℕ}
   --   : JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ')

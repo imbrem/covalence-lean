@@ -529,8 +529,7 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
         ⟩)
       (.trans (.symm (.bs0_cf_univ hC hn)) hCn)
   ⟩
-  | nil_uniq hA ha IA Ia =>
-    exact ⟨Ia.lhs_ty, .cast ⟨_, .symm <| .prop_ext_true hA ha⟩ (.nil (ℓ := 0) ha.ok)⟩
+  | nil_uniq ha Ia => exact ⟨Ia.lhs_ty, .nil ha.ok⟩
   | eqn_rfl hA hab IA Iab => exact ⟨.eqn IA.1 Iab.1 Iab.2, .unit hab.ok⟩
   | beta_abs_cf _ _ hℓ _ _ hBa hba IA IB Ib Ia _ Iba =>
     exact ⟨.app_cf IA.1 (fun x hx => (IB x hx).1) hℓ
@@ -564,6 +563,8 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
       .app_k ICn.2 ICs.2 (by simp [Nat.imax]) (Isn.2.cast ⟨_, .pi_k hCn hCs (by simp [Nat.imax])⟩)
         (.natrec_cf (fun x hx => (IC x hx).1) In.1 Iz.1 (fun x hx => (Is x hx).1) hCn)
     ⟩
+  | unit_uniq hφ ha Iφ Ia => exact ⟨Iφ.lhs_ty, .unit hφ.ok⟩
+  | empty_uniq hφ ha Iφ Ia => exact ⟨Iφ.lhs_ty, .empty hφ.ok⟩
   | eqn_ext hA ha hb he IA Ia Ib Ie => exact ⟨Ia.1, Ib.1⟩
   | pi_ext_cf hA hB hℓ hf hg hfg IA IB If Ig Ifg => exact ⟨If.1, Ig.1⟩
   | sigma_ext_cf hA hB hℓ he IA IB Ie => exact ⟨
@@ -571,7 +572,6 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
               (.fst_cf IA.1 (fun x hx => (IB x hx).1) hℓ Ie.1)
               (.snd_cf IA.1 (fun x hx => (IB x hx).1) hℓ Ie.1
               (.bs0_cf_univ hB (.fst_cf hA hB hℓ he)))⟩
-  | prop_ext hA hB hmp hmpr IA IB Imp Impr => exact ⟨IA.1, IB.1⟩
   -- | univ_succ hs Is =>
   --  exact ⟨.univ hs.ok, .cast (.symm ⟨_, hs.univ_succ.univ_succ⟩) (.univ hs.ok)⟩
   -- | univ_max hm hn hℓ hℓ' _ _ => exact ⟨
@@ -594,3 +594,13 @@ theorem Ctx.JEq.ty_rhs {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) : Γ.HasTy
 
 theorem Ctx.JEq.refl_iff (Γ : Ctx) (A a : Tm) : Γ.JEq A a a ↔ Γ.HasTy A a
   := ⟨Ctx.JEq.ty_lhs, Ctx.HasTy.refl⟩
+
+theorem Ctx.HasTy.rename0 {Γ : Ctx} {x : ℕ} {A B a : Tm}
+  (h : Ctx.HasTy (Γ.cons x A) (B.bs0 (.fv x)) (a.bs0 (.fv x)))
+  (hB : x ∉ B.fvs) (ha : x ∉ a.fvs)
+  : ∀y ∉ Γ.dv, Ctx.HasTy (Γ.cons y A) (B.bs0 (.fv y)) (a.bs0 (.fv y)) := by
+  intro y hy
+  rw [<-Ctx.JEq.refl_iff]
+  apply Ctx.JEq.rename0 _ hB ha ha y hy
+  rw [Ctx.JEq.refl_iff]
+  exact h

@@ -88,7 +88,6 @@ theorem Ctx.JEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A a b : Tm} (h
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
     · exact hℓ
     · exact Ie hΓΔ
-  | prop_ext => apply JEq.prop_ext <;> apply_assumption <;> assumption
   -- | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
   -- | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'
   -- | univ_imax _ _ hℓ hℓ' Im In => exact JEq.univ_imax (Im hΓΔ) (In hΓΔ) hℓ hℓ'
@@ -96,7 +95,9 @@ theorem Ctx.JEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A a b : Tm} (h
   | symm => apply JEq.symm; apply_assumption; assumption
   | cast => apply JEq.cast <;> apply_assumption <;> assumption
   | _ =>
-    constructor <;> first | (apply_assumption <;> assumption) | {
+    constructor <;>
+    first
+    | (apply_assumption <;> assumption) | {
       rename Finset ℕ => L
       intro x hx
       have ⟨hΓ, hL⟩ : x ∉ Γ.dv ∧ x ∉ L := by simp only [<-Finset.notMem_union]; exact hx
@@ -301,7 +302,6 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
     · exact hℓ
     · exact Ie hΓΔ
-  | prop_ext => apply JEq.prop_ext <;> apply_assumption <;> assumption
   -- | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
   -- | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'
   -- | univ_imax _ _ hℓ hℓ' Im In => exact JEq.univ_imax (Im hΓΔ) (In hΓΔ) hℓ hℓ'
@@ -390,11 +390,6 @@ theorem Ctx.JEq.abs_k {Γ : Ctx} {ℓ n m : ℕ} {A A' B B' b b' : Tm}
   (hℓ : ℓ = Nat.imax m n) (hb : Γ.JEq B b b') : Γ.JEq (.pi ℓ A B) (.abs ℓ A B b) (.abs ℓ A' B' b')
   := .abs_cf hA (hB.to_cf_dv hA.lhs_ty) hℓ (hb.to_cf_dv hA.lhs_ty)
 
-theorem Ctx.JEq.prop_ext_true {Γ : Ctx} {A a : Tm}
-  (hA : Γ.JEq (.univ 0) A A) (ha : Γ.JEq A a a) : Γ.JEq (.univ 0) A (.unit 0)
-  := .prop_ext hA hA.ok.unit
-      (.abs_k hA (hA.ok.unit (ℓ := 0)) rfl hA.ok.nil') (.abs_k hA.ok.unit hA rfl ha)
-
 theorem Ctx.JEq.dite_k {Γ : Ctx} {ℓ : ℕ} {φ φ' A A' a a' b b' : Tm}
   (hφ : Γ.JEq (.univ 0) φ φ') (hA : Γ.JEq (.univ ℓ) A A') (ha : Γ.JEq A a a') (hb : Γ.JEq A b b')
   : Γ.JEq A (.dite φ A a b) (.dite φ' A' a' b')
@@ -441,7 +436,7 @@ theorem Ctx.JEq.from_empty {Γ : Ctx} {m n : ℕ} {A : Tm}
 
 theorem Ctx.Ok.not_empty {ℓ : ℕ} {Γ : Ctx} (hΓ : Γ.Ok)
   : Γ.JEq (.univ 0) (.not (.empty ℓ)) (.unit 0)
-  := .prop_ext_true (.not hΓ.empty) (.from_empty (n := 0) hΓ.empty)
+  := .unit_uniq (.not hΓ.empty) (.from_empty (n := 0) hΓ.empty)
 
 theorem Ctx.JEq.not_empty {Γ : Ctx} {φ : Tm}
   (hφ : Γ.JEq (.univ 0) φ (.empty 0)) : Ctx.JEq Γ (.univ 0) (.not φ) (.unit 0)
