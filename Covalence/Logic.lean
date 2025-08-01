@@ -82,6 +82,13 @@ theorem Ctx.IsTy.pi_src {Γ : Ctx} {ℓ : ℕ} {A B : Tm} (h : Γ.IsTy (A.pi ℓ
   have ⟨_, hA, hC⟩ := h
   cases hA with | pi_cf hA _ => exact ⟨_, hA.refl⟩
 
+theorem Ctx.IsTy.pi_trg {Γ : Ctx} {ℓ : ℕ} {A B : Tm} (h : Γ.IsTy (A.pi ℓ B))
+  : (∀x ∉ Γ.dv, (Γ.cons x A).IsTy (B.bs0 (.fv x))) := by
+  have ⟨_, h⟩ := h
+  rw [Ctx.JEq.refl_iff, <-Ctx.OuterTy.has_ty_iff] at h
+  have ⟨_, hA, hC⟩ := h
+  cases hA with | pi_cf hA hB hℓ => intro x hx; exact ⟨_, (HasTy.cf_ty_to_dv hB x hx).refl⟩
+
 theorem Ctx.IsTy.pi_trg_prop {Γ : Ctx} {A B : Tm} (h : Γ.IsTy (A.pi 0 B))
   : (∀x ∉ Γ.dv, (Γ.cons x A).IsProp (B.bs0 (.fv x))) := by
   have ⟨_, h⟩ := h
