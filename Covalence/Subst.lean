@@ -1,4 +1,5 @@
 import Covalence.Wk
+import Covalence.Syntax.Close
 
 --TODO: SubstEq lore...
 
@@ -377,12 +378,18 @@ def Ctx.Ok.toName0 {Γ : Ctx} {x : ℕ} {A : Tm} (hΓ : (Γ.cons x A).Ok) (y : �
   : (Γ.cons y A).SubstEq (Γ.cons x A) ((Tm.fv y).m0 x) ((Tm.fv y).m0 x) :=
   fromName0 (hΓ.tail.cons hy hΓ.ty) x hΓ.var
 
+theorem Ctx.JEq.rename0' {Γ : Ctx} {x : ℕ} {A B a b : Tm}
+  (h : Ctx.JEq (Γ.cons x A) B a b)
+  : ∀y ∉ Γ.dv, Ctx.JEq (Γ.cons y A) (B.ms0 x (.fv y)) (a.ms0 x (.fv y)) (b.ms0 x (.fv y)) := by
+  intro y hy
+  exact h.subst_one (h.ok.toName0 y hy)
+
 theorem Ctx.JEq.rename0 {Γ : Ctx} {x : ℕ} {A B a b : Tm}
   (h : Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (a.bs0 (.fv x)) (b.bs0 (.fv x)))
   (hB : x ∉ B.fvs) (ha : x ∉ a.fvs) (hb : x ∉ b.fvs)
   : ∀y ∉ Γ.dv, Ctx.JEq (Γ.cons y A) (B.bs0 (.fv y)) (a.bs0 (.fv y)) (b.bs0 (.fv y)) := by
   intro y hy
-  convert h.subst_one (h.ok.toName0 y hy) using 1
+  convert h.rename0' y hy using 1
   <;> exact (Tm.ms0_bs0_notMem _ _ (by simp [Tm.bvi]) x (by assumption)).symm
 
 theorem Ctx.TyEq.rename0 {Γ : Ctx} {x : ℕ} {A B B' : Tm}

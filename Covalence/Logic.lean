@@ -8,6 +8,9 @@ theorem Ctx.Inhab.ok {Γ : Ctx} {A : Tm} (h : Γ.Inhab A) : Γ.Ok
 theorem Ctx.Inhab.regular {Γ : Ctx} {A : Tm} (h : Γ.Inhab A) : Γ.IsTy A
   := let ⟨_, ha⟩ := h; ha.regular
 
+theorem Ctx.Inhab.cast {Γ : Ctx} {A B : Tm} (hAB : Γ.TyEq A B) (h : Γ.Inhab A) : Γ.Inhab B
+  := let ⟨_, ha⟩ := h; ⟨_, ha.cast hAB⟩
+
 theorem Ctx.Inhab.explode' {Γ : Ctx} {ℓ : ℕ} (h : Γ.Inhab (.empty ℓ)) {A a b : Tm}
   (ha : Γ.JEq A a a) (hb : Γ.JEq A b b) : Γ.JEq A a b
   := have ⟨_, h⟩ := h; h.refl.explode' ha hb
@@ -18,14 +21,20 @@ theorem Ctx.Inhab.all {Γ : Ctx} {ℓ : ℕ} (h : Γ.Inhab (.empty ℓ))
   have hA' : Γ.JEq (.univ ℓA) (.unit ℓA) A := h.explode' hA.ok.unit hA;
   ⟨.nil ℓA, .cast ⟨_, hA'⟩ (.nil hA.ok)⟩
 
-def Ctx.Contradiction (Γ : Ctx) := Γ.Inhab (.empty 0)
+def Ctx.Contra (Γ : Ctx) := Γ.Inhab (.empty 0)
 
 def Ctx.IsProp (Γ : Ctx) (φ : Tm) := Γ.HasTy (.univ 0) φ
 
 theorem Ctx.IsProp.not {Γ : Ctx} {φ : Tm} (h : Γ.IsProp φ) : Γ.IsProp φ.not
   := HasTy.not h
 
+theorem Ctx.IsProp.cf_to_dv {Γ : Ctx} {A φ : Tm} {L : Finset ℕ}
+  (h : ∀ x ∉ L, (Γ.cons x A).IsProp (φ.bs0 (.fv x)))
+  : ∀ x ∉ Γ.dv, (Γ.cons x A).IsProp (φ.bs0 (.fv x)) := HasTy.cf_ty_to_dv h
+
 def Ctx.IsTrue (Γ : Ctx) (φ : Tm) := Γ.JEq (.univ 0) φ (.unit 0)
+
+theorem Ctx.Ok.tt {Γ : Ctx} (h : Γ.Ok) : Γ.IsTrue (.unit 0) := h.unit
 
 theorem Ctx.IsTrue.is_prop {Γ : Ctx} {φ : Tm} (h : Γ.IsTrue φ) : Γ.IsProp φ := h.ty_lhs
 
@@ -47,12 +56,17 @@ theorem Ctx.IsTrue.iff_inhab_prop {Γ : Ctx} {φ : Tm}
 
 def Ctx.IsFalse (Γ : Ctx) (φ : Tm) := Γ.JEq (.univ 0) φ (.empty 0)
 
+theorem Ctx.Ok.ff {Γ : Ctx} (h : Γ.Ok) : Γ.IsFalse (.empty 0) := h.empty
+
 theorem Ctx.IsFalse.is_prop {Γ : Ctx} {φ : Tm} (h : Γ.IsFalse φ) : Γ.IsProp φ := h.ty_lhs
 
 theorem Ctx.IsFalse.is_ty {Γ : Ctx} {φ : Tm} (h : Γ.IsFalse φ) : Γ.IsTy φ := h.is_prop.is_ty
 
 theorem Ctx.IsFalse.ty_eq_empty {Γ : Ctx} {φ : Tm} (h : Γ.IsFalse φ) : Γ.TyEq φ (.empty 0)
   := ⟨_, h⟩
+
+theorem Ctx.IsTrue.contra {Γ : Ctx} {φ : Tm} (h : Γ.IsTrue φ) (h' : Γ.IsFalse φ) : Γ.Contra
+  := h.inhab.cast ⟨_, h'⟩
 
 def Ctx.IsEmpty (Γ : Ctx) (A : Tm) := Γ.Inhab A.not
 
@@ -67,6 +81,17 @@ theorem Ctx.IsTy.pi_src {Γ : Ctx} {ℓ : ℕ} {A B : Tm} (h : Γ.IsTy (A.pi ℓ
   rw [Ctx.JEq.refl_iff, <-Ctx.OuterTy.has_ty_iff] at h
   have ⟨_, hA, hC⟩ := h
   cases hA with | pi_cf hA _ => exact ⟨_, hA.refl⟩
+
+theorem Ctx.IsTy.pi_trg_prop {Γ : Ctx} {A B : Tm} (h : Γ.IsTy (A.pi 0 B))
+  : (∀x ∉ Γ.dv, (Γ.cons x A).IsProp (B.bs0 (.fv x))) := by
+  have ⟨_, h⟩ := h
+  rw [Ctx.JEq.refl_iff, <-Ctx.OuterTy.has_ty_iff] at h
+  have ⟨_, hA, hC⟩ := h
+  cases hA with | pi_cf hA hB hℓ =>
+    rename_i m n L
+    cases n with
+    | zero => exact IsProp.cf_to_dv hB
+    | succ => cases m <;> simp [Nat.imax] at hℓ
 
 theorem Ctx.IsEmpty.is_prop {Γ : Ctx} {A : Tm} (h : Γ.IsEmpty A) : Γ.IsProp A.not
   := h.regular.pi_src.not_prop
@@ -95,23 +120,28 @@ theorem Ctx.IsFalse.iff_empty_prop {Γ : Ctx} {φ : Tm}
   : Γ.IsFalse φ ↔ Γ.IsEmpty φ ∧ Γ.IsProp φ
   := ⟨fun h => ⟨h.is_empty, h.is_prop⟩, fun ⟨h, hp⟩ => h.is_false hp⟩
 
--- theorem Ctx.Contradiction.empty0 {Γ : Ctx} {x : ℕ} {A : Tm} {ℓ : ℕ}
--- (h : (Γ.cons x A).Contradiction)
---   : Γ.IsEmpty A  :=
---   have ⟨c, hc⟩ := h;
---   have ⟨_, hA⟩ := h.ok.ty;
---   ⟨.abs 0 A (.empty 0) c, .abs_cf hA.ty_lhs
---     (fun x hx => (h.ok.tail.cons hx h.ok.ty).empty.ty_lhs) rfl
---     sorry
---   ⟩
+theorem Ctx.Contra.close_emp {Γ : Ctx} {x : ℕ} {A : Tm}
+(h : (Γ.cons x A).Contra) : Γ.IsEmpty A  :=
+  have ⟨c, hc⟩ := h;
+  have ⟨_, hA⟩ := h.ok.ty;
+  ⟨.abs 0 A (.empty 0) (c.close x), .abs_cf hA.ty_lhs
+    (fun _ hx => (h.ok.tail.cons hx h.ok.ty).empty.ty_lhs) rfl
+    hc.close
+  ⟩
+
+theorem Ctx.Contra.close_not_tt {Γ : Ctx} {x : ℕ} {A : Tm}
+  (h : (Γ.cons x A).Contra) : Γ.IsTrue A.not :=
+  h.close_emp.is_true
+
+theorem Ctx.Contra.close_ff {Γ : Ctx} {x : ℕ} {φ : Tm}
+  (hφ : Γ.IsProp φ) (h : (Γ.cons x φ).Contra) : Γ.IsFalse φ :=
+  h.close_emp.is_false hφ
 
 def Ctx.Implies (Γ : Ctx) (φ ψ : Tm) := Γ.IsProp φ ∧ Γ.IsProp ψ ∧ Γ.IsTrue (.pi 0 φ ψ)
 
-theorem Ctx.Implies.src_prop {Γ : Ctx} {φ ψ : Tm} (h : Γ.Implies φ ψ) : Γ.IsProp φ
-  := h.1
+theorem Ctx.Implies.src_prop {Γ : Ctx} {φ ψ : Tm} (h : Γ.Implies φ ψ) : Γ.IsProp φ := h.1
 
-theorem Ctx.Implies.trg_prop {Γ : Ctx} {φ ψ : Tm} (h : Γ.Implies φ ψ) : Γ.IsProp ψ
-  := h.2.1
+theorem Ctx.Implies.trg_prop {Γ : Ctx} {φ ψ : Tm} (h : Γ.Implies φ ψ) : Γ.IsProp ψ := h.2.1
 
 theorem Ctx.Implies.src_ty {Γ : Ctx} {φ ψ : Tm} (h : Γ.Implies φ ψ) : Γ.IsTy φ := h.src_prop.is_ty
 

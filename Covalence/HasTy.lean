@@ -604,3 +604,35 @@ theorem Ctx.HasTy.rename0 {Γ : Ctx} {x : ℕ} {A B a : Tm}
   apply Ctx.JEq.rename0 _ hB ha ha y hy
   rw [Ctx.JEq.refl_iff]
   exact h
+
+theorem Ctx.HasTy.rename0' {Γ : Ctx} {x : ℕ} {A B a : Tm}
+  (h : Ctx.HasTy (Γ.cons x A) B a)
+  : ∀y ∉ Γ.dv, Ctx.HasTy (Γ.cons y A) (B.ms0 x (.fv y)) (a.ms0 x (.fv y)) := by
+  intro y hy
+  rw [<-Ctx.JEq.refl_iff]
+  apply Ctx.JEq.rename0' _ y hy
+  rw [Ctx.JEq.refl_iff]
+  exact h
+
+theorem Ctx.HasTy.close {Γ : Ctx} {x : ℕ} {A B a : Tm}
+  (h : Ctx.HasTy (Γ.cons x A) B a)
+  : ∀y ∉ Γ.dv, Ctx.HasTy (Γ.cons y A) ((B.close x).bs0 (.fv y)) ((a.close x).bs0 (.fv y)) := by
+  intro y hy
+  convert h.rename0' y hy using 1 <;> rw [Tm.rename_close]
+
+theorem Ctx.HasTy.cf_to_dv {Γ : Ctx} {A B a : Tm} {L : Finset ℕ}
+  (h : ∀ x ∉ L, Ctx.HasTy (Γ.cons x A) (B.bs0 (.fv x)) (a.bs0 (.fv x)))
+  : ∀ x ∉ Γ.dv, Ctx.HasTy (Γ.cons x A) (B.bs0 (.fv x)) (a.bs0 (.fv x)) := by
+  intro x hx
+  have ⟨y, hy⟩ := Finset.exists_notMem (L ∪ B.fvs ∪ a.fvs)
+  simp only [Finset.mem_union, not_or] at hy
+  exact (h y hy.1.1).rename0 hy.1.2 hy.2 x hx
+
+theorem Ctx.HasTy.cf_ty_to_dv {Γ : Ctx} {A B a : Tm} {L : Finset ℕ}
+  (h : ∀ x ∉ L, Ctx.HasTy (Γ.cons x A) B (a.bs0 (.fv x)))
+  : ∀ x ∉ Γ.dv, Ctx.HasTy (Γ.cons x A) B (a.bs0 (.fv x)) := by
+  have hB : B.bvi = 0 := have ⟨x, hx⟩ := L.exists_notMem; (h x hx).lc_ty
+  convert Ctx.HasTy.cf_to_dv (L := L) _
+  · rw [Tm.bs0, Tm.bsubst_lc _ hB]
+  convert h
+  rw [Tm.bs0, Tm.bsubst_lc _ hB]
