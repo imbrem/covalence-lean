@@ -198,6 +198,11 @@ theorem Ctx.JEq.wk1
     (by simp at hx; exact hx.2)
     (by simp at hx; simp [h.ok.var, Ne.symm hx.1]) h.ok.ty)
 
+theorem Ctx.TyEq.wk1
+  {Γ : Ctx} {y : ℕ} {Y A B : Tm} (h : (Γ.cons y Y).TyEq A B)
+  {x : ℕ} {C D : Tm} (hx : x ∉ {y} ∪ Γ.dv) (hC : Γ.TyEq C D) : ((Γ.cons x C).cons y Y).TyEq A B
+  := have ⟨ℓ, h⟩ := h; ⟨ℓ, h.wk1 hx hC⟩
+
 theorem Ctx.JEq.lhs_cons {Γ : Ctx} {ℓ : ℕ} {A B : Tm}
   (h : Γ.JEq (.univ ℓ) A B) {x : ℕ} (hx : x ∉ Γ.dv) : (Γ.cons x A).JEq (.univ ℓ) A B
   := h.wk0 hx h.ty_eq

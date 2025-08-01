@@ -18,7 +18,8 @@ def Tm.closeUnder (i : ℕ) (x : ℕ) : Tm → Tm
     .pair ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x) (b.closeUnder i x)
   | .fst ℓ A B a => .fst ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x)
   | .snd ℓ A B a => .snd ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x)
-  | .dite φ A a b => .dite (φ.closeUnder i x) (A.closeUnder i x) (a.closeUnder i x) (b.closeUnder i x)
+  | .dite φ A a b
+    => .dite (φ.closeUnder i x) (A.closeUnder i x) (a.closeUnder i x) (b.closeUnder i x)
   | .trunc A => .trunc (A.closeUnder i x)
   | .choose A φ => .choose (A.closeUnder i x) (φ.closeUnder (i + 1) x)
   | .nats => .nats
@@ -128,3 +129,15 @@ theorem Tm.rename_close (t : Tm) (x y : ℕ) : (t.close x).bs0 (.fv y) = t.ms0 x
   convert t.bs0_close x (.fv y) using 1; rw [fs0, fsubst_eq_msubst]
   · rfl
   · intro x hx; simp only [get_f0]; split <;> rfl
+
+theorem Tm.fvs_closeUnder (t : Tm) (n : ℕ) (x : ℕ) : (t.closeUnder n x).fvs = t.fvs.erase x
+  := by induction t generalizing n with
+  | bv j => simp only [closeUnder]; split <;> simp
+  | fv y => simp only [closeUnder]; split <;> simp [*]; rename_i h; simp [Ne.symm h]
+  | _ => simp only [closeUnder, fvs, Finset.erase_empty, Finset.erase_union_distrib, *]
+
+theorem Tm.fvs_close (t : Tm) (x : ℕ) : (t.close x).fvs = t.fvs.erase x
+  := t.fvs_closeUnder 0 x
+
+theorem Tm.fvs_close_subset (t : Tm) (x : ℕ) : (t.close x).fvs ⊆ t.fvs
+  := by rw [Tm.fvs_close]; exact Finset.erase_subset _ _

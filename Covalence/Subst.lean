@@ -312,7 +312,7 @@ theorem Ctx.JEq.bs0_one {Γ : Ctx} {A B a b b' : Tm} {x : ℕ} (hx : x ∉ B.fvs
   (hb : Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
   (ha : Ctx.JEq Γ A a a) : Γ.JEq (B.bs0 a) (b.bs0 a) (b'.bs0 a) := by
   simp at hx
-  convert hb.ms0_one ha using 1 <;> rw [Tm.ms0_bs0_notMem (ha := ha.lc_lhs)] <;> simp [*]
+  convert hb.ms0_one ha using 1 <;> rw [Tm.ms0_bs0_var_notMem (ha := ha.lc_lhs)] <;> simp [*]
 
 theorem Ctx.JEq.bs0_one_cf {Γ : Ctx} {A B a b b' : Tm} {L : Finset ℕ}
   (hb : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
@@ -390,7 +390,7 @@ theorem Ctx.JEq.rename0 {Γ : Ctx} {x : ℕ} {A B a b : Tm}
   : ∀y ∉ Γ.dv, Ctx.JEq (Γ.cons y A) (B.bs0 (.fv y)) (a.bs0 (.fv y)) (b.bs0 (.fv y)) := by
   intro y hy
   convert h.rename0' y hy using 1
-  <;> exact (Tm.ms0_bs0_notMem _ _ (by simp [Tm.bvi]) x (by assumption)).symm
+  <;> exact (Tm.ms0_bs0_var_notMem _ _ (by simp [Tm.bvi]) x (by assumption)).symm
 
 theorem Ctx.TyEq.rename0 {Γ : Ctx} {x : ℕ} {A B B' : Tm}
   (h : Ctx.TyEq (Γ.cons x A) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
@@ -398,7 +398,7 @@ theorem Ctx.TyEq.rename0 {Γ : Ctx} {x : ℕ} {A B B' : Tm}
   : ∀y ∉ Γ.dv, Ctx.TyEq (Γ.cons y A) (B.bs0 (.fv y)) (B'.bs0 (.fv y)) := by
   intro y hy
   convert h.subst_one (h.ok.toName0 y hy) using 1
-  <;> exact (Tm.ms0_bs0_notMem _ _ (by simp [Tm.bvi]) x (by assumption)).symm
+  <;> exact (Tm.ms0_bs0_var_notMem _ _ (by simp [Tm.bvi]) x (by assumption)).symm
 
 theorem Ctx.JEq.univ_of_cf {Γ : Ctx} {A B C : Tm} {L : Finset ℕ}
   (h : ∀ x ∉ L, Ctx.TyEq (Γ.cons x A) (B.bs0 (.fv x)) (C.bs0 (.fv x)))

@@ -305,7 +305,7 @@ theorem Tm.msubst_eqOn_subset {X : Finset ℕ} {σ τ : MSubst}
 theorem Tm.msubst_eqOn (t : Tm) {σ τ : MSubst} (h : σ.EqOn t.fvs τ) : t.msubst σ = t.msubst τ
 := t.msubst_eqOn_subset h (by rfl)
 
-theorem Tm.ms0_bsubst_b0_notMem (t : Tm) (a : Tm) (ha : a.bvi = 0) (n : ℕ)
+theorem Tm.ms0_bsubst_b0_var_notMem (t : Tm) (a : Tm) (ha : a.bvi = 0) (n : ℕ)
   : ∀x ∉ t.fvs, (t.bsubst (BSubst.lift^[n] (Tm.fv x).b0)).ms0 x a = t.bsubst (BSubst.lift^[n] a.b0)
   := fun x hx => by
   simp only [ms0]
@@ -337,6 +337,6 @@ theorem Tm.msubst_eqOn_subset_one {X : Finset ℕ} {σ : MSubst}
 theorem Tm.msubst_eqOn_one (t : Tm) {σ : MSubst} (h : σ.EqOn t.fvs 1) : t.msubst σ = t
   := by rw [t.msubst_eqOn h, msubst_one]
 
-theorem Tm.ms0_bs0_notMem (t : Tm) (a : Tm) (ha : a.bvi = 0)
+theorem Tm.ms0_bs0_var_notMem (t : Tm) (a : Tm) (ha : a.bvi = 0)
   : ∀x ∉ t.fvs, (t.bs0 (.fv x)).ms0 x a = t.bs0 a
-  := t.ms0_bsubst_b0_notMem a ha 0
+  := t.ms0_bsubst_b0_var_notMem a ha 0

@@ -137,6 +137,13 @@ theorem Ctx.HasTy.wk0'
   {x : ℕ} {B C : Tm} (hx : x ∉ Γ.dv) (hB : Γ.TyEq B C) : (Γ.cons x B).HasTy A (a.bs0 (.fv x))
   := by convert h.wk0 hx hB using 1; rw [Tm.bs0, Tm.bsubst_lc]; exact h.refl.lc_lhs
 
+theorem Ctx.HasTy.wk1
+  {Γ : Ctx} {y : ℕ} {Y A a : Tm} (h : (Γ.cons y Y).HasTy A a)
+  {x : ℕ} {B C : Tm} (hx : x ∉ {y} ∪ Γ.dv) (hB : Γ.TyEq B C) : ((Γ.cons x B).cons y Y).HasTy A a
+  := h.wk (hB.lhs_pure_wk1
+    (by simp at hx; exact hx.2)
+    (by simp at hx; simp [h.ok.var, Ne.symm hx.1]) h.ok.ty).wk
+
 theorem Ctx.HasTy.to_cf_dv {Γ : Ctx} {A B a : Tm} (h : Γ.HasTy A a) (hB : Γ.IsTy B)
   : ∀x ∉ Γ.dv, (Γ.cons x B).HasTy (A.bs0 (.fv x)) (a.bs0 (.fv x))
   := fun x hx => by
@@ -380,7 +387,7 @@ theorem Ctx.HasTy.bs0 {Γ : Ctx} {A B a b : Tm} {x : ℕ} (hx : x ∉ B.fvs ∪ 
   (hb : Ctx.HasTy (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)))
   (ha : Ctx.HasTy Γ A a) : Γ.HasTy (B.bs0 a) (b.bs0 a) := by
   simp at hx
-  convert hb.ms0_one ha using 1 <;> rw [Tm.ms0_bs0_notMem (ha := ha.lc_tm)] <;> simp [*]
+  convert hb.ms0_one ha using 1 <;> rw [Tm.ms0_bs0_var_notMem (ha := ha.lc_tm)] <;> simp [*]
 
 theorem Ctx.HasTy.bs0_cf {Γ : Ctx} {A B a b : Tm} {L : Finset ℕ}
   (hb : ∀ x ∉ L, Ctx.HasTy (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)))
@@ -645,6 +652,15 @@ theorem Ctx.HasTy.cf_ty_to_dv {Γ : Ctx} {A B a : Tm} {L : Finset ℕ}
   · rw [Tm.bs0, Tm.bsubst_lc _ hB]
   convert h
   rw [Tm.bs0, Tm.bsubst_lc _ hB]
+
+theorem Ctx.HasTy.cf_k_to_dv {Γ : Ctx} {A B a : Tm} {L : Finset ℕ}
+  (h : ∀ x ∉ L, Ctx.HasTy (Γ.cons x A) B a)
+  : ∀ x ∉ Γ.dv, Ctx.HasTy (Γ.cons x A) B a := by
+  have ha : a.bvi = 0 := have ⟨x, hx⟩ := L.exists_notMem; (h x hx).lc_tm
+  convert Ctx.HasTy.cf_ty_to_dv (L := L) _
+  · rw [Tm.bs0, Tm.bsubst_lc _ ha]
+  convert h
+  rw [Tm.bs0, Tm.bsubst_lc _ ha]
 
 theorem Ctx.HasTy.abs_ty_cf {Γ : Ctx} {ℓ m n : ℕ} {A B b : Tm}
   (hA : Γ.HasTy (.univ m) A) (hB : Γ.HasTy (.univ n) B) (hℓ : ℓ = m.imax n) {L : Finset ℕ}

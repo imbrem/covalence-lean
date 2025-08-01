@@ -54,6 +54,28 @@ theorem Ctx.IsTrue.iff_inhab_prop {Γ : Ctx} {φ : Tm}
   : Γ.IsTrue φ ↔ Γ.Inhab φ ∧ Γ.IsProp φ
   := ⟨fun h => ⟨h.inhab, h.is_prop⟩, fun ⟨h, hp⟩ => h.is_true hp⟩
 
+theorem Ctx.Ok.var0 {Γ : Ctx} {x : ℕ} {A : Tm} (h : (Γ.cons x A).Ok) : (Γ.cons x A).Inhab A
+  := ⟨.fv x, .var h .here⟩
+
+theorem Ctx.IsProp.var0 {Γ : Ctx} {x : ℕ} {A : Tm}
+  (h : (Γ.cons x A).IsProp A) : (Γ.cons x A).IsTrue A
+  := h.ok.var0.is_true h
+
+theorem Ctx.IsProp.wk0 {Γ : Ctx} {A φ : Tm} (h : Γ.IsProp φ) {x} (hx : x ∉ Γ.dv) (hA : Γ.IsTy A)
+  : (Γ.cons x A).IsProp φ := HasTy.wk0 h hx hA
+
+theorem Ctx.IsProp.wk1
+  {Γ : Ctx} {y : ℕ} {Y φ : Tm} (h : (Γ.cons y Y).IsProp φ)
+  {x : ℕ} {B C : Tm} (hx : x ∉ {y} ∪ Γ.dv) (hB : Γ.TyEq B C) : ((Γ.cons x B).cons y Y).IsProp φ
+  := HasTy.wk1 h hx hB
+
+theorem Ctx.IsProp.wk0_var0 {Γ : Ctx} {x : ℕ} {A : Tm}
+  (h : Γ.IsProp A) (hx : x ∉ Γ.dv) : (Γ.cons x A).IsTrue A
+  := (h.wk0 hx h.is_ty).var0
+
+theorem Ctx.IsTrue.nil_ty {Γ : Ctx} {φ : Tm} (hA : Γ.IsTrue φ) : Γ.HasTy φ (.nil 0)
+  := .cast ⟨_, .symm hA⟩ (.nil hA.ok)
+
 def Ctx.IsFalse (Γ : Ctx) (φ : Tm) := Γ.JEq (.univ 0) φ (.empty 0)
 
 theorem Ctx.Ok.ff {Γ : Ctx} (h : Γ.Ok) : Γ.IsFalse (.empty 0) := h.empty
@@ -271,37 +293,55 @@ theorem Ctx.IsTrue.ext {Γ : Ctx} {A a b : Tm} (h : Γ.IsTrue (.eqn A a b))
 theorem Ctx.IsTrue.eqn_iff {Γ : Ctx} {A a b : Tm}
   : Γ.IsTrue (.eqn A a b) ↔ Γ.JEq A a b := ⟨Ctx.IsTrue.ext, JEq.eqn_tt⟩
 
--- theorem Ctx.HasTy.close_prop {Γ : Ctx} {x : ℕ} {φ A a : Tm}
---   (hφ : Γ.IsProp φ) (h : Ctx.HasTy (Γ.cons x φ) A a)
---   : ∀y ∉ Γ.dv, Ctx.HasTy (Γ.cons y φ) ((A.close x).bs0 (.nil 0)) ((a.close x).bs0 (.nil 0)) := by
---   sorry
+theorem Ctx.HasTy.close_prop {Γ : Ctx} {x : ℕ} {φ A a : Tm}
+  (hφ : Γ.IsProp φ) (h : Ctx.HasTy (Γ.cons x φ) A a)
+  : ∀y ∉ Γ.dv, Ctx.HasTy (Γ.cons y φ) ((A.close x).bs0 (.nil 0)) ((a.close x).bs0 (.nil 0)) := by
+  apply HasTy.cf_k_to_dv (L := (A.close x).fvs ∪ (a.close x).fvs ∪ Γ.dv)
+  intro y hy
+  simp at hy
+  have ⟨x, hx⟩ := Finset.exists_notMem ({y} ∪ Γ.dv)
+  have hc := HasTy.bs0 (by simp [*])
+    ((h.close y (by simp [*])).wk1 (x := x) hx hφ.is_ty)
+    (hφ.wk0_var0 (x := x) (by simp only [Finset.mem_union, not_or] at hx; exact hx.2)).nil_ty
+  convert hc.rename0' y (by simp [*]) using 1
+  <;> {
+    rw [Tm.ms0, Tm.msubst_eqOn_subset_one (X := Γ.dv)]
+    · intro z hz; simp [Tm.get_m0]; intro hz'; cases hz'; simp at hx; exact (hx.2 hz).elim
+    · have hA := h.refl.scoped_ty;
+      have ha := h.refl.scoped_lhs;
+      simp only [Ctx.dv, <-Finset.insert_eq, Finset.subset_insert_iff] at *
+      exact Tm.bs0_fv_sub (by simp only [Tm.fvs_close, *])
+                          (by simp only [Tm.fvs, Finset.empty_subset])
+  }
 
--- theorem Ctx.HasTy.close_prop_ty {Γ : Ctx} {x : ℕ} {φ A a : Tm}
---   (hφ : Γ.IsProp φ) (hA : Γ.IsTy A) (h : Ctx.HasTy (Γ.cons x φ) A a)
---   : ∀y ∉ Γ.dv, Ctx.HasTy (Γ.cons y φ) A ((a.close x).bs0 (.nil 0)) := by
---   sorry
+theorem Ctx.HasTy.close_prop_ty {Γ : Ctx} {x : ℕ} {φ A a : Tm}
+  (hφ : Γ.IsProp φ) (hA : Γ.IsTy A) (h : Ctx.HasTy (Γ.cons x φ) A a)
+  : ∀y ∉ Γ.dv, Ctx.HasTy (Γ.cons y φ) A ((a.close x).bs0 (.nil 0)) := by
+  convert h.close_prop hφ
+  rw [Tm.close_notMem (h := h.lc_ty), Tm.bs0, Tm.bsubst_lc (h := h.lc_ty)]
+  apply Finset.not_mem_subset hA.scoped h.ok.var
 
--- theorem Ctx.Inhab.close_lem {Γ : Ctx} {φ A : Tm}
---   (hφ : Γ.IsProp φ) (hA : Γ.IsTy A)
---   {x : ℕ} (htt : (Γ.cons x φ).Inhab A) {y : ℕ} (hff : (Γ.cons y φ.not).Inhab A)
---   : Γ.Inhab A :=
---   have ⟨_, hA⟩ := hA; have ⟨_, htt⟩ := htt; have ⟨_, hff⟩ := hff;
---   ⟨_, .dite_cf hφ hA.ty_lhs (htt.close_prop_ty hφ hA.lhs_ty) (hff.close_prop_ty hφ.not hA.lhs_ty)⟩
+theorem Ctx.Inhab.close_lem {Γ : Ctx} {φ A : Tm}
+  (hφ : Γ.IsProp φ) (hA : Γ.IsTy A)
+  {x : ℕ} (htt : (Γ.cons x φ).Inhab A) {y : ℕ} (hff : (Γ.cons y φ.not).Inhab A)
+  : Γ.Inhab A :=
+  have ⟨_, hA⟩ := hA; have ⟨_, htt⟩ := htt; have ⟨_, hff⟩ := hff;
+  ⟨_, .dite_cf hφ hA.ty_lhs (htt.close_prop_ty hφ hA.lhs_ty) (hff.close_prop_ty hφ.not hA.lhs_ty)⟩
 
--- theorem Ctx.IsTrue.close_lem {Γ : Ctx} {φ ψ : Tm}
---   (hφ : Γ.IsProp φ) (hψ : Γ.IsProp ψ)
---   {x : ℕ} (htt : (Γ.cons x φ).IsTrue ψ) {y : ℕ} (hff : (Γ.cons y φ.not).IsTrue ψ)
---   : Γ.IsTrue ψ := (htt.inhab.close_lem hφ hψ.is_ty hff.inhab).is_true hψ
+theorem Ctx.IsTrue.close_lem {Γ : Ctx} {φ ψ : Tm}
+  (hφ : Γ.IsProp φ) (hψ : Γ.IsProp ψ)
+  {x : ℕ} (htt : (Γ.cons x φ).IsTrue ψ) {y : ℕ} (hff : (Γ.cons y φ.not).IsTrue ψ)
+  : Γ.IsTrue ψ := (htt.inhab.close_lem hφ hψ.is_ty hff.inhab).is_true hψ
 
--- theorem Ctx.Inhab.lem_cf {Γ : Ctx} {φ A : Tm}
---   (hφ : Γ.IsProp φ) (hA : Γ.IsTy A) {L : Finset ℕ}
---   (htt : ∀ x ∉ L, (Γ.cons x φ).Inhab A) (hff : ∀ x ∉ L, (Γ.cons x φ.not).Inhab A)
---   : Γ.Inhab A := have ⟨x, hx⟩ := L.exists_notMem; (htt x hx).close_lem hφ hA (hff x hx)
+theorem Ctx.Inhab.lem_cf {Γ : Ctx} {φ A : Tm}
+  (hφ : Γ.IsProp φ) (hA : Γ.IsTy A) {L : Finset ℕ}
+  (htt : ∀ x ∉ L, (Γ.cons x φ).Inhab A) (hff : ∀ x ∉ L, (Γ.cons x φ.not).Inhab A)
+  : Γ.Inhab A := have ⟨x, hx⟩ := L.exists_notMem; (htt x hx).close_lem hφ hA (hff x hx)
 
--- theorem Ctx.IsTrue.lem_cf {Γ : Ctx} {φ ψ : Tm}
---   (hφ : Γ.IsProp φ) (hψ : Γ.IsProp ψ) {L : Finset ℕ}
---   (htt : ∀ x ∉ L, (Γ.cons x φ).IsTrue ψ) (hff : ∀ x ∉ L, (Γ.cons x φ.not).IsTrue ψ)
---   : Γ.IsTrue ψ := have ⟨x, hx⟩ := L.exists_notMem; (htt x hx).close_lem hφ hψ (hff x hx)
+theorem Ctx.IsTrue.lem_cf {Γ : Ctx} {φ ψ : Tm}
+  (hφ : Γ.IsProp φ) (hψ : Γ.IsProp ψ) {L : Finset ℕ}
+  (htt : ∀ x ∉ L, (Γ.cons x φ).IsTrue ψ) (hff : ∀ x ∉ L, (Γ.cons x φ.not).IsTrue ψ)
+  : Γ.IsTrue ψ := have ⟨x, hx⟩ := L.exists_notMem; (htt x hx).close_lem hφ hψ (hff x hx)
 
 -- theorem Ctx.Iff.propext {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ)
 --   : Γ.JEq (.univ 0) φ ψ := sorry--(IsTrue.lem_cf (L := Γ.dv) sorry sorry sorry sorry).ext
