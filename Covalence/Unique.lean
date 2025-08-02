@@ -64,14 +64,14 @@ inductive Ctx.InnerTy : Ctx → Tm → Tm → Prop
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
     → (ℓ = m ⊔ n)
     → HasTy Γ (.sigma ℓ A B) e
-    → InnerTy Γ A (.fst ℓ A B e)
+    → InnerTy Γ A (.fst A B e)
   | snd_cf {Γ : Ctx} {ℓ m n : ℕ} {A B Ba e : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
     → (ℓ = m ⊔ n)
     → HasTy Γ (.sigma ℓ A B) e
-    → JEq Γ (.univ n) (B.bs0 (.fst ℓ A B e)) Ba
-    → InnerTy Γ Ba (.snd ℓ A B e)
+    → JEq Γ (.univ n) (B.bs0 (.fst A B e)) Ba
+    → InnerTy Γ Ba (.snd A B e)
   | dite_cf {Γ : Ctx} {ℓ : ℕ} {φ A a b : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ 0) φ
     → HasTy Γ (.univ ℓ) A

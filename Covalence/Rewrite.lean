@@ -17,10 +17,10 @@ inductive Ctx.Rw (Γ : Ctx) : Tm → Tm → Prop
   | sigma (ℓ : ℕ) {A A' B B' : Tm} : Rw Γ A A' → Rw Γ B B' → Rw Γ (.sigma ℓ A B) (.sigma ℓ A' B')
   | pair (ℓ : ℕ) {A A' B B' a a' b b' : Tm}
     : Rw Γ A A' → Rw Γ B B' → Rw Γ a a' → Rw Γ b b' → Rw Γ (.pair ℓ A B a b) (.pair ℓ A' B' a' b')
-  | fst (ℓ : ℕ) {A A' B B' a a' : Tm}
-    : Rw Γ A A' → Rw Γ B B' → Rw Γ a a' → Rw Γ (.fst ℓ A B a) (.fst ℓ A' B' a')
-  | snd (ℓ : ℕ) {A A' B B' a a' : Tm}
-    : Rw Γ A A' → Rw Γ B B' → Rw Γ a a' → Rw Γ (.snd ℓ A B a) (.snd ℓ A' B' a')
+  | fst {A A' B B' a a' : Tm}
+    : Rw Γ A A' → Rw Γ B B' → Rw Γ a a' → Rw Γ (.fst A B a) (.fst A' B' a')
+  | snd {A A' B B' a a' : Tm}
+    : Rw Γ A A' → Rw Γ B B' → Rw Γ a a' → Rw Γ (.snd A B a) (.snd A' B' a')
   | dite {φ φ' A A' a a' b b' : Tm}
     : Rw Γ φ φ' → Rw Γ A A' → Rw Γ a a' → Rw Γ b b' → Rw Γ (.dite φ A a b) (.dite φ' A' a' b')
   | trunc {A A' : Tm} : Rw Γ A A' → Rw Γ (.trunc A) (.trunc A')

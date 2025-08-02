@@ -16,8 +16,8 @@ def Tm.closeUnder (i : ℕ) (x : ℕ) : Tm → Tm
   | .sigma ℓ A B => .sigma ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x)
   | .pair ℓ A B a b =>
     .pair ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x) (b.closeUnder i x)
-  | .fst ℓ A B a => .fst ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x)
-  | .snd ℓ A B a => .snd ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x)
+  | .fst A B a => .fst (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x)
+  | .snd A B a => .snd (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x)
   | .dite φ A a b
     => .dite (φ.closeUnder i x) (A.closeUnder i x) (a.closeUnder i x) (b.closeUnder i x)
   | .trunc A => .trunc (A.closeUnder i x)
