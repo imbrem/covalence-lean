@@ -60,9 +60,17 @@ theorem Ctx.IsTrue.iff_inhab_prop {Γ : Ctx} {φ : Tm}
 theorem Ctx.Ok.var0 {Γ : Ctx} {x : ℕ} {A : Tm} (h : (Γ.cons x A).Ok) : (Γ.cons x A).Inhab A
   := ⟨.fv x, .var h .here⟩
 
-theorem Ctx.IsProp.var0 {Γ : Ctx} {x : ℕ} {A : Tm}
-  (h : (Γ.cons x A).IsProp A) : (Γ.cons x A).IsTrue A
+theorem Ctx.IsProp.var0 {Γ : Ctx} {x : ℕ} {φ : Tm}
+  (h : (Γ.cons x φ).IsProp φ) : (Γ.cons x φ).IsTrue φ
   := h.ok.var0.is_true h
+
+theorem Ctx.Ok.var1 {Γ : Ctx} {x y : ℕ} {A B : Tm}
+  (h : ((Γ.cons x A).cons y B).Ok) : ((Γ.cons x A).cons y B).Inhab A
+  := ⟨.fv x, .var h (.there .here)⟩
+
+theorem Ctx.IsProp.var1 {Γ : Ctx} {x y : ℕ} {φ A : Tm}
+  (h : ((Γ.cons x φ).cons y A).IsProp φ) : ((Γ.cons x φ).cons y A).IsTrue φ
+  := h.ok.var1.is_true h
 
 theorem Ctx.IsProp.wk0 {Γ : Ctx} {A φ : Tm} (h : Γ.IsProp φ) {x} (hx : x ∉ Γ.dv) (hA : Γ.IsTy A)
   : (Γ.cons x A).IsProp φ := HasTy.wk0 h hx hA
@@ -139,6 +147,12 @@ theorem Ctx.IsEmpty.is_false {Γ : Ctx} {φ : Tm} (h : Γ.IsEmpty φ) (hp : Γ.I
 theorem Ctx.HasTy.is_false {Γ : Ctx} {φ a : Tm} (h : Γ.HasTy φ.not a) (hp : Γ.IsProp φ)
   : Γ.IsFalse φ := IsEmpty.is_false ⟨a, h⟩ hp
 
+theorem Ctx.Contra.all_true {Γ : Ctx} (h : Γ.Contra) : ∀ {φ}, Γ.IsProp φ → Γ.IsTrue φ
+  := fun hφ => (h.all hφ.is_ty).is_true hφ
+
+theorem Ctx.Contra.all_false {Γ : Ctx} (h : Γ.Contra) : ∀ {φ}, Γ.IsProp φ → Γ.IsFalse φ
+  := fun hφ => IsEmpty.is_false (h.all hφ.not.is_ty) hφ
+
 theorem Ctx.IsFalse.is_empty {Γ : Ctx} {φ : Tm} (h : Γ.IsFalse φ) : Γ.IsEmpty φ :=
   ⟨
     Tm.abs 0 φ (.empty 0) (.bv 0),
@@ -156,6 +170,21 @@ theorem Ctx.IsFalse.inhab {Γ : Ctx} {φ : Tm} (h : Γ.IsFalse φ) : Γ.Inhab φ
 theorem Ctx.IsFalse.iff_empty_prop {Γ : Ctx} {φ : Tm}
   : Γ.IsFalse φ ↔ Γ.IsEmpty φ ∧ Γ.IsProp φ
   := ⟨fun h => ⟨h.is_empty, h.is_prop⟩, fun ⟨h, hp⟩ => h.is_false hp⟩
+
+theorem Ctx.IsTrue.to_false {Γ : Ctx} {φ : Tm} (hφ : Γ.IsProp φ) (h : Γ.IsTrue φ.not)
+  : Γ.IsFalse φ := IsEmpty.is_false h.inhab hφ
+
+theorem Ctx.IsProp.not_var0 {Γ : Ctx} {x : ℕ} {φ : Tm}
+  (h : (Γ.cons x φ.not).IsProp φ) : (Γ.cons x φ.not).IsFalse φ
+  := h.not.var0.to_false h
+
+theorem Ctx.IsProp.not_var1 {Γ : Ctx} {x y : ℕ} {φ A : Tm}
+  (h : ((Γ.cons x φ.not).cons y A).IsProp φ) : ((Γ.cons x φ.not).cons y A).IsFalse φ
+  := h.not.var1.to_false h
+
+theorem Ctx.IsProp.wk0_not_var0 {Γ : Ctx} {x : ℕ} {φ : Tm}
+  (h : Γ.IsProp φ) (hx : x ∉ Γ.dv) : (Γ.cons x φ.not).IsFalse φ
+  := (h.wk0 hx h.not.is_ty).not_var0
 
 theorem Ctx.Contra.close_emp {Γ : Ctx} {x : ℕ} {A : Tm}
 (h : (Γ.cons x A).Contra) : Γ.IsEmpty A  :=
@@ -316,6 +345,23 @@ theorem Ctx.IsTrue.ext {Γ : Ctx} {A a b : Tm} (h : Γ.IsTrue (.eqn A a b))
 theorem Ctx.IsTrue.eqn_iff {Γ : Ctx} {A a b : Tm}
   : Γ.IsTrue (.eqn A a b) ↔ Γ.JEq A a b := ⟨Ctx.IsTrue.ext, JEq.eqn_tt⟩
 
+theorem Ctx.IsTrue.eqn_bool {Γ : Ctx} {φ : Tm} (h : Γ.IsTrue φ)
+  : Γ.IsTrue (.eqn (.univ 0) φ (.unit 0)) := JEq.eqn_tt h
+
+theorem Ctx.IsFalse.eqn_bool {Γ : Ctx} {φ : Tm} (h : Γ.IsFalse φ)
+  : Γ.IsTrue (.eqn (.univ 0) φ (.empty 0)) := JEq.eqn_tt h
+
+theorem Ctx.IsTrue.eqn_symm {Γ : Ctx} {A a b : Tm} (h : Γ.IsTrue (.eqn A a b))
+  : Γ.IsTrue (.eqn A b a) := by
+  simp only [Ctx.IsTrue.eqn_iff] at *
+  exact JEq.symm h
+
+theorem Ctx.IsTrue.eqn_trans {Γ : Ctx} {A a b c : Tm}
+  (h : Γ.IsTrue (.eqn A a b)) (h' : Γ.IsTrue (.eqn A b c))
+  : Γ.IsTrue (.eqn A a c) := by
+  simp only [Ctx.IsTrue.eqn_iff] at *
+  exact JEq.trans h h'
+
 theorem Ctx.HasTy.close_prop {Γ : Ctx} {x : ℕ} {φ A a : Tm}
   (hφ : Γ.IsProp φ) (h : Ctx.HasTy (Γ.cons x φ) A a)
   : ∀y ∉ Γ.dv, Ctx.HasTy (Γ.cons y φ) ((A.close x).bs0 (.nil 0)) ((a.close x).bs0 (.nil 0)) := by
@@ -381,5 +427,49 @@ theorem Ctx.IsTrue.lem_cf {Γ : Ctx} {φ ψ : Tm}
   (htt : ∀ x ∉ L, (Γ.cons x φ).IsTrue ψ) (hff : ∀ x ∉ L, (Γ.cons x φ.not).IsTrue ψ)
   : Γ.IsTrue ψ := have ⟨x, hx⟩ := L.exists_notMem; (htt x hx).close_lem hφ hψ (hff x hx)
 
--- theorem Ctx.Iff.propext {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ)
---   : Γ.JEq (.univ 0) φ ψ := sorry--(IsTrue.lem_cf (L := Γ.dv) sorry sorry sorry sorry).ext
+theorem Ctx.Implies.ok {Γ : Ctx} {φ ψ : Tm} (h : Γ.Implies φ ψ) : Γ.Ok := h.2.2.ok
+
+theorem Ctx.Iff.ok {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ) : Γ.Ok := h.1.ok
+
+theorem Ctx.Iff.lhs_prop {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ) : Γ.IsProp φ := h.1.src_prop
+
+theorem Ctx.Iff.rhs_prop {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ) : Γ.IsProp ψ := h.2.src_prop
+
+theorem Ctx.Iff.eqn_prop {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ)
+  : Γ.IsProp (.eqn (.univ 0) φ ψ) := .eqn (.univ h.ok) h.lhs_prop h.rhs_prop
+
+theorem Ctx.Iff.wk0 {Γ : Ctx} {x : ℕ} {A : Tm} (hx : x ∉ Γ.dv) (hA : Γ.IsTy A)
+  {φ ψ : Tm} (h : Γ.Iff φ ψ) : (Γ.cons x A).Iff φ ψ
+  := ⟨h.1.wk0 hx hA, h.2.wk0 hx hA⟩
+
+theorem Ctx.Iff.propext {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ)
+  : Γ.JEq (.univ 0) φ ψ := (IsTrue.lem_cf (L := Γ.dv) h.lhs_prop h.eqn_prop
+    (fun x hx =>
+    have h' := h.wk0 hx h.lhs_prop.is_ty;
+    have hψ' := h'.rhs_prop;
+    IsTrue.lem_cf (L := {x} ∪ Γ.dv)
+        hψ' h'.eqn_prop
+        (fun _ hy =>
+          (h'.lhs_prop.wk0 hy hψ'.is_ty).var1.eqn_bool.eqn_trans
+          (hψ'.wk0_var0 hy).eqn_bool.eqn_symm)
+        (fun _ hy =>
+          have h'' := h'.wk0 hy hψ'.not.is_ty;
+          Contra.all_true
+          (IsTrue.contra h''.lhs_prop.var1 (h''.1.mt h''.rhs_prop.not_var0))
+          h''.eqn_prop
+        )
+    )
+    (fun x hx =>
+      have h' := h.wk0 hx h.lhs_prop.not.is_ty;
+      have hψ' := h'.rhs_prop;
+      IsTrue.lem_cf (L := {x} ∪ Γ.dv) hψ' h'.eqn_prop
+        (fun _ hy =>
+          have h'' := h'.wk0 hy hψ'.is_ty;
+          Contra.all_true
+          (IsTrue.contra (h''.2.mp h''.rhs_prop.var0) h''.lhs_prop.not_var1)
+          h''.eqn_prop)
+        (fun _ hy =>
+          (h'.lhs_prop.wk0 hy hψ'.not.is_ty).not_var1.eqn_bool.eqn_trans
+          (hψ'.wk0_not_var0 hy).eqn_bool.eqn_symm)
+  )
+  ).ext
