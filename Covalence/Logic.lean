@@ -473,3 +473,16 @@ theorem Ctx.Iff.propext {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ)
           (hψ'.wk0_not_var0 hy).eqn_bool.eqn_symm)
   )
   ).ext
+
+theorem Ctx.Implies.cast {Γ : Ctx} {φ φ' ψ ψ' : Tm}
+  (hφ : Γ.JEq (.univ 0) φ' φ) (h : Γ.Implies φ ψ) (hψ : Γ.JEq (.univ 0) ψ ψ')
+  : Γ.Implies φ' ψ' := ⟨hφ.ty_lhs, hψ.ty_rhs, .trans (.pi_k hφ hψ.symm rfl) h.2.2⟩
+
+theorem Ctx.Implies.of_jeq {Γ : Ctx} {φ ψ : Tm} (h : Γ.JEq (.univ 0) φ ψ)
+  : Γ.Implies φ ψ := (Ctx.Implies.refl h.ty_lhs).cast h.lhs h
+
+theorem Ctx.Iff.of_jeq {Γ : Ctx} {φ ψ : Tm} (h : Γ.JEq (.univ 0) φ ψ)
+  : Γ.Iff φ ψ := ⟨.of_jeq h, .of_jeq h.symm⟩
+
+theorem Ctx.Iff.jeq_iff {Γ : Ctx} {φ ψ : Tm}
+  : Γ.Iff φ ψ ↔ Γ.JEq (.univ 0) φ ψ := ⟨Ctx.Iff.propext, Ctx.Iff.of_jeq⟩
