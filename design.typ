@@ -34,7 +34,7 @@ locally-nameless style #cite(<chargueraud-locally-nameless-2012>).
 #let srfl = $sans("rfl")$
 #let eqa(ty) = $attach(=, br: ty)$
 #let site(d, A, l, r) = $sans("ite")(#d, #A, #l, #r)$
-#let sapp(ℓ, A, B, f, a) = $sans("app")_(#ℓ #A . #B)(#f, #a)$
+#let sapp(A, B, f, a) = $sans("app")_(#A . #B)(#f, #a)$
 #let sabs(ℓ, A, B, b) = $λ_#ℓ #A . (#b : #B)$
 #let smk(ℓ, A, B, a, b) = $sans("mk")_(#ℓ #A . #B)(#a, #b)$
 #let ssucc = $sans("s")$
@@ -61,7 +61,7 @@ locally-nameless style #cite(<chargueraud-locally-nameless-2012>).
     / Unit and empty types: $bold(1)_ℓ, *_ℓ, bold(0)_ℓ$
     / Equations: $a eqa(A) b$
     / Dependent functions: $Π_ℓ A . B$, $sabs(ℓ, A, B, b)$
-    / Applications: $sapp(ℓ, A, B, f, a)$
+    / Applications: $sapp(A, B, f, a)$
     / Dependent pairs: $Σ_ℓ A . B$, $smk(ℓ, A, B, a, b)$
     / Pair projections: $π_(l A . B) (e)$, $π_(r A . B) (e)$
     / Dependent if-then-else: $site(φ, A, a, b)$
@@ -186,7 +186,7 @@ locally-nameless style #cite(<chargueraud-locally-nameless-2012>).
 #display-row(
   prooftree(rule(
     name: [app],
-    $Γ ⊢ sapp(m ⊔ n, A, B, f, a) ≡ sapp(m ⊔ n, A', B', f', a') : B^a$,
+    $Γ ⊢ sapp(A, B, f, a) ≡ sapp(A', B', f', a') : B^a$,
     $Γ ⊢ A ≡ A' : cal(U)_m$,
     $Γ, x : A ⊢ B^x ≡ B'^x : cal(U)_n$,
     $Γ ⊢ f ≡ f' : Π A . B$,
@@ -279,7 +279,7 @@ locally-nameless style #cite(<chargueraud-locally-nameless-2012>).
     $Γ, x : ℕ ⊢ C^x ≡ C'^x : cal(U)_ℓ$,
     $Γ ⊢ n ≡ n' : ℕ$,
     $Γ ⊢ z ≡ z' : C^0$,
-    $Γ, x : ℕ ⊢ s^x ≡ s'^x : C^x → C^(sapp(ℓ, ℕ, ℕ, ssucc, x))$,
+    $Γ, x : ℕ ⊢ s^x ≡ s'^x : C^x → C^(sapp(ℕ, ℕ, ssucc, x))$,
   ))
 )
 
@@ -307,7 +307,7 @@ locally-nameless style #cite(<chargueraud-locally-nameless-2012>).
 #display-row(
   prooftree(rule(
     name: $β$,
-    $Γ ⊢ sapp(imax(m, n), A, B, sabs(imax(m, n), A, B, b), a) ≡ b^a : B^a$,
+    $Γ ⊢ sapp(A, B, sabs(imax(m, n), A, B, b), a) ≡ b^a : B^a$,
     $Γ ⊢ A : cal(U)_m$,
     $Γ, x : A ⊢ B^x : cal(U)_n$,
     $Γ ⊢ a : A$,
@@ -369,20 +369,20 @@ locally-nameless style #cite(<chargueraud-locally-nameless-2012>).
     $Γ ⊢ natrec(C, 0, z, s) ≡ z : C^0$,
     $Γ, x : ℕ ⊢ C^x : cal(U)_ℓ$,
     $Γ ⊢ z : C^0$,
-    $Γ, x : ℕ ⊢ s^x : C^x → C^(sapp(ℓ, ℕ, ℕ, ssucc, x))$,
+    $Γ, x : ℕ ⊢ s^x : C^x → C^(sapp(ℕ, ℕ, ssucc, x))$,
   ))
 )
 
 #display-row(
   prooftree(rule(
     name: [$sans("rec")_ℕ$-$sans("s")$],
-    $Γ ⊢ natrec(C, sapp(ℓ, ℕ, ℕ, ssucc, n), z, s) 
-        ≡ sapp(ℓ, C^n, C^(sapp(1, ℕ, ℕ, ssucc, n)), s, natrec(C, n, z, s)) 
-        : C^(sapp(1, ℕ, ℕ, ssucc, n))$,
+    $Γ ⊢ natrec(C, sapp(ℕ, ℕ, ssucc, n), z, s) 
+        ≡ sapp(C^n, C^(sapp(ℕ, ℕ, ssucc, n)), s, natrec(C, n, z, s)) 
+        : C^(sapp(ℕ, ℕ, ssucc, n))$,
     $Γ, x : ℕ ⊢ C^x : cal(U)_ℓ$,
     $Γ ⊢ n : ℕ$,
     $Γ ⊢ z : C^0$,
-    $Γ, x : ℕ ⊢ s^x : C^x → C^(sapp(1, ℕ, ℕ, ssucc, x))$,
+    $Γ, x : ℕ ⊢ s^x : C^x → C^(sapp(ℕ, ℕ, ssucc, x))$,
   ))
 )
 
