@@ -11,8 +11,8 @@ def Tm.closeUnder (i : ℕ) (x : ℕ) : Tm → Tm
   | .eqn A a b => .eqn (A.closeUnder i x) (a.closeUnder i x) (b.closeUnder i x)
   | .pi ℓ A B => .pi ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x)
   | .abs ℓ A B b => .abs ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x) (b.closeUnder (i + 1) x)
-  | .app ℓ A B f a =>
-    .app ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x) (f.closeUnder i x) (a.closeUnder i x)
+  | .app A B f a =>
+    .app (A.closeUnder i x) (B.closeUnder (i + 1) x) (f.closeUnder i x) (a.closeUnder i x)
   | .sigma ℓ A B => .sigma ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x)
   | .pair ℓ A B a b =>
     .pair ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x) (b.closeUnder i x)

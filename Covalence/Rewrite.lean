@@ -12,8 +12,8 @@ inductive Ctx.Rw (Γ : Ctx) : Tm → Tm → Prop
   | pi (ℓ : ℕ) {A A' B B' : Tm} : Rw Γ A A' → Rw Γ B B' → Rw Γ (.pi ℓ A B) (.pi ℓ A' B')
   | abs (ℓ : ℕ) {A A' B B' b b' : Tm}
     : Rw Γ A A' → Rw Γ B B' → Rw Γ b b' → Rw Γ (.abs ℓ A B b) (.abs ℓ A' B' b')
-  | app (ℓ : ℕ) {A A' B B' f f' a a' : Tm}
-    : Rw Γ A A' → Rw Γ B B' → Rw Γ f f' → Rw Γ a a' → Rw Γ (.app ℓ A B f a) (.app ℓ A' B' f' a')
+  | app {A A' B B' f f' a a' : Tm}
+    : Rw Γ A A' → Rw Γ B B' → Rw Γ f f' → Rw Γ a a' → Rw Γ (.app A B f a) (.app A' B' f' a')
   | sigma (ℓ : ℕ) {A A' B B' : Tm} : Rw Γ A A' → Rw Γ B B' → Rw Γ (.sigma ℓ A B) (.sigma ℓ A' B')
   | pair (ℓ : ℕ) {A A' B B' a a' b b' : Tm}
     : Rw Γ A A' → Rw Γ B B' → Rw Γ a a' → Rw Γ b b' → Rw Γ (.pair ℓ A B a b) (.pair ℓ A' B' a' b')

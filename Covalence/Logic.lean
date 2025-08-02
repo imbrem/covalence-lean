@@ -1,4 +1,4 @@
-import Covalence.Unique
+import Covalence.Factor
 
 def Ctx.Inhab (Γ : Ctx) (A : Tm) : Prop := ∃a, Γ.HasTy A a
 
@@ -247,7 +247,7 @@ theorem Ctx.Implies.trans {Γ : Ctx} {φ ψ θ : Tm} (h : Γ.Implies φ ψ) (h' 
   : Γ.Implies φ θ := ⟨h.src_prop, h'.trg_prop,
     have ⟨f, hf⟩ := h.inhab; have ⟨g, hg⟩ := h'.inhab;
     Inhab.is_true
-    ⟨.abs 0 φ θ (.app 0 ψ θ g (.app 0 φ ψ f (.bv 0))),
+    ⟨.abs 0 φ θ (.app ψ θ g (.app φ ψ f (.bv 0))),
       (.abs_ty_cf (L := Γ.dv) h.src_prop h'.trg_prop rfl (fun x hx => by
         have hφ' := h.src_prop.wk0 hx h.src_prop.is_ty;
         have hψ' := h.trg_prop.wk0 hx h.src_prop.is_ty
@@ -255,7 +255,7 @@ theorem Ctx.Implies.trans {Γ : Ctx} {φ ψ θ : Tm} (h : Γ.Implies φ ψ) (h' 
         have hf' := hf.wk0 hx h.src_prop.is_ty;
         have hg' := hg.wk0 hx h.src_prop.is_ty;
         convert HasTy.app_k hψ' hθ' rfl hg' (.app_k hφ' hψ' rfl hf' (.var hf'.ok .here)) using 1
-        simp [Tm.bs0, Nat.imax, Tm.bsubst_lc, hφ'.lc_tm, hψ'.lc_tm, hθ'.lc_tm, hg'.lc_tm, hf'.lc_tm]
+        simp [Tm.bs0, Tm.bsubst_lc, hφ'.lc_tm, hψ'.lc_tm, hθ'.lc_tm, hg'.lc_tm, hf'.lc_tm]
       ))
     ⟩
     (.pi_k h.src_prop h'.trg_prop rfl)

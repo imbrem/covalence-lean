@@ -171,7 +171,7 @@ theorem Ctx.JEq.pi_k {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' : Tm}
 theorem Ctx.JEq.app_k {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' f f' a a' : Tm}
   (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B') (hℓ : ℓ = Nat.imax m n)
   (hf : Γ.JEq (.pi ℓ A B) f f') (ha : Γ.JEq A a a')
-  : Γ.JEq B (.app ℓ A B f a) (.app ℓ A' B' f' a')
+  : Γ.JEq B (.app A B f a) (.app A' B' f' a')
   := .app_cf hA (hB.to_cf_dv hA.lhs_ty) hℓ hf ha
       (by convert hB.lhs; rw [Tm.bs0, Tm.bsubst_lc]; exact hB.lc_lhs)
 

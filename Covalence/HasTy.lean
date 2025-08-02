@@ -23,7 +23,7 @@ inductive Ctx.HasTy : Ctx → Tm → Tm → Prop
     → HasTy Γ (.pi ℓ A B) f
     → HasTy Γ A a
     → JEq Γ (.univ n) (B.bs0 a) Ba
-    → HasTy Γ Ba (.app ℓ A B f a)
+    → HasTy Γ Ba (.app A B f a)
   | abs_cf {Γ : Ctx} {ℓ m n : ℕ} {A B b : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
@@ -78,7 +78,7 @@ inductive Ctx.HasTy : Ctx → Tm → Tm → Prop
     → HasTy Γ (C.bs0 .zero) z
     → (∀ x ∉ L,
         HasTy (Γ.cons x .nats) (.pi ℓ (C.bs0 (.fv x))
-              (C.bs0 (.app 1 .nats .nats .succ (.fv x)))) (s.bs0 (.fv x)))
+              (C.bs0 (.app .nats .nats .succ (.fv x)))) (s.bs0 (.fv x)))
     → JEq Γ (.univ ℓ) (C.bs0 n) Cn
     → HasTy Γ Cn (.natrec C n z s)
   | cast {Γ : Ctx} {A B a : Tm}
@@ -168,7 +168,7 @@ theorem Ctx.HasTy.pi_k {Γ : Ctx} {ℓ m n : ℕ} {A B : Tm}
 theorem Ctx.HasTy.app_k {Γ : Ctx} {ℓ m n : ℕ} {A B f a : Tm}
   (hA : Γ.HasTy (.univ m) A) (hB : Γ.HasTy (.univ n) B) (hℓ : ℓ = m.imax n)
   (hf : Γ.HasTy (.pi ℓ A B) f) (ha : Γ.HasTy A a)
-  : Γ.HasTy B (.app ℓ A B f a)
+  : Γ.HasTy B (.app A B f a)
   := .app_cf hA (hB.to_cf_dv hA.refl.ty_eq) hℓ hf ha (by
     convert hB.refl; rw [Tm.bs0, Tm.bsubst_lc]; exact hB.refl.lc_lhs)
 

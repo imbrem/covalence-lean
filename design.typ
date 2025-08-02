@@ -227,7 +227,7 @@ locally-nameless style #cite(<chargueraud-locally-nameless-2012>).
 #display-row(
   prooftree(rule(
     name: $π_l$,
-    $Γ ⊢ π^l_(m ⊔ n . A . B) (e) ≡ π^l_(m ⊔ n .  A' . B') (e') : A$,
+    $Γ ⊢ π_(l A . B) (e) ≡ π_(l A' . B') (e') : A$,
     $Γ ⊢ A ≡ A' : cal(U)_m$,
     $Γ, x : A ⊢ B^x ≡ B'^x : cal(U)_n$,
     $Γ ⊢ e ≡ e' : Σ_(m ⊔ n) A . B$,
@@ -237,7 +237,7 @@ locally-nameless style #cite(<chargueraud-locally-nameless-2012>).
 #display-row(
   prooftree(rule(
     name: $π_r$,
-    $Γ ⊢ π^r_(m ⊔ n . A . B) (e) ≡ π_(r A' . B') (e') : B^(π^l_(m ⊔ n . A . B) (e))$,
+    $Γ ⊢ π_(r A . B) (e) ≡ π_(r A' . B') (e') : B^(π_(l A . B) (e))$,
     $Γ ⊢ A ≡ A' : cal(U)_m$,
     $Γ, x : A ⊢ B^x ≡ B'^x : cal(U)_n$,
     $Γ ⊢ e ≡ e' : Σ_(m ⊔ n) A . B$,
@@ -318,7 +318,7 @@ locally-nameless style #cite(<chargueraud-locally-nameless-2012>).
 #display-row(
   prooftree(rule(
     name: $β_(π_l)$,
-    $Γ ⊢ π^l_(m ⊔ n . A . B) (smk(m ⊔ n, A, B, a, b)) ≡ a : A$,
+    $Γ ⊢ π^l_(l A . B) (smk(m ⊔ n, A, B, a, b)) ≡ a : A$,
     $Γ ⊢ A : cal(U)_m$,
     $Γ, x : A ⊢ B^x : cal(U)_n$,
     $Γ ⊢ a : A$,
@@ -329,7 +329,7 @@ locally-nameless style #cite(<chargueraud-locally-nameless-2012>).
 #display-row(
   prooftree(rule(
     name: $β_(π_r)$,
-    $Γ ⊢ π^r_(m ⊔ n . A . B) (smk(m ⊔ n, A, B, a, b)) ≡ b : B^a$,
+    $Γ ⊢ π_(r A . B) (smk(m ⊔ n, A, B, a, b)) ≡ b : B^a$,
     $Γ ⊢ A : cal(U)_m$,
     $Γ, x : A ⊢ B^x : cal(U)_n$,
     $Γ ⊢ a : A$,
