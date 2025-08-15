@@ -1,14 +1,5 @@
 import Covalence.Factor
 
-theorem Ctx.Ok.at_eq {Γ : Ctx} {x : ℕ} {A B : Tm} (h : Γ.Ok) (hA : Γ.At x A) (hB : Γ.At x B) : A = B
-  := by induction hA with
-  | here => cases hB with
-    | here => rfl
-    | there hx => exact (h.var hx.mem_dv).elim
-  | there hx I => cases hB with
-    | here => exact (h.var hx.mem_dv).elim
-    | there hy => exact I h.tail hy
-
 theorem Ctx.HasTy.unique_inner_multi {Γ : Ctx} {X Y a : Tm} (hX : Γ.HasTy X a) (hY : Γ.InnerTy Y a)
   : TyEq' Γ X Y := by induction hX generalizing Y with
   | var hΓ hA => cases hY with | var hΓ' hB =>

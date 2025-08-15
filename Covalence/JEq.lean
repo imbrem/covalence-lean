@@ -279,6 +279,9 @@ attribute [simp] Ctx.Ok.nil
 theorem Ctx.Ok.no_rep {Γ : Ctx} (h : Γ.Ok) : Ctx.NoRep Γ
   := by induction h <;> constructor <;> assumption
 
+theorem Ctx.NoRep.var {Γ : Ctx} {x : ℕ} {A : Tm} (h : Ctx.NoRep (Ctx.cons Γ x A)) : x ∉ Γ.dv
+  := by cases h; assumption
+
 theorem Ctx.Ok.var {Γ : Ctx} {x : ℕ} {A : Tm} (h : (Γ.cons x A).Ok) : x ∉ Γ.dv
   := by cases h; assumption
 
@@ -287,6 +290,23 @@ theorem Ctx.Ok.ty {Γ : Ctx} {x : ℕ} {A : Tm} (h : (Γ.cons x A).Ok) : IsTy Γ
 
 theorem Ctx.Ok.tail {Γ : Ctx} {x : ℕ} {A : Tm} (h : (Γ.cons x A).Ok) : Ctx.Ok Γ
   := by cases h; assumption
+
+theorem Ctx.NoRep.tail {Γ : Ctx} {x : ℕ} {A : Tm} (h : Ctx.NoRep (Ctx.cons Γ x A)) : Ctx.NoRep Γ
+  := by cases h; assumption
+
+theorem Ctx.NoRep.at_eq
+  {Γ : Ctx} {x : ℕ} {A B : Tm} (h : Γ.NoRep) (hA : Γ.At x A) (hB : Γ.At x B) : A = B
+  := by induction hA with
+  | here => cases hB with
+    | here => rfl
+    | there hx => exact (h.var hx.mem_dv).elim
+  | there hx I => cases hB with
+    | here => exact (h.var hx.mem_dv).elim
+    | there hy => exact I h.tail hy
+
+theorem Ctx.Ok.at_eq
+  {Γ : Ctx} {x : ℕ} {A B : Tm} (h : Γ.Ok) (hA : Γ.At x A) (hB : Γ.At x B) : A = B
+  := h.no_rep.at_eq hA hB
 
 theorem Ctx.JEq.ok {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) : Γ.Ok := by induction h with
   | nil_ok | cons_ok => constructor <;> first | assumption | constructor <;> assumption
