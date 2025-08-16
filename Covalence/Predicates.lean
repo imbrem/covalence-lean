@@ -7,12 +7,6 @@ import Covalence.Rewrite
 -- `eq_in(Γ, a, b) -> bool`: the E-graph relation
 notation Γ " ⊢ " a " ≡ " b => Ctx.Rw Γ a b
 
--- `eq_at(Γ, a, b, A) -> bool`: the E-graph relation _at a given type_
-notation Γ " ⊢ " a " ≡ " b " : " A => Ctx.JEq Γ A a b
-
--- `has_ty(Γ, a, A) -> bool`
-notation Γ " ⊢ " a " : " A => Ctx.HasTy Γ A a
-
 -- `is_wf(Γ, a) -> bool`
 notation Γ " ⊢ " a " wf" => Ctx.Wf Γ a
 

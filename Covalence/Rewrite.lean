@@ -9,9 +9,9 @@ inductive Ctx.Rw (Γ : Ctx) : Tm → Tm → Prop
   | empty (ℓ : ℕ) : Rw Γ (.empty ℓ) (.empty ℓ)
   | eqn {A A' a a' b b' : Tm}
     : Rw Γ A A' → Rw Γ a a' → Rw Γ b b' → Rw Γ (.eqn A a b) (.eqn A' a' b')
-  | pi (ℓ : ℕ) {A A' B B' : Tm} : Rw Γ A A' → Rw Γ B B' → Rw Γ (.pi ℓ A B) (.pi ℓ A' B')
-  | abs (ℓ : ℕ) {A A' B B' b b' : Tm}
-    : Rw Γ A A' → Rw Γ B B' → Rw Γ b b' → Rw Γ (.abs ℓ A B b) (.abs ℓ A' B' b')
+  | pi {A A' B B' : Tm} : Rw Γ A A' → Rw Γ B B' → Rw Γ (.pi A B) (.pi A' B')
+  | abs {A A' B B' b b' : Tm}
+    : Rw Γ A A' → Rw Γ B B' → Rw Γ b b' → Rw Γ (.abs A B b) (.abs A' B' b')
   | app {A A' B B' f f' a a' : Tm}
     : Rw Γ A A' → Rw Γ B B' → Rw Γ f f' → Rw Γ a a' → Rw Γ (.app A B f a) (.app A' B' f' a')
   | sigma (ℓ : ℕ) {A A' B B' : Tm} : Rw Γ A A' → Rw Γ B B' → Rw Γ (.sigma ℓ A B) (.sigma ℓ A' B')

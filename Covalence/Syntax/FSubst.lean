@@ -50,11 +50,11 @@ def Tm.fsubst (σ : FSubst) : Tm → Tm
   | .nil ℓ => .nil ℓ
   | .empty ℓ => .empty ℓ
   | .eqn A a b => .eqn (A.fsubst σ) (a.fsubst σ) (b.fsubst σ)
-  | .pi ℓ A B => .pi ℓ (A.fsubst σ) (B.fsubst (↑f σ))
-  | .abs ℓ A B b => .abs ℓ (A.fsubst σ) (B.fsubst (↑f σ)) (b.fsubst (↑f σ))
+  | .pi A B => .pi (A.fsubst σ) (B.fsubst (↑f σ))
+  | .abs A B b => .abs (A.fsubst σ) (B.fsubst (↑f σ)) (b.fsubst (↑f σ))
   | .app A B f a => .app (A.fsubst σ) (B.fsubst (↑f σ)) (f.fsubst σ) (a.fsubst σ)
-  | .sigma ℓ A B => .sigma ℓ (A.fsubst σ) (B.fsubst (↑f σ))
-  | .pair ℓ A B a b => .pair ℓ (A.fsubst σ) (B.fsubst (↑f σ)) (a.fsubst σ) (b.fsubst σ)
+  | .sigma A B => .sigma (A.fsubst σ) (B.fsubst (↑f σ))
+  | .pair A B a b => .pair (A.fsubst σ) (B.fsubst (↑f σ)) (a.fsubst σ) (b.fsubst σ)
   | .fst A B a => .fst (A.fsubst σ) (B.fsubst (↑f σ)) (a.fsubst σ)
   | .snd A B a => .snd (A.fsubst σ) (B.fsubst (↑f σ)) (a.fsubst σ)
   | .dite φ A a b => .dite (φ.fsubst σ) (A.fsubst σ) (a.fsubst σ) (b.fsubst σ)

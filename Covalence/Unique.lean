@@ -2,25 +2,30 @@ import Covalence.Factor
 
 theorem Ctx.HasTy.unique_inner_multi {Γ : Ctx} {X Y a : Tm} (hX : Γ.HasTy X a) (hY : Γ.InnerTy Y a)
   : TyEq' Γ X Y := by induction hX generalizing Y with
-  | var hΓ hA => cases hY with | var hΓ' hB =>
-    cases hΓ.at_eq hA hB; exact .single (JEq.regular (.var hΓ.zero hA))
-  | univ | unit | nil | empty | eqn | pi_cf | sigma_cf | trunc | nats | zero =>
-    cases hY; apply TyEq'.of_ty; constructor; constructor; apply Ctx.Ok.zero
-            ; first | assumption | apply HasTy.ok; assumption
-  | fst_cf | dite_cf | choose_cf =>
-    cases hY; constructor; apply JEq.ty_eq <;> (apply HasTy.refl; assumption)
-  | app_cf hA hB hℓ hf ha hBa IA IB If Ia => cases hY with | app_cf hA' hB' hℓ' hf' ha' hBa' =>
-    exact .trans (.single hBa.symm.ty_eq) (.single hBa'.ty_eq)
-  | abs_cf hA hB hℓ hb IA IB Ib => cases hY with | abs_cf hA' hB' hℓ' hb' =>
-    exact .single ⟨_, JEq.pi_cf hA.refl (fun x hx => (hB x hx).refl) hℓ⟩
-  | pair_cf hA hB hℓ ha hb IA IB => cases hY with | pair_cf hA' hB' hℓ' ha' hb' =>
-    exact .single ⟨_, JEq.sigma_cf hA.refl (fun x hx => (hB x hx).refl) hℓ⟩
-  | snd_cf hA hB hℓ he hBa IA IB Ie => cases hY with | snd_cf hA' hB' hℓ' he' hBa' =>
-    exact .trans (.single hBa.symm.ty_eq) (.single hBa'.ty_eq)
-  | succ hΓ => cases hY; exact .single ⟨_, .pi_k hΓ.nats hΓ.nats rfl⟩
-  | natrec_cf hC hn hz hs hCn IC In Iz Is => cases hY with | natrec_cf hC' hn' hz' hs' hCn' =>
-    exact .trans (.single hCn.symm.ty_eq) (.single hCn'.ty_eq)
-  | cast hAB ha IA => exact .head hAB.symm (IA hY)
+  -- | var hΓ hA => cases hY with | var hΓ' hB =>
+  --   cases hΓ.at_eq hA hB; exact .single (JEq.regular (.var hΓ.zero hA))
+  -- | univ | unit | nil | empty | eqn | pi_cf | sigma_cf | trunc | nats | zero =>
+  --   cases hY; apply TyEq'.of_ty; constructor; constructor; apply Ctx.Ok.zero
+  --           ; first | assumption | apply HasTy.ok; assumption
+  | pi_cf hA hB hℓ IA IB => cases hY with | pi_cf hA' hB' hℓ' =>
+    have ⟨W, hA', hW⟩ := hA'.outer_ty;
+    have hm := (IA hA').trans hW;
+    sorry
+  | _ => sorry
+  -- | fst_cf | dite_cf | choose_cf =>
+  --   cases hY; constructor; apply JEq.ty_eq <;> (apply HasTy.refl; assumption)
+  -- | app_cf hA hB hℓ hf ha hBa IA IB If Ia => cases hY with | app_cf hA' hB' hℓ' hf' ha' hBa' =>
+  --   exact .trans (.single hBa.symm.ty_eq) (.single hBa'.ty_eq)
+  -- | abs_cf hA hB hℓ hb IA IB Ib => cases hY with | abs_cf hA' hB' hℓ' hb' =>
+  --   exact .single ⟨_, JEq.pi_cf hA.refl (fun x hx => (hB x hx).refl) hℓ⟩
+  -- | pair_cf hA hB hℓ ha hb IA IB => cases hY with | pair_cf hA' hB' hℓ' ha' hb' =>
+  --   exact .single ⟨_, JEq.sigma_cf hA.refl (fun x hx => (hB x hx).refl) hℓ⟩
+  -- | snd_cf hA hB hℓ he hBa IA IB Ie => cases hY with | snd_cf hA' hB' hℓ' he' hBa' =>
+  --   exact .trans (.single hBa.symm.ty_eq) (.single hBa'.ty_eq)
+  -- | succ hΓ => cases hY; exact .single ⟨_, .pi_k hΓ.nats hΓ.nats rfl⟩
+  -- | natrec_cf hC hn hz hs hCn IC In Iz Is => cases hY with | natrec_cf hC' hn' hz' hs' hCn' =>
+  --   exact .trans (.single hCn.symm.ty_eq) (.single hCn'.ty_eq)
+  -- | cast hAB ha IA => exact .head hAB.symm (IA hY)
 
 theorem Ctx.HasTy.unique_multi {Γ : Ctx} {X Y a : Tm} (hX : Γ.HasTy X a) (hY : Γ.HasTy Y a)
   : TyEq' Γ X Y := have ⟨_, hCa, hC⟩ := hY.outer_ty; (hX.unique_inner_multi hCa).trans hC

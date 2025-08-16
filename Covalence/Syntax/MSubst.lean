@@ -20,11 +20,11 @@ def Tm.msubst (σ : MSubst) : Tm → Tm
   | .nil ℓ => .nil ℓ
   | .empty ℓ => .empty ℓ
   | .eqn A a b => .eqn (A.msubst σ) (a.msubst σ) (b.msubst σ)
-  | .pi ℓ A B => .pi ℓ (A.msubst σ) (B.msubst σ)
-  | .abs ℓ A B b => .abs ℓ (A.msubst σ) (B.msubst σ) (b.msubst σ)
+  | .pi A B => .pi (A.msubst σ) (B.msubst σ)
+  | .abs A B b => .abs (A.msubst σ) (B.msubst σ) (b.msubst σ)
   | .app A B f a => .app (A.msubst σ) (B.msubst σ) (f.msubst σ) (a.msubst σ)
-  | .sigma ℓ A B => .sigma ℓ (A.msubst σ) (B.msubst σ)
-  | .pair ℓ A B a b => .pair ℓ (A.msubst σ) (B.msubst σ) (a.msubst σ) (b.msubst σ)
+  | .sigma A B => .sigma (A.msubst σ) (B.msubst σ)
+  | .pair A B a b => .pair (A.msubst σ) (B.msubst σ) (a.msubst σ) (b.msubst σ)
   | .fst A B a => .fst (A.msubst σ) (B.msubst σ) (a.msubst σ)
   | .snd A B a => .snd (A.msubst σ) (B.msubst σ) (a.msubst σ)
   | .dite φ A a b => .dite (φ.msubst σ) (A.msubst σ) (a.msubst σ) (b.msubst σ)

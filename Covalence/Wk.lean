@@ -58,7 +58,7 @@ theorem Ctx.JEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A a b : Tm} (h
     · apply hΓΔ.at hA
   | nil_ok | cons_ok => exact hΓΔ.src_ok.zero
   | eqn_ext => apply JEq.eqn_ext <;> apply_assumption <;> assumption
-  | pi_ext_cf hA hB hℓ hf hg hfg IA IB If Ig Ifg =>
+  | pi_ext_cf hA hB hf hg hfg IA IB If Ig Ifg =>
     have hA' := IA hΓΔ
     rename Finset ℕ => L
     apply JEq.pi_ext_cf (L := L ∪ Γ.dv)
@@ -68,7 +68,6 @@ theorem Ctx.JEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A a b : Tm} (h
       apply IB
       · exact hx.1
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact hℓ
     · exact If hΓΔ
     · exact Ig hΓΔ
     · intro x hx
@@ -76,7 +75,7 @@ theorem Ctx.JEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A a b : Tm} (h
       apply Ifg
       · exact hx.1
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-  | sigma_ext_cf hA hB hℓ he IA IB Ie =>
+  | sigma_ext_cf hA hB he IA IB Ie =>
     have hA' := IA hΓΔ
     rename Finset ℕ => L
     apply JEq.sigma_ext_cf (L := L ∪ Γ.dv)
@@ -86,7 +85,6 @@ theorem Ctx.JEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A a b : Tm} (h
       apply IB
       · exact hx.1
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact hℓ
     · exact Ie hΓΔ
   | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
   | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'
@@ -165,14 +163,14 @@ theorem Ctx.JEq.to_cf_dv' {Γ : Ctx} {A B a b : Tm} (h : Γ.JEq A a b) (hB : Γ.
 
 theorem Ctx.JEq.pi_k {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' : Tm}
   (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B') (hℓ : ℓ = Nat.imax m n)
-  : Γ.JEq (.univ ℓ) (.pi ℓ A B) (.pi ℓ A' B')
-  := .pi_cf hA (hB.to_cf_dv hA.lhs_ty) hℓ
+  : Γ.JEq (.univ ℓ) (.pi A B) (.pi A' B')
+  := .pi_cf hA (hB.to_cf_dv hA.lhs_ty) (by cases hℓ; exact hB.ok.univ)
 
-theorem Ctx.JEq.app_k {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' f f' a a' : Tm}
-  (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B') (hℓ : ℓ = Nat.imax m n)
-  (hf : Γ.JEq (.pi ℓ A B) f f') (ha : Γ.JEq A a a')
+theorem Ctx.JEq.app_k {Γ : Ctx} {m n : ℕ} {A A' B B' f f' a a' : Tm}
+  (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B')
+  (hf : Γ.JEq (.pi A B) f f') (ha : Γ.JEq A a a')
   : Γ.JEq B (.app A B f a) (.app A' B' f' a')
-  := .app_cf hA (hB.to_cf_dv hA.lhs_ty) hℓ hf ha
+  := .app_cf hA (hB.to_cf_dv hA.lhs_ty) hf ha
       (by convert hB.lhs; rw [Tm.bs0, Tm.bsubst_lc]; exact hB.lc_lhs)
 
 theorem Ctx.JEq.lhs_pure_wk1
@@ -277,7 +275,7 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
   | var _ hA => exact (hΓΔ.at hA).jeq
   | nil_ok | cons_ok => exact hΓΔ.src_ok.zero
   | eqn_ext => apply JEq.eqn_ext <;> apply_assumption <;> assumption
-  | pi_ext_cf hA hB hℓ hf hg hfg IA IB If Ig Ifg =>
+  | pi_ext_cf hA hB hf hg hfg IA IB If Ig Ifg =>
     have hA' := IA hΓΔ
     rename Finset ℕ => L
     apply JEq.pi_ext_cf (L := L ∪ Γ.dv)
@@ -287,7 +285,6 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
       apply IB
       · exact hx.1
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact hℓ
     · exact If hΓΔ
     · exact Ig hΓΔ
     · intro x hx
@@ -295,7 +292,7 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
       apply Ifg
       · exact hx.1
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-  | sigma_ext_cf hA hB hℓ he IA IB Ie =>
+  | sigma_ext_cf hA hB he IA IB Ie =>
     have hA' := IA hΓΔ
     rename Finset ℕ => L
     apply JEq.sigma_ext_cf (L := L ∪ Γ.dv)
@@ -305,7 +302,6 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
       apply IB
       · exact hx.1
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact hℓ
     · exact Ie hΓΔ
   | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
   | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'
@@ -378,7 +374,7 @@ theorem Ctx.JEq.regular {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) : Γ.IsTy
   | var hΓ hA => exact hΓ.ok.var_regular hA
   | nil_ok => exact Ok.nil.nats_ty
   | cons_ok _ hA hx => exact (hA.lhs_ty.cons hx).nats_ty
-  | succ hΓ I => exact ⟨1, .pi_cf hΓ.ok.nats (fun x hx => (I.cons hx).nats) rfl⟩
+  | succ hΓ I => exact ⟨1, .pi_cf hΓ.ok.nats (fun x hx => (I.cons hx).nats) hΓ.ok.univ⟩
   | symm => assumption
   | trans => assumption
   | _ =>
@@ -388,12 +384,13 @@ theorem Ctx.JEq.regular {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) : Γ.IsTy
             <;> first | rfl | assumption
                       | apply JEq.lhs; assumption
                       | intros; apply JEq.lhs; apply_assumption; assumption
-                      | apply Ok.zero; apply JEq.ok ; assumption)
+                      | apply Ok.zero; apply JEq.ok ; assumption
+                      | apply Ok.univ; apply JEq.ok ; assumption)
 
-theorem Ctx.JEq.abs_k {Γ : Ctx} {ℓ n m : ℕ} {A A' B B' b b' : Tm}
+theorem Ctx.JEq.abs_k {Γ : Ctx} {n m : ℕ} {A A' B B' b b' : Tm}
   (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B')
-  (hℓ : ℓ = Nat.imax m n) (hb : Γ.JEq B b b') : Γ.JEq (.pi ℓ A B) (.abs ℓ A B b) (.abs ℓ A' B' b')
-  := .abs_cf hA (hB.to_cf_dv hA.lhs_ty) hℓ (hb.to_cf_dv hA.lhs_ty)
+  (hb : Γ.JEq B b b') : Γ.JEq (.pi A B) (.abs A B b) (.abs A' B' b')
+  := .abs_cf hA (hB.to_cf_dv hA.lhs_ty) (hb.to_cf_dv hA.lhs_ty)
 
 theorem Ctx.JEq.dite_k {Γ : Ctx} {ℓ : ℕ} {φ φ' A A' a a' b b' : Tm}
   (hφ : Γ.JEq (.univ 0) φ φ') (hA : Γ.JEq (.univ ℓ) A A') (ha : Γ.JEq A a a') (hb : Γ.JEq A b b')
@@ -430,9 +427,9 @@ theorem Ctx.JEq.explode' {Γ : Ctx} {ℓ : ℕ} {A e a b : Tm}
 
 theorem Ctx.JEq.from_empty {Γ : Ctx} {m n : ℕ} {A : Tm}
   (hA : Γ.JEq (.univ n) A A)
-  : Γ.JEq (.pi (m.imax n) (.empty m) A)
-          (.abs (m.imax n) (.empty m) A (.nil n)) (.abs (m.imax n) (.empty m) A (.nil n))
-  := .abs_cf hA.ok.empty (hA.to_cf_dv hA.ok.empty_ty) rfl (by
+  : Γ.JEq (.pi (.empty m) A)
+          (.abs (.empty m) A (.nil n)) (.abs (.empty m) A (.nil n))
+  := .abs_cf hA.ok.empty (hA.to_cf_dv hA.ok.empty_ty) (by
     intro x hx
     have hA' := hA.wk0 hx (hA.ok.empty_ty (ℓ := m));
     simp only [Tm.bs0, Tm.bsubst, A.bsubst_lc hA.lc_lhs]

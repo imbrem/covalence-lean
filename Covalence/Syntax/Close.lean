@@ -9,13 +9,13 @@ def Tm.closeUnder (i : ℕ) (x : ℕ) : Tm → Tm
   | .nil ℓ => .nil ℓ
   | .empty ℓ => .empty ℓ
   | .eqn A a b => .eqn (A.closeUnder i x) (a.closeUnder i x) (b.closeUnder i x)
-  | .pi ℓ A B => .pi ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x)
-  | .abs ℓ A B b => .abs ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x) (b.closeUnder (i + 1) x)
+  | .pi A B => .pi (A.closeUnder i x) (B.closeUnder (i + 1) x)
+  | .abs A B b => .abs (A.closeUnder i x) (B.closeUnder (i + 1) x) (b.closeUnder (i + 1) x)
   | .app A B f a =>
     .app (A.closeUnder i x) (B.closeUnder (i + 1) x) (f.closeUnder i x) (a.closeUnder i x)
-  | .sigma ℓ A B => .sigma ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x)
-  | .pair ℓ A B a b =>
-    .pair ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x) (b.closeUnder i x)
+  | .sigma A B => .sigma (A.closeUnder i x) (B.closeUnder (i + 1) x)
+  | .pair A B a b =>
+    .pair (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x) (b.closeUnder i x)
   | .fst A B a => .fst (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x)
   | .snd A B a => .snd (A.closeUnder i x) (B.closeUnder (i + 1) x) (a.closeUnder i x)
   | .dite φ A a b

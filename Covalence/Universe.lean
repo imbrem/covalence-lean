@@ -14,12 +14,12 @@ inductive Ctx.MaybeSubsort : Ctx → ℕ → Tm → Prop
   | pi {Γ : Ctx} {A B : Tm} {ℓ m n : ℕ} {L : Finset ℕ}
     : MaybeSubsort Γ (m + 1) A
     → (∀x ∉ L, MaybeSubsort (Γ.cons x A) (n + 1) (B.bs0 (.fv x)))
-    → (hℓ : ℓ = m.imax n) → MaybeSubsort Γ (ℓ + 1) (.pi ℓ A B)
+    → (hℓ : ℓ = m.imax n) → MaybeSubsort Γ (ℓ + 1) (.pi A B)
   | abs {Γ : Ctx} {A B b : Tm} {ℓ m n : ℕ} {L : Finset ℕ}
     : MaybeSubsort Γ (m + 1) A
     → (∀x ∉ L, MaybeSubsort (Γ.cons x A) (n + 1) (B.bs0 (.fv x)))
     → (hℓ : ℓ = m.imax n)
-    → MaybeSubsort Γ ℓ (.abs ℓ A B b)
+    → MaybeSubsort Γ ℓ (.abs A B b)
   | app {Γ : Ctx} {A B f a : Tm} {m n : ℕ} {L : Finset ℕ}
     : MaybeSubsort Γ (m + 1) A
     → (∀x ∉ L, MaybeSubsort (Γ.cons x A) (n + 1) (B.bs0 (.fv x)))
@@ -28,12 +28,12 @@ inductive Ctx.MaybeSubsort : Ctx → ℕ → Tm → Prop
     : MaybeSubsort Γ (m + 1) A
     → (∀x ∉ L, MaybeSubsort (Γ.cons x A) (n + 1) (B.bs0 (.fv x)))
     → (hℓ : ℓ = m ⊔ n)
-    → MaybeSubsort Γ (ℓ + 1) (.sigma ℓ A B)
+    → MaybeSubsort Γ (ℓ + 1) (.sigma A B)
   | pair {Γ : Ctx} {ℓ : ℕ} {A B a b : Tm} {m n : ℕ} {L : Finset ℕ}
     : MaybeSubsort Γ (m + 1) A
     → (∀x ∉ L, MaybeSubsort (Γ.cons x A) (n + 1) (B.bs0 (.fv x)))
     → (hℓ : ℓ = m ⊔ n)
-    → MaybeSubsort Γ ℓ (.pair ℓ A B a b)
+    → MaybeSubsort Γ ℓ (.pair A B a b)
   | fst {Γ : Ctx} {A B a : Tm} {m : ℕ}
     : MaybeSubsort Γ (m + 1) A → MaybeSubsort Γ m (.fst A B a)
   | snd {Γ : Ctx} {A B a : Tm} {m n : ℕ} {L : Finset ℕ}
@@ -113,13 +113,16 @@ theorem Ctx.MaybeSubsort.unique {Γ : Ctx} {a : Tm} {m n : ℕ}
     cases hΓ.at_eq hx hx'; have IA := IA hA'; omega
   | pi hA hB hℓ IA IB =>
     rename Finset ℕ => L
-    cases ha' with | pi hA' hB' =>
+    cases hℓ
+    cases ha' with | pi hA' hB' hℓ =>
     rename Finset ℕ => L'
+    cases hℓ
     have ⟨x, hx⟩ := Finset.exists_notMem (L ∪ L');
+    have IA := IA hA'
     have hBx := hB x (by simp at hx; exact hx.left);
     have hBx' := hB' x (by simp at hx; exact hx.right);
     have IBx := IB x (by simp at hx; exact hx.left) hBx'
-    cases IBx; rfl
+    cases IA; cases IBx; rfl
   | app hA hB IA IB =>
     rename Finset ℕ => L
     cases ha' with | app hA' hB' =>
@@ -131,31 +134,40 @@ theorem Ctx.MaybeSubsort.unique {Γ : Ctx} {a : Tm} {m n : ℕ}
     cases IBx; rfl
   | abs hA hB hℓ IA IB =>
     rename Finset ℕ => L
-    cases ha' with | abs hA' hB' =>
+    cases hℓ
+    cases ha' with | abs hA' hB' hℓ =>
     rename Finset ℕ => L'
+    cases hℓ
     have ⟨x, hx⟩ := Finset.exists_notMem (L ∪ L');
+    have IA := IA hA'
     have hBx := hB x (by simp at hx; exact hx.left);
     have hBx' := hB' x (by simp at hx; exact hx.right);
     have IBx := IB x (by simp at hx; exact hx.left) hBx'
-    cases IBx; rfl
+    cases IA; cases IBx; rfl
   | sigma hA hB hℓ IA IB =>
     rename Finset ℕ => L
-    cases ha' with | sigma hA' hB' =>
+    cases hℓ
+    cases ha' with | sigma hA' hB' hℓ =>
     rename Finset ℕ => L'
+    cases hℓ
     have ⟨x, hx⟩ := Finset.exists_notMem (L ∪ L');
+    have IA := IA hA'
     have hBx := hB x (by simp at hx; exact hx.left);
     have hBx' := hB' x (by simp at hx; exact hx.right);
     have IBx := IB x (by simp at hx; exact hx.left) hBx'
-    cases IBx; rfl
+    cases IA; cases IBx; rfl
   | pair hA hB hℓ IA IB =>
     rename Finset ℕ => L
-    cases ha' with | pair hA' hB' =>
+    cases hℓ
+    cases ha' with | pair hA' hB' hℓ =>
     rename Finset ℕ => L'
+    cases hℓ
     have ⟨x, hx⟩ := Finset.exists_notMem (L ∪ L');
+    have IA := IA hA'
     have hBx := hB x (by simp at hx; exact hx.left);
     have hBx' := hB' x (by simp at hx; exact hx.right);
     have IBx := IB x (by simp at hx; exact hx.left) hBx'
-    cases IBx; rfl
+    cases IA; cases IBx; rfl
   | fst hA IA => cases ha' with | fst hA' => cases IA hA'; rfl
   | snd hA hB IA IB =>
     rename Finset ℕ => L
@@ -182,12 +194,12 @@ theorem Ctx.MaybeSubsort.unique {Γ : Ctx} {a : Tm} {m n : ℕ}
 def Ctx.MaybeSubsortCompat (Γ : Ctx) (ℓ : ℕ) (a b : Tm) : Prop :=
   MaybeSubsort Γ ℓ a ∧ MaybeSubsort Γ ℓ b
 
--- theorem Ctx.JEq.maybe_subsort_compat_iff {Γ : Ctx} {A a b : Tm} (hab : Γ.JEq A a b) {ℓ : ℕ} :
---   Γ.HasTy (.univ ℓ) A ↔ Ctx.MaybeSubsortCompat Γ ℓ a b := by
---   induction hab generalizing ℓ with
---   | beta_true_cf =>
---     sorry
---   | _ => sorry
+theorem Ctx.JEq.maybe_subsort_compat_iff {Γ : Ctx} {A a b : Tm} (hab : Γ.JEq A a b) {ℓ : ℕ} :
+  Γ.HasTy (.univ ℓ) A ↔ Ctx.MaybeSubsortCompat Γ ℓ a b := by
+  induction hab generalizing ℓ with
+  | beta_true_cf =>
+    sorry
+  | _ => sorry
 
 -- theorem Ctx.MaybeSubsort.jeq_univ {Γ : Ctx} {A a b : Tm} {ℓ : ℕ}
 --   (ha : Γ.MaybeSubsort ℓ a) (hb : Γ.MaybeSubsort ℓ b) (hab : Γ.JEq A a b)
