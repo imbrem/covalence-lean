@@ -220,20 +220,20 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → (ℓ = m ⊔ n)
     → JEq Γ (.sigma ℓ A B) e e
     → JEq Γ (.sigma ℓ A B) e (.pair ℓ A B (.fst A B e) (.snd A B e))
-  -- -- Universe levels
-  -- | univ_succ {Γ : Ctx} {ℓ ℓ' : ℕ}
-  --   : JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ')
-  --   → JEq Γ (.univ (ℓ + 2)) (.univ (ℓ + 1)) (.univ (ℓ' + 1))
-  -- | univ_max {Γ : Ctx} {ℓ ℓ' m m' n n' : ℕ}
-  --   : JEq Γ (.univ (m + 1)) (.univ m) (.univ m')
-  --   → JEq Γ (.univ (n + 1)) (.univ n) (.univ n')
-  --   → ℓ = m ⊔ n → ℓ' = m' ⊔ n'
-  --   → JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ')
-  -- | univ_imax {Γ : Ctx} {ℓ ℓ' m m' n n' : ℕ}
-  --   : JEq Γ (.univ (m + 1)) (.univ m) (.univ m')
-  --   → JEq Γ (.univ (n + 1)) (.univ n) (.univ n')
-  --   → ℓ = m.imax n → ℓ' = m'.imax n'
-  --   → JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ')
+  -- Universe levels
+  | univ_succ {Γ : Ctx} {ℓ ℓ' : ℕ}
+    : JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ')
+    → JEq Γ (.univ (ℓ + 2)) (.univ (ℓ + 1)) (.univ (ℓ' + 1))
+  | univ_max {Γ : Ctx} {ℓ ℓ' m m' n n' : ℕ}
+    : JEq Γ (.univ (m + 1)) (.univ m) (.univ m')
+    → JEq Γ (.univ (n + 1)) (.univ n) (.univ n')
+    → ℓ = m ⊔ n → ℓ' = m' ⊔ n'
+    → JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ')
+  | univ_imax {Γ : Ctx} {ℓ ℓ' m m' n n' : ℕ}
+    : JEq Γ (.univ (m + 1)) (.univ m) (.univ m')
+    → JEq Γ (.univ (n + 1)) (.univ n) (.univ n')
+    → ℓ = m.imax n → ℓ' = m'.imax n'
+    → JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ')
   -- Equivalence relations
   | trans {Γ : Ctx} {A a b c : Tm} : JEq Γ A a b → JEq Γ A b c → JEq Γ A a c
   | symm {Γ : Ctx} {A a b : Tm} : JEq Γ A a b → JEq Γ A b a

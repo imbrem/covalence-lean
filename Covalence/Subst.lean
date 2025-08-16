@@ -219,9 +219,9 @@ theorem Ctx.JEq.subst_one {Γ Δ : Ctx} {σ : Tm.MSubst} {A a b : Tm}
         }
       })
     <;> assumption
-  -- | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
-  -- | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'
-  -- | univ_imax _ _ hℓ hℓ' Im In => exact JEq.univ_imax (Im hΓΔ) (In hΓΔ) hℓ hℓ'
+  | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
+  | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'
+  | univ_imax _ _ hℓ hℓ' Im In => exact JEq.univ_imax (Im hΓΔ) (In hΓΔ) hℓ hℓ'
   | var _ hA => exact hΓΔ.at hA
   | trans _ _ Ia Ib => exact (Ia hΓΔ).trans (Ib hΓΔ)
   | symm _ Ia => exact (Ia hΓΔ).symm

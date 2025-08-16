@@ -588,16 +588,16 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
               (.fst_cf IA.1 (fun x hx => (IB x hx).1) hℓ Ie.1)
               (.snd_cf IA.1 (fun x hx => (IB x hx).1) hℓ Ie.1
               (.bs0_cf_univ hB (.fst_cf hA hB hℓ he)))⟩
-  -- | univ_succ hs Is =>
-  --  exact ⟨.univ hs.ok, .cast (.symm ⟨_, hs.univ_succ.univ_succ⟩) (.univ hs.ok)⟩
-  -- | univ_max hm hn hℓ hℓ' _ _ => exact ⟨
-  --   .univ hm.ok,
-  --   .cast (.symm ⟨_, .univ_succ (.univ_max hm hn hℓ hℓ')⟩) (.univ hm.ok)
-  -- ⟩
-  -- | univ_imax hm hn hℓ hℓ' Im In => exact ⟨
-  --   .univ hm.ok,
-  --   .cast (.symm ⟨_, .univ_succ (.univ_imax hm hn hℓ hℓ')⟩) (.univ hm.ok)
-  -- ⟩
+  | univ_succ hs Is =>
+   exact ⟨.univ hs.ok, .cast (.symm ⟨_, hs.univ_succ.univ_succ⟩) (.univ hs.ok)⟩
+  | univ_max hm hn hℓ hℓ' _ _ => exact ⟨
+    .univ hm.ok,
+    .cast (.symm ⟨_, .univ_succ (.univ_max hm hn hℓ hℓ')⟩) (.univ hm.ok)
+  ⟩
+  | univ_imax hm hn hℓ hℓ' Im In => exact ⟨
+    .univ hm.ok,
+    .cast (.symm ⟨_, .univ_succ (.univ_imax hm hn hℓ hℓ')⟩) (.univ hm.ok)
+  ⟩
   | symm => apply Ctx.Cmp.symm; assumption
   | trans => apply Ctx.Cmp.trans <;> assumption
   | cast hA ha IA Ia => exact Ia.cast ⟨_, hA⟩
