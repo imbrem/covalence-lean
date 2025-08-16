@@ -41,7 +41,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
   | pi_cf {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A'
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
-    → JEq Γ (.univ (ℓ + 1)) (.univ (m.imax n)) (.univ ℓ)
+    → (ℓ = m.imax n)
     → JEq Γ (.univ ℓ) (.pi A B) (.pi A' B')
   | app_cf {Γ : Ctx} {m n : ℕ} {A A' B B' Ba f f' a a' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A'
@@ -58,7 +58,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
   | sigma_cf {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A'
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
-    → JEq Γ (.univ (ℓ + 1)) (.univ (m ⊔ n)) (.univ ℓ)
+    → (ℓ = m ⊔ n)
     → JEq Γ (.univ ℓ) (.sigma A B) (.sigma A' B')
   | pair_cf {Γ : Ctx} {m n : ℕ} {A A' B B' a a' b b' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A'
@@ -329,7 +329,7 @@ theorem Ctx.Ok.nats {Γ : Ctx} (h : Γ.Ok) : Γ.JEq (.univ 1) .nats .nats
 
 theorem Ctx.JEq.not {Γ : Ctx} {ℓ : ℕ} {A A' : Tm} (h : JEq Γ (.univ ℓ) A A')
   : JEq Γ (.univ 0) (.not A) (.not A')
-  := .pi_cf (L := Γ.dv) h (fun _ hx => (h.ok.cons hx h.lhs_ty).empty) h.ok.univ
+  := .pi_cf (L := Γ.dv) h (fun _ hx => (h.ok.cons hx h.lhs_ty).empty) rfl
 
 theorem Ctx.ok_iff_zero {Γ : Ctx} : Γ.Ok ↔ Γ.JEq .nats .zero .zero := ⟨Ok.zero, JEq.ok⟩
 

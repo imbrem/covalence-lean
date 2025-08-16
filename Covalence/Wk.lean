@@ -1,4 +1,4 @@
-import Covalence.JEq
+import Covalence.Sub
 
 inductive Ctx.PureWk : Ctx → Ctx → Prop
   | nil : PureWk .nil .nil
@@ -17,11 +17,10 @@ inductive Ctx.PureWk : Ctx → Ctx → Prop
 
 attribute [simp] Ctx.PureWk.nil
 
-theorem Ctx.PureWk.dv_anti {Γ Δ : Ctx} (h : Ctx.PureWk Γ Δ) : Δ.dv ⊆ Γ.dv := by
-  induction h with
-  | nil => rfl
-  | lift' => simp [dv]; apply Finset.union_subset_union_right; assumption
-  | skip _ _ _ I => apply Finset.Subset.trans I; simp [dv]
+theorem Ctx.PureWk.sub_map {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) : Ctx.SubMap Γ Δ
+  := by induction hΓΔ <;> constructor <;> assumption
+
+theorem Ctx.PureWk.dv_anti {Γ Δ : Ctx} (h : Ctx.PureWk Γ Δ) : Δ.dv ⊆ Γ.dv := h.sub_map.dv_anti
 
 theorem Ctx.PureWk.src_ok {Γ Δ : Ctx} (h : Ctx.PureWk Γ Δ) : Γ.Ok := by
   induction h <;> constructor <;> assumption
@@ -40,12 +39,7 @@ theorem Ctx.pure_wk_self_iff {Γ : Ctx} : Ctx.PureWk Γ Γ ↔ Γ.Ok := ⟨PureW
 theorem Ctx.pure_wk_nil_iff {Γ : Ctx} : Ctx.PureWk Γ .nil ↔ Γ.Ok := ⟨PureWk.src_ok, Ok.pure_drop⟩
 
 theorem Ctx.PureWk.at {Γ Δ : Ctx} (h : Ctx.PureWk Γ Δ) {x : ℕ} {A : Tm} (hA : Δ.At x A) : Γ.At x A
-  := by induction h with
-  | nil => exact hA
-  | lift' _ _ _ _ _ I => cases hA with
-    | here => apply At.here
-    | there => apply At.there; apply I; assumption
-  | skip _ _ _ I => apply At.there; exact I hA
+  := h.sub_map.at hA
 
 theorem Ctx.JEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A a b : Tm} (h : Δ.JEq A a b)
   : Γ.JEq A a b := by induction h generalizing Γ with
@@ -164,7 +158,7 @@ theorem Ctx.JEq.to_cf_dv' {Γ : Ctx} {A B a b : Tm} (h : Γ.JEq A a b) (hB : Γ.
 theorem Ctx.JEq.pi_k {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' : Tm}
   (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B') (hℓ : ℓ = Nat.imax m n)
   : Γ.JEq (.univ ℓ) (.pi A B) (.pi A' B')
-  := .pi_cf hA (hB.to_cf_dv hA.lhs_ty) (by cases hℓ; exact hB.ok.univ)
+  := .pi_cf hA (hB.to_cf_dv hA.lhs_ty) hℓ
 
 theorem Ctx.JEq.app_k {Γ : Ctx} {m n : ℕ} {A A' B B' f f' a a' : Tm}
   (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B')
@@ -374,7 +368,7 @@ theorem Ctx.JEq.regular {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) : Γ.IsTy
   | var hΓ hA => exact hΓ.ok.var_regular hA
   | nil_ok => exact Ok.nil.nats_ty
   | cons_ok _ hA hx => exact (hA.lhs_ty.cons hx).nats_ty
-  | succ hΓ I => exact ⟨1, .pi_cf hΓ.ok.nats (fun x hx => (I.cons hx).nats) hΓ.ok.univ⟩
+  | succ hΓ I => exact ⟨1, .pi_cf hΓ.ok.nats (fun x hx => (I.cons hx).nats) rfl⟩
   | symm => assumption
   | trans => assumption
   | _ =>
@@ -384,8 +378,7 @@ theorem Ctx.JEq.regular {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b) : Γ.IsTy
             <;> first | rfl | assumption
                       | apply JEq.lhs; assumption
                       | intros; apply JEq.lhs; apply_assumption; assumption
-                      | apply Ok.zero; apply JEq.ok ; assumption
-                      | apply Ok.univ; apply JEq.ok ; assumption)
+                      | apply Ok.zero; apply JEq.ok ; assumption)
 
 theorem Ctx.JEq.abs_k {Γ : Ctx} {n m : ℕ} {A A' B B' b b' : Tm}
   (hA : Γ.JEq (.univ m) A A') (hB : Γ.JEq (.univ n) B B')
