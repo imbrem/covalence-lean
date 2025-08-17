@@ -1,4 +1,5 @@
 import Covalence.Unique
+import Covalence.Logic
 
 inductive Ctx.Rw (Γ : Ctx) : Tm → Tm → Prop
   | fv (x : ℕ) : Rw Γ (.fv x) (.fv x)
@@ -30,9 +31,9 @@ inductive Ctx.Rw (Γ : Ctx) : Tm → Tm → Prop
   | succ : Rw Γ .succ .succ
   | natrec {C C' n n' z z' s s' : Tm}
     : Rw Γ C C' → Rw Γ n n' → Rw Γ z z' → Rw Γ s s' → Rw Γ (.natrec C n z s) (.natrec C' n' z' s')
-  | let₁ {A A' a a' b b' : Tm}
-    : Rw Γ A A' → Rw Γ a a' → Rw Γ b b' → Rw Γ (.let₁ A a b) (.let₁ A' a' b')
   | invalid : Rw Γ .invalid .invalid
+  | has_ty {a a' A A' : Tm}
+    : Rw Γ a a' → Rw Γ A A' → Rw Γ (.has_ty a A) (.has_ty a' A')
   | wf {a b : Tm} : Γ.WfEq a b → Rw Γ a b
 
 @[simp]

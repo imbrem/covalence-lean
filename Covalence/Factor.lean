@@ -98,6 +98,8 @@ inductive Ctx.InnerTy : Ctx → Tm → Tm → Prop
               (C.bs0 (.app .nats .nats .succ (.fv x)))) (s.bs0 (.fv x)))
     → JEq Γ (.univ ℓ) (C.bs0 n) Cn
     → InnerTy Γ Cn (.natrec C n z s)
+  | has_ty' {Γ : Ctx} {ℓ : ℕ} {A a : Tm}
+    : HasTy Γ (.univ ℓ) A → HasTy Γ A a → InnerTy Γ (.univ 0) (.has_ty a A)
 
 theorem Ctx.InnerTy.has_ty {Γ : Ctx} {A a : Tm} (h : Γ.InnerTy A a) : Γ.HasTy A a
   := by cases h <;> constructor <;> assumption
@@ -121,3 +123,12 @@ theorem Ctx.HasTy.outer_ty {Γ : Ctx} {A a : Tm} (h : Γ.HasTy A a) : Γ.OuterTy
 
 theorem Ctx.OuterTy.has_ty_iff {Γ : Ctx} {A a : Tm} : Γ.OuterTy A a ↔ Γ.HasTy A a
   := ⟨Ctx.OuterTy.has_ty, Ctx.HasTy.outer_ty⟩
+
+theorem Ctx.HasTy.has_ty {Γ : Ctx} {A a : Tm} (h : Γ.HasTy A a) : Γ.HasTy (.univ 0) (.has_ty a A)
+  := have ⟨_, hA⟩ := h.regular; .has_ty' hA.ty_lhs h
+
+theorem Ctx.HasTy.of_has_ty {Γ : Ctx} {A a : Tm} (h : Γ.HasTy (.univ 0) (.has_ty a A)) : Γ.HasTy A a
+  := by have ⟨W, hA, hW⟩ := h.outer_ty; cases hA; assumption
+
+theorem Ctx.HasTy.has_ty_iff {Γ : Ctx} {A a : Tm} : Γ.HasTy (.univ 0) (.has_ty a A) ↔ Γ.HasTy A a
+  := ⟨Ctx.HasTy.of_has_ty, Ctx.HasTy.has_ty⟩

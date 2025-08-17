@@ -27,7 +27,7 @@ def Tm.closeUnder (i : ℕ) (x : ℕ) : Tm → Tm
   | .succ => .succ
   | .natrec C n z s =>
     .natrec (C.closeUnder (i + 1) x) (n.closeUnder i x) (z.closeUnder i x) (s.closeUnder (i + 1) x)
-  | .let₁ A a b => .let₁ (A.closeUnder i x) (a.closeUnder i x) (b.closeUnder (i + 1) x)
+  | .has_ty a A => .has_ty (a.closeUnder i x) (A.closeUnder i x)
   | .invalid => .invalid
 
 theorem Tm.closeUnder_notMem (t : Tm) {i : ℕ} (h : t.bvi ≤ i) (x : ℕ) (hx : x ∉ fvs t)

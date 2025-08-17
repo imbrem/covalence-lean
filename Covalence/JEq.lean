@@ -114,9 +114,16 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
   --   → (∀ x ∉ L, JEq (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)) (b'.bs0 (.fv x)))
   --   → JEq Γ (.univ n) (B.bs0 a) Ba
   --   → JEq Γ Ba (.let₁ A a b) (.let₁ A' a' b')
+  -- Predicates
+  | has_ty {Γ : Ctx} {ℓ : ℕ} {A A' a a' : Tm}
+    : JEq Γ (.univ ℓ) A A' → JEq Γ A a a' → JEq Γ (.univ 0) (.has_ty a A) (.has_ty a' A')
   -- Equations
   | nil_uniq {Γ : Ctx} {ℓ : ℕ} {a : Tm} : JEq Γ (.unit ℓ) a a → JEq Γ (.unit ℓ) a (.nil ℓ)
   | explode {Γ : Ctx} {ℓ : ℕ} {a : Tm} : JEq Γ (.empty ℓ) a a → JEq Γ (.univ 0) (.unit 0) (.empty 0)
+  | has_ty_tt' {Γ : Ctx} {ℓ : ℕ} {a A : Tm}
+    : JEq Γ (.univ ℓ) A A
+    → JEq Γ A a a
+    → JEq Γ (.univ 0) (.has_ty a A) (.unit 0)
   | eqn_rfl {Γ : Ctx} {ℓ : ℕ} {A a b : Tm} :
     JEq Γ (.univ ℓ) A A → JEq Γ A a b → JEq Γ (.univ 0) (.eqn A a b) (.unit 0)
   | beta_abs_cf {Γ : Ctx} {ℓ m n : ℕ} {A B a b Ba ba : Tm} {L : Finset ℕ}

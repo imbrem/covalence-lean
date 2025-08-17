@@ -81,6 +81,8 @@ inductive Ctx.HasTy : Ctx → Tm → Tm → Prop
               (C.bs0 (.app .nats .nats .succ (.fv x)))) (s.bs0 (.fv x)))
     → JEq Γ (.univ ℓ) (C.bs0 n) Cn
     → HasTy Γ Cn (.natrec C n z s)
+  | has_ty' {Γ : Ctx} {a A : Tm} {ℓ : ℕ}
+    : HasTy Γ (.univ ℓ) A → HasTy Γ A a → HasTy Γ (.univ 0) (.has_ty a A)
   | cast {Γ : Ctx} {A B a : Tm}
     : TyEq Γ A B
     → HasTy Γ A a
@@ -545,8 +547,11 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
         ⟩)
       (.trans (.symm (.bs0_cf_univ hC hn)) hCn)
   ⟩
+  | has_ty hA ha IA Ia =>
+    exact ⟨.has_ty' IA.lhs_ty Ia.lhs_ty, .has_ty' IA.rhs_ty (Ia.rhs_ty.cast ⟨_, hA⟩)⟩
   | nil_uniq ha Ia => exact ⟨Ia.lhs_ty, .nil ha.ok⟩
   | eqn_rfl hA hab IA Iab => exact ⟨.eqn IA.1 Iab.1 Iab.2, .unit hab.ok⟩
+  | has_ty_tt' hA ha IA Ia => exact ⟨.has_ty' IA.lhs_ty Ia.lhs_ty, .unit ha.ok⟩
   | beta_abs_cf _ _ hℓ _ _ hBa hba IA IB Ib Ia _ Iba =>
     exact ⟨.app_cf IA.1 (fun x hx => (IB x hx).1) hℓ
             (.abs_cf IA.1 (fun x hx => (IB x hx).1) hℓ (fun x hx => (Ib x hx).1)) Ia.1 hBa, Iba.2⟩

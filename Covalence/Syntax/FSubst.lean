@@ -64,7 +64,7 @@ def Tm.fsubst (σ : FSubst) : Tm → Tm
   | .zero => .zero
   | .succ => .succ
   | .natrec C n z s => .natrec (C.fsubst (↑f σ)) (n.fsubst σ) (z.fsubst σ) (s.fsubst (↑f σ))
-  | .let₁ A a b => .let₁ (A.fsubst σ) (a.fsubst σ) (b.fsubst (↑f σ))
+  | .has_ty a A => .has_ty (a.fsubst σ) (A.fsubst σ)
   | .invalid => .invalid
 
 @[simp]
