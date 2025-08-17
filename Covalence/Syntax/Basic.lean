@@ -28,6 +28,7 @@ inductive Tm : Type
 | natrec (C n z s : Tm) : Tm
 | let₁ (A a b : Tm) : Tm
 | invalid : Tm
+deriving DecidableEq
 
 abbrev Tm.not (t : Tm) : Tm := .pi t (.empty 0)
 

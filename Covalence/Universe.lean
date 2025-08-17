@@ -234,95 +234,10 @@ theorem Ctx.MaybeSubsort.unique {Γ : Ctx} {a : Tm} {m n : ℕ}
 
 def Ctx.HasTy.ctx {Γ : Ctx} {a A : Tm} (_ : Γ ⊢ a : A) : Ctx := Γ
 
-inductive Ctx.OkTy : Ctx → Tm → Tm → Prop
-  | univ {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → OkTy Γ (.univ (ℓ + 1)) (.univ ℓ)
-  | var {Γ : Ctx} {x : ℕ} {A : Tm} {ℓ : ℕ}
-    : OkTy Γ (.univ ℓ) A → Γ.At x A → OkTy Γ A (.fv x)
-  | unit {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → OkTy Γ (.univ ℓ) (.unit ℓ)
-  | nil {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → OkTy Γ (.unit ℓ) (.nil ℓ)
-  | empty {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → OkTy Γ (.univ ℓ) (.empty ℓ)
-  | eqn {Γ : Ctx} {ℓ : ℕ} {A a b : Tm}
-    : OkTy Γ (.univ ℓ) A
-    → OkTy Γ A a
-    → OkTy Γ A b
-    → OkTy Γ (.univ 0) (.eqn A a b)
-  | pi_cf {Γ : Ctx} {ℓ m n : ℕ} {A B : Tm} {L : Finset ℕ}
-    : OkTy Γ (.univ m) A
-    → (∀ x ∉ L, OkTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → (ℓ = m.imax n)
-    → OkTy Γ (.univ ℓ) (.pi A B)
-  | app_cf {Γ : Ctx} {m n : ℕ} {A B Ba f a : Tm} {L : Finset ℕ}
-    : OkTy Γ (.univ m) A
-    → (∀ x ∉ L, OkTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → OkTy Γ (.pi A B) f
-    → OkTy Γ A a
-    → JEq Γ (.univ n) (B.bs0 a) Ba
-    → OkTy Γ Ba (.app A B f a)
-  | abs_cf {Γ : Ctx} {m n : ℕ} {A B b : Tm} {L : Finset ℕ}
-    : OkTy Γ (.univ m) A
-    → (∀ x ∉ L, OkTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → (∀ x ∉ L, OkTy (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)))
-    → OkTy Γ (.pi A B) (.abs A B b)
-  | sigma_cf {Γ : Ctx} {ℓ m n : ℕ} {A B : Tm} {L : Finset ℕ}
-    : OkTy Γ (.univ m) A
-    → (∀ x ∉ L, OkTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
-    → OkTy Γ (.univ ℓ) (.sigma A B)
-  | pair_cf {Γ : Ctx} {m n : ℕ} {A B a b : Tm} {L : Finset ℕ}
-    : OkTy Γ (.univ m) A
-    → (∀ x ∉ L, OkTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → OkTy Γ A a
-    → OkTy Γ (B.bs0 a) b
-    → OkTy Γ (.sigma A B) (.pair A B a b)
-  | fst_cf {Γ : Ctx} {m n : ℕ} {A B e : Tm} {L : Finset ℕ}
-    : OkTy Γ (.univ m) A
-    → (∀ x ∉ L, OkTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → OkTy Γ (.sigma A B) e
-    → OkTy Γ A (.fst A B e)
-  | snd_cf {Γ : Ctx} {m n : ℕ} {A B Ba e : Tm} {L : Finset ℕ}
-    : OkTy Γ (.univ m) A
-    → (∀ x ∉ L, OkTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → OkTy Γ (.sigma A B) e
-    → JEq Γ (.univ n) (B.bs0 (.fst A B e)) Ba
-    → OkTy Γ Ba (.snd A B e)
-  | dite_cf {Γ : Ctx} {ℓ : ℕ} {φ A a b : Tm} {L : Finset ℕ}
-    : OkTy Γ (.univ 0) φ
-    → OkTy Γ (.univ ℓ) A
-    → (∀ x ∉ L, OkTy (Γ.cons x φ) A a)
-    → (∀ x ∉ L, OkTy (Γ.cons x (.not φ)) A b)
-    → OkTy Γ A (.dite φ A a b)
-  | trunc {Γ : Ctx} {ℓ : ℕ} {A : Tm}
-    : OkTy Γ (.univ ℓ) A
-    → OkTy Γ (.univ 0) (.trunc A)
-  | choose_cf {Γ : Ctx} {ℓ} {A φ : Tm} {L : Finset ℕ}
-    : OkTy Γ (.univ ℓ) A
-    → JEq Γ (.univ 0) (.trunc A) (.unit 0)
-    → (∀ x ∉ L, OkTy (Γ.cons x A) (.univ 0) (φ.bs0 (.fv x)))
-    → OkTy Γ A (.choose A φ)
-  | nats {Γ : Ctx} : Γ.Ok → OkTy Γ (.univ 1) .nats
-  | zero {Γ : Ctx} : Γ.Ok → OkTy Γ .nats .zero
-  | succ {Γ : Ctx} : Γ.Ok → OkTy Γ (.pi .nats .nats) .succ
-  | natrec_cf {Γ : Ctx} {ℓ : ℕ} {C n z s Cn : Tm} {L : Finset ℕ}
-    : (∀ x ∉ L, OkTy (Γ.cons x .nats) (.univ ℓ) (C.bs0 (.fv x)))
-    → OkTy Γ .nats n
-    → OkTy Γ (C.bs0 .zero) z
-    → (∀ x ∉ L,
-        OkTy (Γ.cons x .nats) (.pi (C.bs0 (.fv x))
-              (C.bs0 (.app .nats .nats .succ (.fv x)))) (s.bs0 (.fv x)))
-    → JEq Γ (.univ ℓ) (C.bs0 n) Cn
-    → OkTy Γ Cn (.natrec C n z s)
-  | cast {Γ : Ctx} {A B a : Tm}
-    : TyEq Γ A B
-    → OkTy Γ A a
-    → OkTy Γ B a
-
--- theorem Ctx.OkTy.has_ty {Γ : Ctx} {A a : Tm}
---   (ha : OkTy Γ A a) : Γ ⊢ a : A := by induction ha <;> constructor <;> assumption
-
 inductive Ctx.NestTy : Ctx → Tm → Tm → Prop
   | univ {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → NestTy Γ (.univ (ℓ + 1)) (.univ ℓ)
   | var {Γ : Ctx} {x : ℕ} {A : Tm} {ℓ : ℕ}
-    : Γ.Ok → Γ.At x A → NestTy Γ (.univ ℓ) A → NestTy Γ A (.fv x)
+    : NestTy Γ (.univ ℓ) A → Γ.At x A → NestTy Γ A (.fv x)
   | unit {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → NestTy Γ (.univ ℓ) (.unit ℓ)
   | nil {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → NestTy Γ (.unit ℓ) (.nil ℓ)
   | empty {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → NestTy Γ (.univ ℓ) (.empty ℓ)
@@ -401,8 +316,10 @@ inductive Ctx.NestTy : Ctx → Tm → Tm → Prop
     → NestTy Γ A a
     → NestTy Γ B a
 
+theorem Ctx.NestTy.has_ty {Γ : Ctx} {A a : Tm} (h : NestTy Γ A a) : Γ ⊢ a : A := sorry
+
 theorem Ctx.HasTy.nest_ty {Γ : Ctx} {A a : Tm} (ha : Γ ⊢ a : A) :
-  OkTy Γ A a := by induction ha with
+  NestTy Γ A a := by induction ha with
   | var hx hA => sorry
   | _ => constructor <;> assumption
 

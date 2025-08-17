@@ -109,7 +109,7 @@ theorem Ctx.HasTy.not {Γ : Ctx} {ℓ : ℕ} {φ : Tm} (h : Ctx.HasTy Γ (.univ 
   :=  .pi_cf (L := Γ.dv) h (fun _ hx => .empty (h.ok.cons hx h.is_ty)) rfl
 
 theorem Ctx.Var.ty {Γ : Ctx} {x : ℕ} {A : Tm} (h : Γ.Var x A) : Γ.HasTy A (.fv x)
-  := have ⟨_, hΓ, hX⟩ := h; (HasTy.var hX.ok hΓ).cast hX
+  := have ⟨_W, hΓ, hX⟩ := h; (HasTy.var hX.ok hΓ).cast hX
 
 theorem Ctx.HasTy.wk {Γ Δ : Ctx} (h : Γ.Wk Δ) {a A : Tm} (h : Δ.HasTy a A) : Γ.HasTy a A
   := by induction h generalizing Γ with
