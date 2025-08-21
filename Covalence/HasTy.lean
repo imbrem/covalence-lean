@@ -679,3 +679,7 @@ theorem Ctx.HasTy.id_abs {Γ : Ctx} {ℓ : ℕ} {A : Tm}
   (hA : Γ.HasTy (.univ ℓ) A) : Γ.HasTy (.pi ℓ A A) (.abs ℓ A A (.bv 0))
   := .abs_ty_cf (L := Γ.dv) hA hA (by simp [Nat.imax])
         (fun x hx => .var (hA.ok.cons hx hA.is_ty) .here)
+
+theorem Ctx.HasTy.has_ty_regular {Γ : Ctx} {A a : Tm}
+  (h : Ctx.HasTy Γ A a) : Γ.HasTy (.univ 0) (.has_ty a A)
+  := have ⟨_, hA⟩ := h.regular; .has_ty' hA.ty_lhs h
