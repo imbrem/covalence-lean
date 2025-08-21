@@ -14,21 +14,19 @@ inductive Ctx.HasTy : Ctx → Tm → Tm → Prop
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
     → (ℓ = m.imax n)
-    → HasTy Γ (.univ ℓ) (.pi ℓ A B)
-  | app_cf {Γ : Ctx} {ℓ m n : ℕ} {A B Ba f a : Tm} {L : Finset ℕ}
+    → HasTy Γ (.univ ℓ) (.pi n A B)
+  | app_cf {Γ : Ctx} {m n : ℕ} {A B Ba f a : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → (ℓ = m.imax n)
-    → HasTy Γ (.pi ℓ A B) f
+    → HasTy Γ (.pi n A B) f
     → HasTy Γ A a
     → JEq Γ (.univ n) (B.bs0 a) Ba
     → HasTy Γ Ba (.app A B f a)
-  | abs_cf {Γ : Ctx} {ℓ m n : ℕ} {A B b : Tm} {L : Finset ℕ}
+  | abs_cf {Γ : Ctx} {m n : ℕ} {A B b : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → (ℓ = m.imax n)
     → (∀ x ∉ L, HasTy (Γ.cons x A) (B.bs0 (.fv x)) (b.bs0 (.fv x)))
-    → HasTy Γ (.pi ℓ A B) (.abs ℓ A B b)
+    → HasTy Γ (.pi n A B) (.abs n A B b)
   | sigma_cf {Γ : Ctx} {ℓ m n : ℕ} {A B : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
@@ -163,20 +161,20 @@ theorem Ctx.HasTy.cast0
 
 theorem Ctx.HasTy.pi_k {Γ : Ctx} {ℓ m n : ℕ} {A B : Tm}
   (hA : Γ.HasTy (.univ m) A) (hB : Γ.HasTy (.univ n) B) (hℓ : ℓ = m.imax n)
-  : Γ.HasTy (.univ ℓ) (.pi ℓ A B)
+  : Γ.HasTy (.univ ℓ) (.pi n A B)
   := .pi_cf hA (hB.to_cf_dv hA.refl.ty_eq) hℓ
 
-theorem Ctx.HasTy.app_k {Γ : Ctx} {ℓ m n : ℕ} {A B f a : Tm}
-  (hA : Γ.HasTy (.univ m) A) (hB : Γ.HasTy (.univ n) B) (hℓ : ℓ = m.imax n)
-  (hf : Γ.HasTy (.pi ℓ A B) f) (ha : Γ.HasTy A a)
+theorem Ctx.HasTy.app_k {Γ : Ctx} {m n : ℕ} {A B f a : Tm}
+  (hA : Γ.HasTy (.univ m) A) (hB : Γ.HasTy (.univ n) B)
+  (hf : Γ.HasTy (.pi n A B) f) (ha : Γ.HasTy A a)
   : Γ.HasTy B (.app A B f a)
-  := .app_cf hA (hB.to_cf_dv hA.refl.ty_eq) hℓ hf ha (by
+  := .app_cf hA (hB.to_cf_dv hA.refl.ty_eq) hf ha (by
     convert hB.refl; rw [Tm.bs0, Tm.bsubst_lc]; exact hB.refl.lc_lhs)
 
-theorem Ctx.HasTy.abs_k {Γ : Ctx} {ℓ m n : ℕ} {A B b : Tm}
-  (hA : Γ.HasTy (.univ m) A) (hB : Γ.HasTy (.univ n) B) (hℓ : ℓ = m.imax n) (hb : Γ.HasTy B b)
-  : Γ.HasTy (.pi ℓ A B) (.abs ℓ A B b)
-  := .abs_cf hA (hB.to_cf_dv hA.refl.ty_eq) hℓ (hb.to_cf_dv hA.refl.ty_eq)
+theorem Ctx.HasTy.abs_k {Γ : Ctx} {m n : ℕ} {A B b : Tm}
+  (hA : Γ.HasTy (.univ m) A) (hB : Γ.HasTy (.univ n) B) (hb : Γ.HasTy B b)
+  : Γ.HasTy (.pi n A B) (.abs n A B b)
+  := .abs_cf hA (hB.to_cf_dv hA.refl.ty_eq) (hb.to_cf_dv hA.refl.ty_eq)
 
 inductive Ctx.Subst : Ctx → Ctx → Tm.MSubst → Prop
   | nil {Γ : Ctx} {σ : Tm.MSubst} : Γ.Ok → Subst Γ .nil σ
@@ -455,22 +453,21 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
       IA.1.pi_cf (fun x hx => (IB x hx).1) hℓ,
       IA.2.pi_cf (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm) hℓ
     ⟩
-  | app_cf hA hB hℓ hf ha hBa IA IB If Ia IBa => exact ⟨
-      IA.1.app_cf (fun x hx => (IB x hx).1) hℓ If.1 Ia.1 hBa,
+  | app_cf hA hB hf ha hBa IA IB If Ia IBa => exact ⟨
+      IA.1.app_cf (fun x hx => (IB x hx).1) If.1 Ia.1 hBa,
       IA.2.app_cf
         (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm)
-        hℓ
-        (If.2.cast ⟨_, hA.pi_cf hB hℓ⟩)
+        (If.2.cast ⟨_, hA.pi_cf hB rfl⟩)
         (Ia.2.cast ⟨_, hA⟩)
         (.trans (.symm (.bs0_cf_univ hB ha)) hBa)
     ⟩
-  | abs_cf hA hB hℓ hb IA IB Ib => exact ⟨
-      IA.1.abs_cf (fun x hx => (IB x hx).1) hℓ (fun x hx => (Ib x hx).1),
+  | abs_cf hA hB hb IA IB Ib => exact ⟨
+      IA.1.abs_cf (fun x hx => (IB x hx).1) (fun x hx => (Ib x hx).1),
       (IA.2.abs_cf
-        (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm) hℓ
+        (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm)
         (fun x hx =>
           ((Ib x hx).2.cast0 hA.ty_eq.symm).cast ((hB x hx).cast0 hA.ty_eq.symm).ty_eq)).cast
-        ⟨_, .symm (.pi_cf hA hB hℓ)⟩
+        ⟨_, .symm (.pi_cf hA hB rfl)⟩
     ⟩
   | sigma_cf hA hB hℓ IA IB => exact ⟨
       IA.1.sigma_cf (fun x hx => (IB x hx).1) hℓ,
@@ -538,11 +535,10 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
                 )
               (.app_k
                 (hC x hx.1).ok.nats (hC x hx.1).ok.nats
-                rfl
                 (.succ (hC x hx.1).ok.zero)
                 (.var (hC x hx.1).ok.zero .here)
               ))
-            (by simp [Nat.imax])
+            rfl
         ⟩)
       (.trans (.symm (.bs0_cf_univ hC hn)) hCn)
   ⟩
@@ -551,9 +547,9 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
   | nil_uniq ha Ia => exact ⟨Ia.lhs_ty, .nil ha.ok⟩
   | eqn_rfl hA hab IA Iab => exact ⟨.eqn Iab.1 Iab.2, .unit hab.ok⟩
   | has_ty_tt' hA ha IA Ia => exact ⟨.has_ty' IA.lhs_ty Ia.lhs_ty, .unit ha.ok⟩
-  | beta_abs_cf _ _ hℓ _ _ hBa hba IA IB Ib Ia _ Iba =>
-    exact ⟨.app_cf IA.1 (fun x hx => (IB x hx).1) hℓ
-            (.abs_cf IA.1 (fun x hx => (IB x hx).1) hℓ (fun x hx => (Ib x hx).1)) Ia.1 hBa, Iba.2⟩
+  | beta_abs_cf _ _ _ _ hBa hba IA IB Ib Ia _ Iba =>
+    exact ⟨.app_cf IA.1 (fun x hx => (IB x hx).1)
+            (.abs_cf IA.1 (fun x hx => (IB x hx).1) (fun x hx => (Ib x hx).1)) Ia.1 hBa, Iba.2⟩
   | beta_fst_cf hA hB hℓ ha hb IA IB Ia Ib =>
     exact ⟨IA.1.fst_cf (fun x hx => (IB x hx).1) hℓ
             (.pair_cf IA.1 (fun x hx => (IB x hx).1) hℓ Ia.1 Ib.1), Ia.2
@@ -578,9 +574,9 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
     ⟩
   | beta_succ_cf hC hn hz hs hsn hCn hCs IC In Iz Is Isn ICn ICs => exact ⟨
       .natrec_cf  (fun x hx => (IC x hx).1)
-                  (.app_k (.nats hz.ok) (.nats hz.ok) rfl (.succ hz.ok) In.1) Iz.1
+                  (.app_k (.nats hz.ok) (.nats hz.ok) (.succ hz.ok) In.1) Iz.1
                   (fun x hx => (Is x hx).1) hCs,
-      .app_k ICn.2 ICs.2 (by simp [Nat.imax]) (Isn.2.cast ⟨_, .pi_k hCn hCs (by simp [Nat.imax])⟩)
+      .app_k ICn.2 ICs.2 (Isn.2.cast ⟨_, .pi_k hCn hCs rfl⟩)
         (.natrec_cf (fun x hx => (IC x hx).1) In.1 Iz.1 (fun x hx => (Is x hx).1) hCn)
     ⟩
   | unit_uniq hφ ha Iφ Ia => exact ⟨Iφ.lhs_ty, .unit hφ.ok⟩
@@ -666,19 +662,18 @@ theorem Ctx.HasTy.cf_k_to_dv {Γ : Ctx} {A B a : Tm} {L : Finset ℕ}
   convert h
   rw [Tm.bs0, Tm.bsubst_lc _ ha]
 
-theorem Ctx.HasTy.abs_ty_cf {Γ : Ctx} {ℓ m n : ℕ} {A B b : Tm}
-  (hA : Γ.HasTy (.univ m) A) (hB : Γ.HasTy (.univ n) B) (hℓ : ℓ = m.imax n) {L : Finset ℕ}
+theorem Ctx.HasTy.abs_ty_cf {Γ : Ctx} {m n : ℕ} {A B b : Tm}
+  (hA : Γ.HasTy (.univ m) A) (hB : Γ.HasTy (.univ n) B) {L : Finset ℕ}
   (hb : ∀ x ∉ L, (Γ.cons x A).HasTy B (b.bs0 (.fv x)))
-  : Γ.HasTy (.pi ℓ A B) (.abs ℓ A B b)
-  := .abs_cf hA (hB.to_cf_dv hA.refl.ty_eq) hℓ (by
+  : Γ.HasTy (.pi n A B) (.abs n A B b)
+  := .abs_cf hA (hB.to_cf_dv hA.refl.ty_eq) (by
     convert HasTy.cf_ty_to_dv hb
     rw [Tm.bs0, Tm.bsubst_lc _ hB.lc_tm]
   )
 
 theorem Ctx.HasTy.id_abs {Γ : Ctx} {ℓ : ℕ} {A : Tm}
   (hA : Γ.HasTy (.univ ℓ) A) : Γ.HasTy (.pi ℓ A A) (.abs ℓ A A (.bv 0))
-  := .abs_ty_cf (L := Γ.dv) hA hA (by simp [Nat.imax])
-        (fun x hx => .var (hA.ok.cons hx hA.is_ty) .here)
+  := .abs_ty_cf (L := Γ.dv) hA hA (fun _ hx => .var (hA.ok.cons hx hA.is_ty) .here)
 
 theorem Ctx.HasTy.has_ty_regular {Γ : Ctx} {A a : Tm}
   (h : Ctx.HasTy Γ A a) : Γ.HasTy (.univ 0) (.has_ty a A)

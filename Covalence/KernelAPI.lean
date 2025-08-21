@@ -1,7 +1,7 @@
 import Covalence.Rewrite
 
-theorem Ctx.IsTy.rw_congr {Γ : Ctx} {A B : Tm} (h : Γ.IsTy A) (hab : Γ.Rw A B) : Γ.IsTy B
-  := have ⟨ℓ, h⟩ := h; sorry
+-- theorem Ctx.IsTy.rw_congr {Γ : Ctx} {A B : Tm} (h : Γ.IsTy A) (hab : Γ.Rw A B) : Γ.IsTy B
+--   := have ⟨ℓ, h⟩ := h; sorry
 
 def Ctx.IsUniv (Γ : Ctx) (a : Tm) : Prop
   := ∃ℓ, Γ.Rw a (.univ ℓ)
