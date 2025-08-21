@@ -8,7 +8,7 @@ def Tm.closeUnder (i : ℕ) (x : ℕ) : Tm → Tm
   | .unit ℓ => .unit ℓ
   | .nil ℓ => .nil ℓ
   | .empty ℓ => .empty ℓ
-  | .eqn A a b => .eqn (A.closeUnder i x) (a.closeUnder i x) (b.closeUnder i x)
+  | .eqn a b => .eqn (a.closeUnder i x) (b.closeUnder i x)
   | .pi ℓ A B => .pi ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x)
   | .abs ℓ A B b => .abs ℓ (A.closeUnder i x) (B.closeUnder (i + 1) x) (b.closeUnder (i + 1) x)
   | .app A B f a =>

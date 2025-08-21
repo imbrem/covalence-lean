@@ -8,8 +8,8 @@ inductive Ctx.Rw (Γ : Ctx) : Tm → Tm → Prop
   | unit (ℓ : ℕ) : Rw Γ (.unit ℓ) (.unit ℓ)
   | nil (ℓ : ℕ) : Rw Γ (.nil ℓ) (.nil ℓ)
   | empty (ℓ : ℕ) : Rw Γ (.empty ℓ) (.empty ℓ)
-  | eqn {A A' a a' b b' : Tm}
-    : Rw Γ A A' → Rw Γ a a' → Rw Γ b b' → Rw Γ (.eqn A a b) (.eqn A' a' b')
+  | eqn {a a' b b' : Tm}
+    : Rw Γ a a' → Rw Γ b b' → Rw Γ (.eqn a b) (.eqn a' b')
   | pi (ℓ : ℕ) {A A' B B' : Tm} : Rw Γ A A' → Rw Γ B B' → Rw Γ (.pi ℓ A B) (.pi ℓ A' B')
   | abs (ℓ : ℕ) {A A' B B' b b' : Tm}
     : Rw Γ A A' → Rw Γ B B' → Rw Γ b b' → Rw Γ (.abs ℓ A B b) (.abs ℓ A' B' b')

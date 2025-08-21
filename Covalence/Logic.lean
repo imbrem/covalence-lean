@@ -1,4 +1,4 @@
-import Covalence.Factor
+import Covalence.Unique
 
 def Ctx.Inhab (Γ : Ctx) (A : Tm) : Prop := ∃a, Γ.HasTy A a
 
@@ -306,61 +306,74 @@ theorem Ctx.Iff.tt {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ) : Γ.IsTrue φ ↔
 theorem Ctx.Iff.ff {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ) : Γ.IsFalse φ ↔ Γ.IsFalse ψ
   := ⟨h.2.mt, h.1.mt⟩
 
-theorem Ctx.JEq.eqn_prop {Γ : Ctx} {A a b : Tm} (h : Γ.JEq A a b) : Γ.IsProp (.eqn A a b)
-  := have ⟨_, hA⟩ := h.regular; .eqn hA.ty_lhs h.ty_lhs h.ty_rhs
+theorem Ctx.JEq.eqn_prop {Γ : Ctx} {A a b : Tm} (h : Γ.JEq A a b) : Γ.IsProp (.eqn a b)
+  := .eqn h.ty_lhs h.ty_rhs
 
-theorem Ctx.JEq.eqn_tt {Γ : Ctx} {A a b : Tm} (h : Γ.JEq A a b) : Γ.IsTrue (.eqn A a b)
+theorem Ctx.JEq.eqn_tt {Γ : Ctx} {A a b : Tm} (h : Γ.JEq A a b) : Γ.IsTrue (.eqn a b)
   := have ⟨_, hA⟩ := h.regular; .eqn_rfl hA h
 
-theorem Ctx.IsProp.eqn_ty {Γ : Ctx} {A a b : Tm} (h : Γ.IsProp (.eqn A a b)) : Γ.IsTy A
-  := by
-  rw [IsProp, <-Ctx.OuterTy.has_ty_iff] at h
-  have ⟨_, hA, hC⟩ := h
-  cases hA; apply HasTy.is_ty; assumption
+-- theorem Ctx.IsProp.eqn_ty {Γ : Ctx} {A a b : Tm} (h : Γ.IsProp (.eqn A a b)) : Γ.IsTy A
+--   := by
+--   rw [IsProp, <-Ctx.OuterTy.has_ty_iff] at h
+--   have ⟨_, hA, hC⟩ := h
+--   cases hA; apply HasTy.is_ty; assumption
 
-theorem Ctx.IsProp.eqn_lhs {Γ : Ctx} {A a b : Tm} (h : Γ.IsProp (.eqn A a b)) : Γ.HasTy A a
-  := by
-  rw [IsProp, <-Ctx.OuterTy.has_ty_iff] at h
-  have ⟨_, hA, hC⟩ := h
-  cases hA; assumption
+-- theorem Ctx.IsProp.eqn_lhs {Γ : Ctx} {A a b : Tm} (h : Γ.IsProp (.eqn A a b)) : Γ.HasTy A a
+--   := by
+--   rw [IsProp, <-Ctx.OuterTy.has_ty_iff] at h
+--   have ⟨_, hA, hC⟩ := h
+--   cases hA; assumption
 
-theorem Ctx.IsProp.eqn_rhs {Γ : Ctx} {A a b : Tm} (h : Γ.IsProp (.eqn A a b)) : Γ.HasTy A b
-  := by
-  rw [IsProp, <-Ctx.OuterTy.has_ty_iff] at h
-  have ⟨_, hA, hC⟩ := h
-  cases hA; assumption
+-- theorem Ctx.IsProp.eqn_rhs {Γ : Ctx} {A a b : Tm} (h : Γ.IsProp (.eqn A a b)) : Γ.HasTy A b
+--   := by
+--   rw [IsProp, <-Ctx.OuterTy.has_ty_iff] at h
+--   have ⟨_, hA, hC⟩ := h
+--   cases hA; assumption
 
-theorem Ctx.IsTrue.eqn_ty {Γ : Ctx} {A a b : Tm} (h : Γ.IsTrue (.eqn A a b)) : Γ.IsTy A
-  := h.is_prop.eqn_ty
+-- theorem Ctx.IsTrue.eqn_ty {Γ : Ctx} {A a b : Tm} (h : Γ.IsTrue (.eqn A a b)) : Γ.IsTy A
+--   := h.is_prop.eqn_ty
 
-theorem Ctx.IsTrue.eqn_lhs {Γ : Ctx} {A a b : Tm} (h : Γ.IsTrue (.eqn A a b)) : Γ.HasTy A a
-  := h.is_prop.eqn_lhs
+-- theorem Ctx.IsTrue.eqn_lhs {Γ : Ctx} {A a b : Tm} (h : Γ.IsTrue (.eqn A a b)) : Γ.HasTy A a
+--   := h.is_prop.eqn_lhs
 
-theorem Ctx.IsTrue.eqn_rhs {Γ : Ctx} {A a b : Tm} (h : Γ.IsTrue (.eqn A a b)) : Γ.HasTy A b
-  := h.is_prop.eqn_rhs
+-- theorem Ctx.IsTrue.eqn_rhs {Γ : Ctx} {A a b : Tm} (h : Γ.IsTrue (.eqn A a b)) : Γ.HasTy A b
+--   := h.is_prop.eqn_rhs
 
-theorem Ctx.IsTrue.ext {Γ : Ctx} {A a b : Tm} (h : Γ.IsTrue (.eqn A a b))
-  : Γ.JEq A a b := have ⟨_, hA⟩ := h.eqn_ty; .eqn_ext hA h.eqn_lhs.refl h.eqn_rhs.refl h
-
-theorem Ctx.IsTrue.eqn_iff {Γ : Ctx} {A a b : Tm}
-  : Γ.IsTrue (.eqn A a b) ↔ Γ.JEq A a b := ⟨Ctx.IsTrue.ext, JEq.eqn_tt⟩
+theorem Ctx.IsTrue.ext {Γ : Ctx} {A a b : Tm} (ha : Γ.HasTy A a) (h : Γ.IsTrue (.eqn a b))
+  : Γ.JEq A a b := by
+  have ⟨W, h, hW⟩ := h.ty_lhs.outer_ty;
+  cases h with
+  | eqn ha' hb =>
+    have ⟨ℓ, hA⟩ := ha.regular;
+    have hA' := ha'.unique ha
+    exact JEq.eqn_ext hA ha.refl (hb.cast hA').refl h
 
 theorem Ctx.IsTrue.eqn_bool {Γ : Ctx} {φ : Tm} (h : Γ.IsTrue φ)
-  : Γ.IsTrue (.eqn (.univ 0) φ (.unit 0)) := JEq.eqn_tt h
+  : Γ.IsTrue (.eqn φ (.unit 0)) := JEq.eqn_tt h
 
 theorem Ctx.IsFalse.eqn_bool {Γ : Ctx} {φ : Tm} (h : Γ.IsFalse φ)
-  : Γ.IsTrue (.eqn (.univ 0) φ (.empty 0)) := JEq.eqn_tt h
+  : Γ.IsTrue (.eqn φ (.empty 0)) := JEq.eqn_tt h
 
-theorem Ctx.IsTrue.eqn_symm {Γ : Ctx} {A a b : Tm} (h : Γ.IsTrue (.eqn A a b))
-  : Γ.IsTrue (.eqn A b a) := by
-  simp only [Ctx.IsTrue.eqn_iff] at *
-  exact JEq.symm h
+theorem Ctx.IsTrue.eqn_symm {Γ : Ctx} {a b : Tm} (h : Γ.IsTrue (.eqn a b))
+  : Γ.IsTrue (.eqn b a) := by
+  have ⟨W, h, hW⟩ := h.ty_lhs.outer_ty;
+  cases h with
+  | eqn ha hb =>
+    have ⟨_, hA⟩ := ha.regular;
+    have h := JEq.eqn_ext hA ha.refl hb.refl h
+    exact h.symm.eqn_tt
 
-theorem Ctx.IsTrue.eqn_trans {Γ : Ctx} {A a b c : Tm}
-  (h : Γ.IsTrue (.eqn A a b)) (h' : Γ.IsTrue (.eqn A b c))
-  : Γ.IsTrue (.eqn A a c) := by
-  simp only [Ctx.IsTrue.eqn_iff] at *
-  exact JEq.trans h h'
+theorem Ctx.IsTrue.eqn_trans {Γ : Ctx} {a b c : Tm}
+  (h : Γ.IsTrue (.eqn a b)) (h' : Γ.IsTrue (.eqn b c))
+  : Γ.IsTrue (.eqn a c) := by
+  have ⟨W, h, hW⟩ := h.ty_lhs.outer_ty;
+  have ⟨W', h', hW'⟩ := h'.ty_lhs.outer_ty;
+  cases h with | eqn ha hb => cases h' with | eqn hb' hc =>
+  have ⟨_, hA⟩ := ha.regular;
+  have hA' := hb'.unique hb
+  have hab := JEq.eqn_ext hA ha.refl hb.refl h
+  have hbc := JEq.eqn_ext hA (hb'.cast hA').refl (hc.cast hA').refl h'
+  exact (hab.trans hbc).eqn_tt
 
 theorem Ctx.HasTy.close_prop {Γ : Ctx} {x : ℕ} {φ A a : Tm}
   (hφ : Γ.IsProp φ) (h : Ctx.HasTy (Γ.cons x φ) A a)
@@ -436,7 +449,7 @@ theorem Ctx.Iff.lhs_prop {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ) : Γ.IsProp 
 theorem Ctx.Iff.rhs_prop {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ) : Γ.IsProp ψ := h.2.src_prop
 
 theorem Ctx.Iff.eqn_prop {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ)
-  : Γ.IsProp (.eqn (.univ 0) φ ψ) := .eqn (.univ h.ok) h.lhs_prop h.rhs_prop
+  : Γ.IsProp (.eqn φ ψ) := .eqn h.lhs_prop h.rhs_prop
 
 theorem Ctx.Iff.wk0 {Γ : Ctx} {x : ℕ} {A : Tm} (hx : x ∉ Γ.dv) (hA : Γ.IsTy A)
   {φ ψ : Tm} (h : Γ.Iff φ ψ) : (Γ.cons x A).Iff φ ψ
@@ -472,7 +485,7 @@ theorem Ctx.Iff.propext {Γ : Ctx} {φ ψ : Tm} (h : Γ.Iff φ ψ)
           (h'.lhs_prop.wk0 hy hψ'.not.is_ty).not_var1.eqn_bool.eqn_trans
           (hψ'.wk0_not_var0 hy).eqn_bool.eqn_symm)
   )
-  ).ext
+  ).ext h.lhs_prop
 
 theorem Ctx.Implies.cast {Γ : Ctx} {φ φ' ψ ψ' : Tm}
   (hφ : Γ.JEq (.univ 0) φ' φ) (h : Γ.Implies φ ψ) (hψ : Γ.JEq (.univ 0) ψ ψ')

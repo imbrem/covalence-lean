@@ -19,7 +19,7 @@ def Tm.msubst (σ : MSubst) : Tm → Tm
   | .unit ℓ => .unit ℓ
   | .nil ℓ => .nil ℓ
   | .empty ℓ => .empty ℓ
-  | .eqn A a b => .eqn (A.msubst σ) (a.msubst σ) (b.msubst σ)
+  | .eqn a b => .eqn (a.msubst σ) (b.msubst σ)
   | .pi ℓ A B => .pi ℓ (A.msubst σ) (B.msubst σ)
   | .abs ℓ A B b => .abs ℓ (A.msubst σ) (B.msubst σ) (b.msubst σ)
   | .app A B f a => .app (A.msubst σ) (B.msubst σ) (f.msubst σ) (a.msubst σ)

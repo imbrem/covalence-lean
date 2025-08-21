@@ -33,11 +33,10 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
   | unit {Γ : Ctx} {ℓ : ℕ} : JEq Γ .nats .zero .zero → JEq Γ (.univ ℓ) (.unit ℓ) (.unit ℓ)
   | nil {Γ : Ctx} {ℓ : ℕ} : JEq Γ .nats .zero .zero → JEq Γ (.unit ℓ) (.nil ℓ) (.nil ℓ)
   | empty {Γ : Ctx} {ℓ : ℕ} : JEq Γ .nats .zero .zero → JEq Γ (.univ ℓ) (.empty ℓ) (.empty ℓ)
-  | eqn {Γ : Ctx} {ℓ : ℕ} {A A' a a' b b' : Tm}
-    : JEq Γ (.univ ℓ) A A'
-    → JEq Γ A a a'
+  | eqn {Γ : Ctx} {A a a' b b' : Tm}
+    : JEq Γ A a a'
     → JEq Γ A b b'
-    → JEq Γ (.univ 0) (.eqn A a b) (.eqn A' a' b')
+    → JEq Γ (.univ 0) (.eqn a b) (.eqn a' b')
   | pi_cf {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A'
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
@@ -125,7 +124,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → JEq Γ A a a
     → JEq Γ (.univ 0) (.has_ty a A) (.unit 0)
   | eqn_rfl {Γ : Ctx} {ℓ : ℕ} {A a b : Tm} :
-    JEq Γ (.univ ℓ) A A → JEq Γ A a b → JEq Γ (.univ 0) (.eqn A a b) (.unit 0)
+    JEq Γ (.univ ℓ) A A → JEq Γ A a b → JEq Γ (.univ 0) (.eqn a b) (.unit 0)
   | beta_abs_cf {Γ : Ctx} {ℓ m n : ℕ} {A B a b Ba ba : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
@@ -211,7 +210,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     : JEq Γ (.univ ℓ) A A
     → JEq Γ A a a
     → JEq Γ A b b
-    → JEq Γ (.univ 0) (.eqn A a b) (.unit 0)
+    → JEq Γ (.univ 0) (.eqn a b) (.unit 0)
     → JEq Γ A a b
   | pi_ext_cf {Γ : Ctx} {ℓ m n : ℕ} {A B f g : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A

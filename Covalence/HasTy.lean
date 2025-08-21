@@ -6,11 +6,10 @@ inductive Ctx.HasTy : Ctx → Tm → Tm → Prop
   | unit {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → HasTy Γ (.univ ℓ) (.unit ℓ)
   | nil {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → HasTy Γ (.unit ℓ) (.nil ℓ)
   | empty {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → HasTy Γ (.univ ℓ) (.empty ℓ)
-  | eqn {Γ : Ctx} {ℓ : ℕ} {A a b : Tm}
-    : HasTy Γ (.univ ℓ) A
-    → HasTy Γ A a
+  | eqn {Γ : Ctx} {A a b : Tm}
+    : HasTy Γ A a
     → HasTy Γ A b
-    → HasTy Γ (.univ 0) (.eqn A a b)
+    → HasTy Γ (.univ 0) (.eqn a b)
   | pi_cf {Γ : Ctx} {ℓ m n : ℕ} {A B : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
@@ -450,8 +449,8 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
     · apply JEq.lhs_ty; assumption
   | univ | var | unit | nil | empty | nats | succ | explode =>
     constructor <;> constructor <;> (try apply ok) <;> assumption
-  | eqn hA ha hb IA Ia Ib
-    => exact ⟨IA.1.eqn Ia.1 Ib.1, IA.2.eqn (Ia.2.cast hA.ty_eq) (Ib.2.cast hA.ty_eq)⟩
+  | eqn ha hb Ia Ib
+    => exact ⟨Ia.1.eqn Ib.1, Ia.2.eqn Ib.2⟩
   | pi_cf hA hB hℓ IA IB => exact ⟨
       IA.1.pi_cf (fun x hx => (IB x hx).1) hℓ,
       IA.2.pi_cf (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm) hℓ
@@ -550,7 +549,7 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
   | has_ty hA ha IA Ia =>
     exact ⟨.has_ty' IA.lhs_ty Ia.lhs_ty, .has_ty' IA.rhs_ty (Ia.rhs_ty.cast ⟨_, hA⟩)⟩
   | nil_uniq ha Ia => exact ⟨Ia.lhs_ty, .nil ha.ok⟩
-  | eqn_rfl hA hab IA Iab => exact ⟨.eqn IA.1 Iab.1 Iab.2, .unit hab.ok⟩
+  | eqn_rfl hA hab IA Iab => exact ⟨.eqn Iab.1 Iab.2, .unit hab.ok⟩
   | has_ty_tt' hA ha IA Ia => exact ⟨.has_ty' IA.lhs_ty Ia.lhs_ty, .unit ha.ok⟩
   | beta_abs_cf _ _ hℓ _ _ hBa hba IA IB Ib Ia _ Iba =>
     exact ⟨.app_cf IA.1 (fun x hx => (IB x hx).1) hℓ

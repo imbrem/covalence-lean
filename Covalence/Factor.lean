@@ -23,11 +23,10 @@ inductive Ctx.InnerTy : Ctx → Tm → Tm → Prop
   | unit {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → InnerTy Γ (.univ ℓ) (.unit ℓ)
   | nil {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → InnerTy Γ (.unit ℓ) (.nil ℓ)
   | empty {Γ : Ctx} {ℓ : ℕ} : Γ.Ok → InnerTy Γ (.univ ℓ) (.empty ℓ)
-  | eqn {Γ : Ctx} {ℓ : ℕ} {A a b : Tm}
-    : HasTy Γ (.univ ℓ) A
-    → HasTy Γ A a
+  | eqn {Γ : Ctx} {A a b : Tm}
+    : HasTy Γ A a
     → HasTy Γ A b
-    → InnerTy Γ (.univ 0) (.eqn A a b)
+    → InnerTy Γ (.univ 0) (.eqn a b)
   | pi_cf {Γ : Ctx} {ℓ m n : ℕ} {A B : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))

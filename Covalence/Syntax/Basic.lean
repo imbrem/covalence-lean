@@ -11,7 +11,7 @@ inductive Tm : Type
 | unit (ℓ : ℕ) : Tm
 | nil (ℓ : ℕ) : Tm
 | empty (ℓ : ℕ) : Tm
-| eqn (A a b : Tm) : Tm
+| eqn (a b : Tm) : Tm
 | pi (ℓ : ℕ) (A B : Tm) : Tm
 | abs (ℓ : ℕ) (A B b : Tm) : Tm
 | app (A B f a : Tm) : Tm
@@ -34,7 +34,7 @@ abbrev Tm.not (t : Tm) : Tm := .pi 0 t (.empty 0)
 @[simp]
 def Tm.fvs : Tm → Finset ℕ
   | .fv x => {x}
-  | .eqn A a b => A.fvs ∪ a.fvs ∪ b.fvs
+  | .eqn a b => a.fvs ∪ b.fvs
   | .pi _ A B => A.fvs ∪ B.fvs
   | .abs _ A B b => A.fvs ∪ B.fvs ∪ b.fvs
   | .app A B f a => A.fvs ∪ B.fvs ∪ f.fvs ∪ a.fvs
@@ -51,7 +51,7 @@ def Tm.fvs : Tm → Finset ℕ
 
 def Tm.bvi : Tm → ℕ
   | .bv i => (i + 1)
-  | .eqn A a b => A.bvi ⊔ a.bvi ⊔ b.bvi
+  | .eqn a b => a.bvi ⊔ b.bvi
   | .pi _ A B => A.bvi ⊔ (B.bvi - 1)
   | .abs _ A B b => A.bvi ⊔ (B.bvi - 1) ⊔ (b.bvi - 1)
   | .app A B f a => A.bvi ⊔ (B.bvi - 1) ⊔ f.bvi ⊔ a.bvi
@@ -74,7 +74,7 @@ def Tm.bwk (ρ : BWk) : Tm → Tm
   | .unit ℓ => .unit ℓ
   | .nil ℓ => .nil ℓ
   | .empty ℓ => .empty ℓ
-  | .eqn A a b => .eqn (A.bwk ρ) (a.bwk ρ) (b.bwk ρ)
+  | .eqn a b => .eqn (a.bwk ρ) (b.bwk ρ)
   | .pi ℓ A B => .pi ℓ (A.bwk ρ) (B.bwk (↑b ρ))
   | .abs ℓ A B b => .abs ℓ (A.bwk ρ) (B.bwk (↑b ρ)) (b.bwk (↑b ρ))
   | .app A B f a => .app (A.bwk ρ) (B.bwk (↑b ρ)) (f.bwk ρ) (a.bwk ρ)
@@ -145,7 +145,7 @@ def Tm.bsubst (σ : BSubst) : Tm → Tm
   | .unit ℓ => .unit ℓ
   | .nil ℓ => .nil ℓ
   | .empty ℓ => .empty ℓ
-  | .eqn A a b => .eqn (A.bsubst σ) (a.bsubst σ) (b.bsubst σ)
+  | .eqn a b => .eqn (a.bsubst σ) (b.bsubst σ)
   | .pi ℓ A B => .pi ℓ (A.bsubst σ) (B.bsubst (↑s σ))
   | .abs ℓ A B b => .abs ℓ (A.bsubst σ) (B.bsubst (↑s σ)) (b.bsubst (↑s σ))
   | .app A B f a => .app (A.bsubst σ) (B.bsubst (↑s σ)) (f.bsubst σ) (a.bsubst σ)
@@ -480,7 +480,7 @@ theorem mem_liftBvSet_iff {S : Set ℕ} {i : ℕ} :
 
 def Tm.bvs : Tm → Set ℕ
   | .bv i => {i}
-  | .eqn A a b => A.bvs ∪ a.bvs ∪ b.bvs
+  | .eqn a b => a.bvs ∪ b.bvs
   | .pi _ A B => A.bvs ∪ liftBvSet B.bvs
   | .abs _ A B b => A.bvs ∪ liftBvSet B.bvs ∪ liftBvSet b.bvs
   | .app A B f a => A.bvs ∪ liftBvSet B.bvs ∪ f.bvs ∪ a.bvs
@@ -511,7 +511,7 @@ theorem Tm.bvs_max (t : Tm) : ∀ i ∈ t.bvs, i < t.bvi := by
 
 def Tm.bvsi : Tm → Set ℕ
   | .bv i => {i + 1, 0}
-  | .eqn A a b => A.bvsi ∪ a.bvsi ∪ b.bvsi
+  | .eqn a b => a.bvsi ∪ b.bvsi
   | .pi _ A B => A.bvsi ∪ Nat.pred '' B.bvsi
   | .abs _ A B b => A.bvsi ∪ Nat.pred '' B.bvsi ∪ Nat.pred '' b.bvsi
   | .app A B f a => A.bvsi ∪ Nat.pred '' B.bvsi ∪ f.bvsi ∪ a.bvsi
