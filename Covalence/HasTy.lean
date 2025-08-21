@@ -31,25 +31,22 @@ inductive Ctx.HasTy : Ctx → Tm → Tm → Prop
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
     → (ℓ = m ⊔ n)
-    → HasTy Γ (.univ ℓ) (.sigma ℓ A B)
-  | pair_cf {Γ : Ctx} {ℓ m n : ℕ} {A B a b : Tm} {L : Finset ℕ}
+    → HasTy Γ (.univ ℓ) (.sigma n A B)
+  | pair_cf {Γ : Ctx} {m n : ℕ} {A B a b : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
     → HasTy Γ A a
     → HasTy Γ (B.bs0 a) b
-    → HasTy Γ (.sigma ℓ A B) (.pair ℓ A B a b)
-  | fst_cf {Γ : Ctx} {ℓ m n : ℕ} {A B e : Tm} {L : Finset ℕ}
+    → HasTy Γ (.sigma n A B) (.pair n A B a b)
+  | fst_cf {Γ : Ctx} {m n : ℕ} {A B e : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
-    → HasTy Γ (.sigma ℓ A B) e
+    → HasTy Γ (.sigma n A B) e
     → HasTy Γ A (.fst A B e)
-  | snd_cf {Γ : Ctx} {ℓ m n : ℕ} {A B Ba e : Tm} {L : Finset ℕ}
+  | snd_cf {Γ : Ctx} {m n : ℕ} {A B Ba e : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
-    → HasTy Γ (.sigma ℓ A B) e
+    → HasTy Γ (.sigma n A B) e
     → JEq Γ (.univ n) (B.bs0 (.fst A B e)) Ba
     → HasTy Γ Ba (.snd A B e)
   | dite_cf {Γ : Ctx} {ℓ : ℕ} {φ A a b : Tm} {L : Finset ℕ}
@@ -473,28 +470,26 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
       IA.1.sigma_cf (fun x hx => (IB x hx).1) hℓ,
       IA.2.sigma_cf (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm) hℓ
     ⟩
-  | pair_cf hA hB hℓ ha hb IA IB Ia Ib => exact ⟨
-      IA.1.pair_cf (fun x hx => (IB x hx).1) hℓ Ia.1 Ib.1,
+  | pair_cf hA hB ha hb IA IB Ia Ib => exact ⟨
+      IA.1.pair_cf (fun x hx => (IB x hx).1) Ia.1 Ib.1,
       (IA.2.pair_cf
         (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm)
-        hℓ
         (Ia.2.cast hA.ty_eq)
         (Ib.2.cast ⟨_, ha.bs0_cf_univ hB⟩)
-        ).cast ⟨_, .symm (.sigma_cf hA hB hℓ)⟩
+        ).cast ⟨_, .symm (.sigma_cf hA hB rfl)⟩
       ⟩
-  | fst_cf hA hB hℓ he IA IB Ie => exact ⟨
-      IA.1.fst_cf (fun x hx => (IB x hx).1) hℓ Ie.1,
+  | fst_cf hA hB he IA IB Ie => exact ⟨
+      IA.1.fst_cf (fun x hx => (IB x hx).1) Ie.1,
       (IA.2.fst_cf
         (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm)
-        hℓ
-        (Ie.2.cast ⟨_, .sigma_cf hA hB hℓ⟩)).cast ⟨_, hA.symm⟩
+        (Ie.2.cast ⟨_, .sigma_cf hA hB rfl⟩)).cast ⟨_, hA.symm⟩
     ⟩
-  | snd_cf hA hB hℓ he hBa IA IB Ie IBa => exact ⟨
-      IA.1.snd_cf (fun x hx => (IB x hx).1) hℓ Ie.1 hBa,
+  | snd_cf hA hB he hBa IA IB Ie IBa => exact ⟨
+      IA.1.snd_cf (fun x hx => (IB x hx).1) Ie.1 hBa,
       (IA.2.snd_cf
-        (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm) hℓ
-        (Ie.2.cast ⟨_, .sigma_cf hA hB hℓ⟩)
-        (.trans (.symm (.bs0_cf_univ hB (.fst_cf hA hB hℓ he))) hBa))
+        (fun x hx => (IB x hx).2.cast0 hA.ty_eq.symm)
+        (Ie.2.cast ⟨_, .sigma_cf hA hB rfl⟩)
+        (.trans (.symm (.bs0_cf_univ hB (.fst_cf hA hB he))) hBa))
       ⟩
   | dite_cf hφ hA ha hb Iφ IA Ia Ib => exact ⟨
       Iφ.1.dite_cf IA.1 (fun x hx => (Ia x hx).1) (fun x hx => (Ib x hx).1),
@@ -550,18 +545,18 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
   | beta_abs_cf _ _ _ _ hBa hba IA IB Ib Ia _ Iba =>
     exact ⟨.app_cf IA.1 (fun x hx => (IB x hx).1)
             (.abs_cf IA.1 (fun x hx => (IB x hx).1) (fun x hx => (Ib x hx).1)) Ia.1 hBa, Iba.2⟩
-  | beta_fst_cf hA hB hℓ ha hb IA IB Ia Ib =>
-    exact ⟨IA.1.fst_cf (fun x hx => (IB x hx).1) hℓ
-            (.pair_cf IA.1 (fun x hx => (IB x hx).1) hℓ Ia.1 Ib.1), Ia.2
+  | beta_fst_cf hA hB ha hb IA IB Ia Ib =>
+    exact ⟨IA.1.fst_cf (fun x hx => (IB x hx).1)
+            (.pair_cf IA.1 (fun x hx => (IB x hx).1) Ia.1 Ib.1), Ia.2
           ⟩
-  | beta_snd_cf hA hB hℓ ha hb hBa IA IB Ia Ib Iba =>
-    exact ⟨IA.1.snd_cf (fun x hx => (IB x hx).1) hℓ
-            (.pair_cf IA.1 (fun x hx => (IB x hx).1) hℓ Ia.1 Ib.1)
-            (.trans (.bs0_cf_univ hB (.beta_fst_cf hA hB hℓ ha hb)) hBa),
+  | beta_snd_cf hA hB ha hb hBa IA IB Ia Ib Iba =>
+    exact ⟨IA.1.snd_cf (fun x hx => (IB x hx).1)
+            (.pair_cf IA.1 (fun x hx => (IB x hx).1) Ia.1 Ib.1)
+            (.trans (.bs0_cf_univ hB (.beta_fst_cf hA hB ha hb)) hBa),
             Ib.1.cast hBa.ty_eq⟩
   | inhab hA ha IA Ia => exact ⟨.trunc IA.1, .unit hA.ok⟩
   | spec_cf hA ht hφ hφa IA It Iφ Iφa =>
-    exact ⟨Iφa.2, .trunc (.sigma_cf IA.1 (fun x hx => (Iφ x hx).1) (by simp))⟩
+    exact ⟨Iφa.2, .trunc (.sigma_cf IA.1 (fun x hx => (Iφ x hx).1) rfl)⟩
   | beta_true_cf hφ hA ha hb Iφ IA Ia Ib => exact ⟨
     Iφ.1.dite_cf IA.1 (fun x hx => (Ia x hx).1) (fun x hx => (Ib x hx).1),
     .strengthen_unit (fun x hx => (Ia x hx).1) hφ.ty_eq⟩
@@ -583,11 +578,11 @@ theorem Ctx.JEq.cmp {Γ : Ctx} {A a b : Tm} (h : Ctx.JEq Γ A a b)
   | empty_uniq hφ ha Iφ Ia => exact ⟨Iφ.lhs_ty, .empty hφ.ok⟩
   | eqn_ext hA ha hb he IA Ia Ib Ie => exact ⟨Ia.1, Ib.1⟩
   | pi_ext_cf hA hB hℓ hf hg hfg IA IB If Ig Ifg => exact ⟨If.1, Ig.1⟩
-  | sigma_ext_cf hA hB hℓ he IA IB Ie => exact ⟨
-      Ie.1, .pair_cf IA.1 (fun x hx => (IB x hx).1) hℓ
-              (.fst_cf IA.1 (fun x hx => (IB x hx).1) hℓ Ie.1)
-              (.snd_cf IA.1 (fun x hx => (IB x hx).1) hℓ Ie.1
-              (.bs0_cf_univ hB (.fst_cf hA hB hℓ he)))⟩
+  | sigma_ext_cf hA hB he IA IB Ie => exact ⟨
+      Ie.1, .pair_cf IA.1 (fun x hx => (IB x hx).1)
+              (.fst_cf IA.1 (fun x hx => (IB x hx).1) Ie.1)
+              (.snd_cf IA.1 (fun x hx => (IB x hx).1) Ie.1
+              (.bs0_cf_univ hB (.fst_cf hA hB he)))⟩
   -- | univ_succ hs Is =>
   --  exact ⟨.univ hs.ok, .cast (.symm ⟨_, hs.univ_succ.univ_succ⟩) (.univ hs.ok)⟩
   -- | univ_max hm hn hℓ hℓ' _ _ => exact ⟨

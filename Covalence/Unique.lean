@@ -18,15 +18,19 @@ theorem Ctx.HasTy.unique_inner_multi {Γ : Ctx} {X Y a : Tm} (hX : Γ.HasTy X a)
     have ⟨WA, hA', hWA⟩ := hA'.outer_ty;
     cases hℓ; cases hℓ'
     exact Ctx.TyEq'.imax_congr_lhs ((IA hA').trans hWA)
+  | sigma_cf hA hB hℓ IA IB => cases hY with | sigma_cf hA' hB' hℓ' =>
+    have ⟨WA, hA', hWA⟩ := hA'.outer_ty;
+    cases hℓ; cases hℓ'
+    exact Ctx.TyEq'.max_congr_lhs ((IA hA').trans hWA)
   | fst_cf | dite_cf | choose_cf =>
     cases hY; constructor; apply JEq.ty_eq <;> (apply HasTy.refl; assumption)
   | app_cf hA hB hf ha hBa IA IB If Ia => cases hY with | app_cf hA' hB' hf' ha' hBa' =>
     exact .trans (.single hBa.symm.ty_eq) (.single hBa'.ty_eq)
   | abs_cf hA hB hb IA IB Ib => cases hY with | abs_cf hA' hB' hb' =>
     exact .single ⟨_, JEq.pi_cf hA.refl (fun x hx => (hB x hx).refl) rfl⟩
-  | pair_cf hA hB hℓ ha hb IA IB => cases hY with | pair_cf hA' hB' hℓ' ha' hb' =>
-    exact .single ⟨_, JEq.sigma_cf hA.refl (fun x hx => (hB x hx).refl) hℓ⟩
-  | snd_cf hA hB hℓ he hBa IA IB Ie => cases hY with | snd_cf hA' hB' hℓ' he' hBa' =>
+  | pair_cf hA hB ha hb IA IB => cases hY with | pair_cf hA' hB' ha' hb' =>
+    exact .single ⟨_, JEq.sigma_cf hA.refl (fun x hx => (hB x hx).refl) rfl⟩
+  | snd_cf hA hB he hBa IA IB Ie => cases hY with | snd_cf hA' hB' he' hBa' =>
     exact .trans (.single hBa.symm.ty_eq) (.single hBa'.ty_eq)
   | succ hΓ => cases hY; exact .single ⟨_, .pi_k hΓ.nats hΓ.nats rfl⟩
   | natrec_cf hC hn hz hs hCn IC In Iz Is => cases hY with | natrec_cf hC' hn' hz' hs' hCn' =>

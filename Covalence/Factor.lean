@@ -48,25 +48,22 @@ inductive Ctx.InnerTy : Ctx → Tm → Tm → Prop
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
     → (ℓ = m ⊔ n)
-    → InnerTy Γ (.univ ℓ) (.sigma ℓ A B)
-  | pair_cf {Γ : Ctx} {ℓ m n : ℕ} {A B a b : Tm} {L : Finset ℕ}
+    → InnerTy Γ (.univ ℓ) (.sigma n A B)
+  | pair_cf {Γ : Ctx} {m n : ℕ} {A B a b : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
     → HasTy Γ A a
     → HasTy Γ (B.bs0 a) b
-    → InnerTy Γ (.sigma ℓ A B) (.pair ℓ A B a b)
-  | fst_cf {Γ : Ctx} {ℓ m n : ℕ} {A B e : Tm} {L : Finset ℕ}
+    → InnerTy Γ (.sigma n A B) (.pair n A B a b)
+  | fst_cf {Γ : Ctx} {m n : ℕ} {A B e : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
-    → HasTy Γ (.sigma ℓ A B) e
+    → HasTy Γ (.sigma n A B) e
     → InnerTy Γ A (.fst A B e)
-  | snd_cf {Γ : Ctx} {ℓ m n : ℕ} {A B Ba e : Tm} {L : Finset ℕ}
+  | snd_cf {Γ : Ctx} {m n : ℕ} {A B Ba e : Tm} {L : Finset ℕ}
     : HasTy Γ (.univ m) A
     → (∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
-    → HasTy Γ (.sigma ℓ A B) e
+    → HasTy Γ (.sigma n A B) e
     → JEq Γ (.univ n) (B.bs0 (.fst A B e)) Ba
     → InnerTy Γ Ba (.snd A B e)
   | dite_cf {Γ : Ctx} {ℓ : ℕ} {φ A a b : Tm} {L : Finset ℕ}

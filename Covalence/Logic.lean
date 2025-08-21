@@ -129,11 +129,7 @@ theorem Ctx.IsTy.pi_trg_prop {Γ : Ctx} {A B : Tm} (h : Γ.IsTy (A.pi 0 B))
   have ⟨_, h⟩ := h
   rw [Ctx.JEq.refl_iff, <-Ctx.OuterTy.has_ty_iff] at h
   have ⟨_, hA, hC⟩ := h
-  cases hA with | pi_cf hA hB hℓ =>
-    rename_i m n L
-    cases n with
-    | zero => exact IsProp.cf_to_dv hB
-    | succ => cases m <;> simp [Nat.imax] at hℓ
+  cases hA with | pi_cf hA hB hℓ => exact IsProp.cf_to_dv hB
 
 theorem Ctx.IsEmpty.is_prop {Γ : Ctx} {A : Tm} (h : Γ.IsEmpty A) : Γ.IsProp A.not
   := h.regular.pi_src.not_prop
@@ -157,7 +153,7 @@ theorem Ctx.IsFalse.is_empty {Γ : Ctx} {φ : Tm} (h : Γ.IsFalse φ) : Γ.IsEmp
   ⟨
     Tm.abs 0 φ (.empty 0) (.bv 0),
     .abs_cf h.is_prop
-      (fun _ hx => .empty (h.ok.cons hx h.is_ty)) rfl
+      (fun _ hx => .empty (h.ok.cons hx h.is_ty))
       (fun _ hx => .cast ⟨0, h.wk0 hx ⟨_, h⟩⟩ (.var (h.ok.cons hx h.is_ty) .here))
   ⟩
 
@@ -191,7 +187,7 @@ theorem Ctx.Contra.close_emp {Γ : Ctx} {x : ℕ} {A : Tm}
   have ⟨c, hc⟩ := h;
   have ⟨_, hA⟩ := h.ok.ty;
   ⟨.abs 0 A (.empty 0) (c.close x), .abs_cf hA.ty_lhs
-    (fun _ hx => (h.ok.tail.cons hx h.ok.ty).empty.ty_lhs) rfl
+    (fun _ hx => (h.ok.tail.cons hx h.ok.ty).empty.ty_lhs)
     hc.close
   ⟩
 
@@ -221,12 +217,12 @@ theorem Ctx.Implies.inhab {Γ : Ctx} {φ ψ : Tm} (h : Γ.Implies φ ψ) : Γ.In
 theorem Ctx.IsTrue.to_imp {Γ : Ctx} {φ : Tm} (hφ : Γ.IsTrue φ) : Γ.Implies (.unit 0) φ := ⟨
     .unit hφ.ok, hφ.is_prop,
     have ⟨_, hp⟩ := hφ.inhab;
-    Inhab.is_true ⟨_, .abs_k (.unit hφ.ok) hφ.is_prop rfl hp⟩ (.pi_k (.unit hφ.ok) hφ.is_prop rfl)
+    Inhab.is_true ⟨_, .abs_k (.unit hφ.ok) hφ.is_prop hp⟩ (.pi_k (.unit hφ.ok) hφ.is_prop rfl)
   ⟩
 
 theorem Ctx.Implies.true_imp {Γ : Ctx} {φ : Tm} (hφ : Γ.Implies (.unit 0) φ) : Γ.IsTrue φ :=
   have ⟨_, hf⟩ := hφ.inhab;
-  Inhab.is_true ⟨_, .app_k hφ.src_prop hφ.trg_prop rfl hf (.nil hf.ok)⟩ hφ.trg_prop
+  Inhab.is_true ⟨_, .app_k hφ.src_prop hφ.trg_prop hf (.nil hf.ok)⟩ hφ.trg_prop
 
 theorem Ctx.Implies.true_imp_iff {Γ : Ctx} {φ : Tm} : Γ.Implies (.unit 0) φ ↔ Γ.IsTrue φ
   := ⟨Ctx.Implies.true_imp, Ctx.IsTrue.to_imp⟩
@@ -248,13 +244,13 @@ theorem Ctx.Implies.trans {Γ : Ctx} {φ ψ θ : Tm} (h : Γ.Implies φ ψ) (h' 
     have ⟨f, hf⟩ := h.inhab; have ⟨g, hg⟩ := h'.inhab;
     Inhab.is_true
     ⟨.abs 0 φ θ (.app ψ θ g (.app φ ψ f (.bv 0))),
-      (.abs_ty_cf (L := Γ.dv) h.src_prop h'.trg_prop rfl (fun x hx => by
+      (.abs_ty_cf (L := Γ.dv) h.src_prop h'.trg_prop (fun x hx => by
         have hφ' := h.src_prop.wk0 hx h.src_prop.is_ty;
         have hψ' := h.trg_prop.wk0 hx h.src_prop.is_ty
         have hθ' := h'.trg_prop.wk0 hx h.src_prop.is_ty;
         have hf' := hf.wk0 hx h.src_prop.is_ty;
         have hg' := hg.wk0 hx h.src_prop.is_ty;
-        convert HasTy.app_k hψ' hθ' rfl hg' (.app_k hφ' hψ' rfl hf' (.var hf'.ok .here)) using 1
+        convert HasTy.app_k hψ' hθ' hg' (.app_k hφ' hψ' hf' (.var hf'.ok .here)) using 1
         simp [Tm.bs0, Tm.bsubst_lc, hφ'.lc_tm, hψ'.lc_tm, hθ'.lc_tm, hg'.lc_tm, hf'.lc_tm]
       ))
     ⟩
@@ -273,7 +269,7 @@ theorem Ctx.Implies.wk0 {Γ : Ctx} {x : ℕ} {A : Tm} (hx : x ∉ Γ.dv) (hA : �
 
 theorem Ctx.IsTrue.close {Γ : Ctx} {x : ℕ} {φ ψ : Tm}
   (hφ : Γ.IsProp φ) (hψ : Γ.IsProp ψ) (h : (Γ.cons x φ).IsTrue ψ) : Γ.Implies φ ψ
-  := ⟨hφ, hψ, Inhab.is_true ⟨_, .abs_ty_cf (b := .nil 0) hφ hψ rfl (fun y hy => by
+  := ⟨hφ, hψ, Inhab.is_true ⟨_, .abs_ty_cf (b := .nil 0) hφ hψ (fun y hy => by
     convert h.nil_ty.rename0' y hy
     rw [Tm.ms0, Tm.msubst_eqOn_one]
     intro z hz

@@ -76,7 +76,7 @@ theorem Ctx.JEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A a b : Tm} (h
       apply Ifg
       · exact hx.1
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-  | sigma_ext_cf hA hB hℓ he IA IB Ie =>
+  | sigma_ext_cf hA hB he IA IB Ie =>
     have hA' := IA hΓΔ
     rename Finset ℕ => L
     apply JEq.sigma_ext_cf (L := L ∪ Γ.dv)
@@ -86,7 +86,6 @@ theorem Ctx.JEq.pure_wk {Γ Δ : Ctx} (hΓΔ : Ctx.PureWk Γ Δ) {A a b : Tm} (h
       apply IB
       · exact hx.1
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact hℓ
     · exact Ie hΓΔ
   -- | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
   -- | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'
@@ -295,7 +294,7 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
       apply Ifg
       · exact hx.1
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-  | sigma_ext_cf hA hB hℓ he IA IB Ie =>
+  | sigma_ext_cf hA hB he IA IB Ie =>
     have hA' := IA hΓΔ
     rename Finset ℕ => L
     apply JEq.sigma_ext_cf (L := L ∪ Γ.dv)
@@ -305,7 +304,6 @@ theorem Ctx.JEq.wk {Γ Δ : Ctx} (hΓΔ : Ctx.Wk Γ Δ) {A a b : Tm} (h : Δ.JEq
       apply IB
       · exact hx.1
       · exact hΓΔ.lift' hx.2 (Set.notMem_subset hΓΔ.dv_anti hx.2) hA'.lhs_ty hA.lhs_ty
-    · exact hℓ
     · exact Ie hΓΔ
   -- | univ_succ _ Is => exact JEq.univ_succ (Is hΓΔ)
   -- | univ_max _ _ hℓ hℓ' Im In => exact JEq.univ_max (Im hΓΔ) (In hΓΔ) hℓ hℓ'

@@ -58,25 +58,22 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     : JEq Γ (.univ m) A A'
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
     → (ℓ = m ⊔ n)
-    → JEq Γ (.univ ℓ) (.sigma ℓ A B) (.sigma ℓ A' B')
-  | pair_cf {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' a a' b b' : Tm} {L : Finset ℕ}
+    → JEq Γ (.univ ℓ) (.sigma n A B) (.sigma n A' B')
+  | pair_cf {Γ : Ctx} {m n : ℕ} {A A' B B' a a' b b' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A'
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
     → JEq Γ A a a'
     → JEq Γ (B.bs0 a) b b'
-    → JEq Γ (.sigma ℓ A B) (.pair ℓ A B a b) (.pair ℓ A' B' a' b')
-  | fst_cf {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' e e' : Tm} {L : Finset ℕ}
+    → JEq Γ (.sigma n A B) (.pair n A B a b) (.pair n A' B' a' b')
+  | fst_cf {Γ : Ctx} {m n : ℕ} {A A' B B' e e' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A'
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
-    → JEq Γ (.sigma ℓ A B) e e'
+    → JEq Γ (.sigma n A B) e e'
     → JEq Γ A (.fst A B e) (.fst A' B' e')
-  | snd_cf  {Γ : Ctx} {ℓ m n : ℕ} {A A' B B' Ba e e' : Tm} {L : Finset ℕ}
+  | snd_cf  {Γ : Ctx} {m n : ℕ} {A A' B B' Ba e e' : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A'
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B'.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
-    → JEq Γ (.sigma ℓ A B) e e'
+    → JEq Γ (.sigma n A B) e e'
     → JEq Γ (.univ n) (B.bs0 (.fst A B e)) Ba
     → JEq Γ Ba (.snd A B e) (.snd A' B' e')
   | dite_cf {Γ : Ctx} {ℓ : ℕ} {φ φ' A A' a a' b b' : Tm} {L : Finset ℕ}
@@ -138,21 +135,19 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
   --   → JEq Γ (.univ n) (B.bs0 a) Ba
   --   → JEq Γ Ba (b.bs0 a) ba
   --   → JEq Γ Ba (.let₁ A a b) ba
-  | beta_fst_cf {Γ : Ctx} {ℓ m n : ℕ} {A B a b : Tm} {L : Finset ℕ}
+  | beta_fst_cf {Γ : Ctx} {m n : ℕ} {A B a b : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
     → JEq Γ A a a
     → JEq Γ (B.bs0 a) b b
-    → JEq Γ A (.fst A B (.pair ℓ A B a b)) a
-  | beta_snd_cf {Γ : Ctx} {ℓ m n : ℕ} {A B a b Ba : Tm} {L : Finset ℕ}
+    → JEq Γ A (.fst A B (.pair n A B a b)) a
+  | beta_snd_cf {Γ : Ctx} {m n : ℕ} {A B a b Ba : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
     → JEq Γ A a a
     → JEq Γ (B.bs0 a) b b
     → JEq Γ (.univ n) (B.bs0 a) Ba
-    → JEq Γ Ba (.snd A B (.pair ℓ A B a b)) b
+    → JEq Γ Ba (.snd A B (.pair n A B a b)) b
   | inhab {Γ : Ctx} {ℓ : ℕ} {A a : Tm}
     : JEq Γ (.univ ℓ) A A
     → JEq Γ A a a
@@ -162,7 +157,7 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → JEq Γ (.univ 0) (.trunc A) (.unit 0)
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ 0) (φ.bs0 (.fv x)) (φ.bs0 (.fv x)))
     → JEq Γ (.univ 0) (φ.bs0 (.choose A φ)) φa
-    → JEq Γ (.univ 0) φa (.trunc (.sigma ℓ A φ))
+    → JEq Γ (.univ 0) φa (.trunc (.sigma 0 A φ))
   | beta_true_cf {Γ : Ctx} {ℓ : ℕ} {φ A a b : Tm} {L : Finset ℕ}
     : JEq Γ (.univ 0) φ (.unit 0)
     → JEq Γ (.univ ℓ) A A
@@ -217,12 +212,11 @@ inductive Ctx.JEq : Ctx → Tm → Tm → Tm → Prop
     → JEq Γ (.pi n A B) g g
     → (∀ x ∉ L, JEq (Γ.cons x A) (B.bs0 (.fv x)) (.app A B f (.fv x)) (.app A B g (.fv x)))
     → JEq Γ (.pi n A B) f g
-  | sigma_ext_cf {Γ : Ctx} {ℓ n m : ℕ} {A B e : Tm} {L : Finset ℕ}
+  | sigma_ext_cf {Γ : Ctx} {n m : ℕ} {A B e : Tm} {L : Finset ℕ}
     : JEq Γ (.univ m) A A
     → (∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.bs0 (.fv x)) (B.bs0 (.fv x)))
-    → (ℓ = m ⊔ n)
-    → JEq Γ (.sigma ℓ A B) e e
-    → JEq Γ (.sigma ℓ A B) e (.pair ℓ A B (.fst A B e) (.snd A B e))
+    → JEq Γ (.sigma n A B) e e
+    → JEq Γ (.sigma n A B) e (.pair n A B (.fst A B e) (.snd A B e))
   -- -- Universe levels
   -- | univ_succ {Γ : Ctx} {ℓ ℓ' : ℕ}
   --   : JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ')
